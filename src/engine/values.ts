@@ -1,4 +1,5 @@
 import { Decimal } from 'decimal.js';
+import type { DateShow } from './dates';
 import type { UnitExpr } from './units/types';
 
 /** Decimal constructor used for all user math. Never use JS floats for results. */
@@ -17,7 +18,9 @@ export type Value =
   /** `value` holds the percentage, so `20%` is stored as 20. */
   | { kind: 'percent'; value: Decimal }
   /** An amount in `unit`: 5 km is { value: 5, unit: [{ km, 1 }] }. Never has an empty unit. */
-  | { kind: 'quantity'; value: Decimal; unit: UnitExpr };
+  | { kind: 'quantity'; value: Decimal; unit: UnitExpr }
+  /** A moment in time. `zoned` is set when the user named a time zone, so it's displayed. */
+  | { kind: 'datetime'; value: Temporal.ZonedDateTime; show: DateShow; zoned?: boolean };
 
 export function num(value: Decimal, format?: NumberFormat): Value {
   return format ? { kind: 'number', value, format } : { kind: 'number', value };

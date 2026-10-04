@@ -16,7 +16,7 @@ const isKw = (t: RToken | undefined, kw: Keyword) => t?.t === 'kw' && t.kw === k
 function startsImplicitOperand(t: RToken | undefined): boolean {
   if (!t) return false;
   // Two bare numbers in a row ("3 cats and 2 dogs") is ambiguous, so it's an error.
-  if (t.t === 'num' || t.t === 'kw' || t.t === 'target' || t.t === 'unit') return false;
+  if (['num', 'kw', 'target', 'unit', 'zone', 'date', 'until'].includes(t.t)) return false;
   if (t.t === 'op') return t.op === '(';
   return true;
 }
@@ -50,6 +50,11 @@ function infixBp(t: RToken | undefined): number {
         return 5;
       case 'conv':
         return 1;
+      case 'from':
+        return 10;
+      case 'ago':
+      case 'later':
+        return 50;
     }
   }
   return startsImplicitOperand(t) ? IMPLICIT_BP : 0;
@@ -87,6 +92,14 @@ export function parse(tokens: RToken[]): Node {
         return { k: 'line', n: t.n };
       case 'agg':
         return { k: 'agg', name: t.name };
+      case 'date':
+        return { k: 'date', spec: t.spec };
+      case 'until':
+        return { k: 'until', arg: expr(PREFIX_BP), unit: t.unit, since: t.since };
+      case 'kw':
+        // "in 3 days"
+        if (t.kw === 'later') return { k: 'fromNow', arg: expr(UNIT_BP - 1), sign: 1 };
+        break;
       case 'unit': {
         // Currency before the amount: $30, € (2 + 3), EUR 20.
         const n = peek();
@@ -191,7 +204,19 @@ export function parse(tokens: RToken[]): Node {
           expectKw('of');
           return { k: 'pctWhatOf', part: left, whole: expr(5) };
         }
+        case 'from':
+          // "2 weeks from today" is today + 2 weeks.
+          return { k: 'binary', op: '+', left: expr(10), right: left };
+        case 'ago':
+          return { k: 'fromNow', arg: left, sign: -1 };
+        case 'later':
+          return { k: 'fromNow', arg: left, sign: 1 };
         case 'conv': {
+          const zone = peek();
+          if (zone?.t === 'zone') {
+            next();
+            return { k: 'convertZone', arg: left, zone: zone.zone };
+          }
           if (peek()?.t === 'unit') return { k: 'convertUnit', arg: left, unit: unitExpr() };
           const target = next();
           if (target.t !== 'target') throw new CalcError('Expected a conversion target');

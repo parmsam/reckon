@@ -11,6 +11,7 @@ export type HighlightType =
   | 'constant'
   | 'variable'
   | 'unit'
+  | 'date'
   | 'reference'
   | 'label'
   | 'comment'
@@ -58,6 +59,11 @@ function tokenHighlight(t: RToken): HighlightType {
       return 'variable';
     case 'unit':
       return 'unit';
+    case 'date':
+    case 'zone':
+      return 'date';
+    case 'until':
+      return 'keyword';
     default:
       return 'reference';
   }

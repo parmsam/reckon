@@ -1,4 +1,5 @@
 import type { Settings } from './context';
+import { formatDateTime } from './datetime';
 import { formatUnit, powerUnits } from './units/quantity';
 import type { UnitExpr } from './units';
 import { D, type Decimal, type Value } from './values';
@@ -68,6 +69,7 @@ function formatQuantity(value: Decimal, unit: UnitExpr, s: Settings): string {
 export function formatValue(v: Value, s: Settings): string {
   if (v.kind === 'percent') return `${formatNumber(v.value, s)}%`;
   if (v.kind === 'quantity') return formatQuantity(v.value, v.unit, s);
+  if (v.kind === 'datetime') return formatDateTime(v, s);
   const d = v.value;
   switch (v.format) {
     case 'hex':

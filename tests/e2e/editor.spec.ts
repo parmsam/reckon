@@ -64,3 +64,27 @@ test('converts units and currencies with live rates', async ({ page }) => {
   await expect(resultOnLine(page, 'BTC')).toHaveText('$1,000.00');
   await expect(page.locator('.cm-tok-unit', { hasText: 'km' })).toBeVisible();
 });
+
+test.describe('dates', () => {
+  test.use({ timezoneId: 'America/New_York' });
+
+  test('uses the browser clock and time zone', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-01-15T17:00:00Z'));
+    await page.goto('./');
+    await setNote(page, 'today\nnow in Tokyo\ndays until Jan 31');
+    await expect(resultOnLine(page, 'today')).toHaveText('Thu, Jan 15, 2026');
+    await expect(resultOnLine(page, 'Tokyo')).toHaveText('Fri, Jan 16, 2026, 2:00 AM GMT+9');
+    await expect(resultOnLine(page, 'until')).toHaveText('16 days');
+    await expect(page.locator('.cm-tok-date', { hasText: 'Jan 31' })).toBeVisible();
+  });
+
+  test('loads the Temporal polyfill when the browser has none', async ({ page }) => {
+    await page.addInitScript(() => {
+      delete (globalThis as { Temporal?: unknown }).Temporal;
+    });
+    await page.clock.setFixedTime(new Date('2026-01-15T17:00:00Z'));
+    await page.goto('./');
+    await setNote(page, 'tomorrow');
+    await expect(resultOnLine(page, 'tomorrow')).toHaveText('Fri, Jan 16, 2026');
+  });
+});

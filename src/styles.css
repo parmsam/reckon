@@ -19,6 +19,7 @@
   --tok-function: #1f6f8b;
   --tok-variable: #2f7a3a;
   --tok-unit: #0f6e6e;
+  --tok-date: #8a3fa0;
   --tok-reference: #b03a5b;
   --tok-label: #6b6875;
   --tok-comment: #8d8996;
@@ -54,6 +55,7 @@
     --tok-function: #6cc4e0;
     --tok-variable: #8fd694;
     --tok-unit: #5fd4c4;
+    --tok-date: #e39ff6;
     --tok-reference: #ff8fab;
     --tok-label: #a19dab;
     --tok-comment: #7d7987;
@@ -467,6 +469,9 @@ button {
 }
 .cm-tok-unit {
   color: var(--tok-unit);
+}
+.cm-tok-date {
+  color: var(--tok-date);
 }
 .cm-tok-reference {
   color: var(--tok-reference);

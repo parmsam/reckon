@@ -144,7 +144,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const editor = createEditor({
     parent: editorEl,
     doc: '',
-    settings: { locale: navigator.language },
+    settings: {
+      locale: navigator.language,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      now: Date.now(),
+    },
     onChange: (body) => {
       const id = currentId();
       if (!id) return;
@@ -159,6 +163,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   editor.view.dom.addEventListener(COPIED_EVENT, (e) =>
     toast(`Copied ${(e as CustomEvent<string>).detail}`),
   );
+
+  // Keep "now" and "today" current.
+  setInterval(() => editor.setSettings({ now: Date.now() }), 30_000);
 
   // ---- Exchange rates -----------------------------------------------------------------------
   const rates = new RatesManager((snapshot) =>

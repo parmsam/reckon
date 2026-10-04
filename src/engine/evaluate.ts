@@ -1,5 +1,13 @@
 import type { BinaryOp, Node } from './ast';
 import type { Settings } from './context';
+import {
+  addDuration,
+  difference,
+  inZone,
+  isCalendarDuration,
+  resolveDate,
+  type DateValue,
+} from './datetime';
 import { CONSTANTS, callFunction, factorial } from './functions';
 import { getUnit, type UnitContext, type UnitExpr } from './units';
 import {
@@ -36,6 +44,7 @@ interface Amount {
 
 function amount(v: Value): Amount {
   if (v.kind === 'percent') throw new CalcError('Expected a number, not a percentage');
+  if (v.kind === 'datetime') throw new CalcError('Expected a number, not a date');
   return { value: v.value, unit: v.kind === 'quantity' ? v.unit : [] };
 }
 
@@ -81,7 +90,23 @@ function arithmetic(op: BinaryOp, a: Decimal, b: Decimal): Decimal {
   }
 }
 
+/** Date arithmetic: date ± duration, duration + date, date − date. */
+function dateBinary(op: BinaryOp, a: Value, b: Value, ctx: UnitContext): Value {
+  if (a.kind === 'datetime' && b.kind === 'datetime' && op === '-') {
+    const d = difference(a, b);
+    return qty(d.value, d.unit);
+  }
+  if (a.kind === 'datetime' && b.kind !== 'datetime' && (op === '+' || op === '-')) {
+    return addDuration(a, amount(b), op === '+' ? 1 : -1, ctx);
+  }
+  if (b.kind === 'datetime' && a.kind !== 'datetime' && op === '+') {
+    return addDuration(b, amount(a), 1, ctx);
+  }
+  throw new CalcError(`Can't apply ${op} to dates`);
+}
+
 function binary(op: BinaryOp, a: Value, b: Value, ctx: UnitContext): Value {
+  if (a.kind === 'datetime' || b.kind === 'datetime') return dateBinary(op, a, b, ctx);
   // 50 + 10% = 55, $50 - 10% = $45, 50 * 10% = 5, 50 / 10% = 500
   if (a.kind !== 'percent' && b.kind === 'percent') {
     const f = b.value.div(HUNDRED);
@@ -143,7 +168,7 @@ function blockAmounts(
   block: readonly Value[],
   ctx: UnitContext,
 ): { values: Decimal[]; unit: UnitExpr } {
-  const amounts = block.filter((v) => v.kind !== 'percent').map(amount);
+  const amounts = block.filter((v) => v.kind === 'number' || v.kind === 'quantity').map(amount);
   const unit = amounts.find((a) => a.unit.length)?.unit ?? [];
   const values = amounts.map((a) =>
     a.unit.length ? convert(a.value, a.unit, unit, ctx) : a.value,
@@ -229,9 +254,18 @@ function call(name: string, args: Value[], env: Env): Value {
 
 export function evaluate(node: Node, env: Env): Value {
   const result = evaluateNode(node, env);
-  finite(result.value);
+  if (result.kind !== 'datetime') finite(result.value);
   return result;
 }
+
+function expectDate(v: Value): DateValue {
+  if (v.kind !== 'datetime') throw new CalcError('Expected a date or time');
+  return v;
+}
+
+const TODAY = { base: { kind: 'today', days: 0 } } as const;
+const NOW = { base: { kind: 'now' } } as const;
+const NOW_TIME = { base: { kind: 'now' }, timeOnly: true } as const;
 
 function evaluateNode(node: Node, env: Env): Value {
   const ev = (n: Node) => evaluateNode(n, env);
@@ -259,6 +293,7 @@ function evaluateNode(node: Node, env: Env): Value {
       return aggregate(node.name, env.block, ctx);
     case 'neg': {
       const v = ev(node.arg);
+      if (v.kind === 'datetime') throw new CalcError("Can't negate a date");
       if (v.kind === 'percent') return pct(v.value.neg());
       return v.kind === 'quantity' ? qty(v.value.neg(), v.unit) : num(v.value.neg());
     }
@@ -311,6 +346,31 @@ function evaluateNode(node: Node, env: Env): Value {
       const a = amount(ev(node.arg));
       const { expr, scale } = multiplyUnits(a.unit, [{ unit: node.unit, power: node.power }], ctx);
       return make({ value: a.value.times(scale), unit: expr }, ctx);
+    }
+    case 'date':
+      return resolveDate(node.spec, env.settings);
+    case 'convertZone':
+      return inZone(expectDate(ev(node.arg)), node.zone);
+    case 'until': {
+      let target = expectDate(ev(node.arg));
+      const base = resolveDate(target.show === 'date' ? TODAY : NOW, env.settings);
+      let d = node.since ? difference(base, target) : difference(target, base);
+      // "days until Jan 1" after Jan 1 has passed means next year's.
+      const spec = node.arg.k === 'date' ? node.arg.spec : undefined;
+      if (!node.since && d.value.isNeg() && spec?.base?.kind === 'calendar' && !spec.base.year) {
+        target = { ...target, value: target.value.add({ years: 1 }) };
+        d = difference(target, base);
+      }
+      const value = node.unit
+        ? convert(d.value, d.unit, [{ unit: node.unit, power: 1 }], ctx)
+        : d.value;
+      return qty(value, node.unit ? [{ unit: node.unit, power: 1 }] : d.unit);
+    }
+    case 'fromNow': {
+      const d = amount(ev(node.arg));
+      // "3 days ago" is a date; "in 45 min" is a time of day.
+      const base = resolveDate(isCalendarDuration(d) ? TODAY : NOW_TIME, env.settings);
+      return addDuration(base, d, node.sign, ctx);
     }
     case 'convertUnit': {
       const a = amount(ev(node.arg));

@@ -1,6 +1,8 @@
 import { CONSTANTS, FUNCTIONS, FUNCTION_ALIASES } from './functions';
+import { dateAt, zoneAt, type DateSpec } from './dates';
 import type { Token } from './lexer';
 import { lookupUnit, MAX_UNIT_WORDS, type UnitDef } from './units';
+import { dim, sameDim } from './units/dims';
 import { CalcError, type Decimal } from './values';
 
 /**
@@ -10,7 +12,7 @@ import { CalcError, type Decimal } from './values';
  */
 
 export type Op = '+' | '-' | '*' | '/' | '^' | '(' | ')' | ',' | '%' | '!' | 'mod';
-export type Keyword = 'of' | 'off' | 'on' | 'conv' | 'is' | 'what';
+export type Keyword = 'of' | 'off' | 'on' | 'conv' | 'is' | 'what' | 'from' | 'ago' | 'later';
 export type Target = 'hex' | 'bin' | 'oct' | 'sci' | 'dec' | 'percent';
 export type Aggregate = 'sum' | 'avg' | 'count' | 'min' | 'max';
 
@@ -32,6 +34,10 @@ export type RToken = Span &
     | { t: 'line'; n: number }
     | { t: 'agg'; name: Aggregate }
     | { t: 'unit'; unit: UnitDef }
+    | { t: 'date'; spec: DateSpec }
+    | { t: 'zone'; zone: string }
+    /** "days until", "time since": `unit` is the unit to answer in, if given. */
+    | { t: 'until'; unit?: UnitDef; since: boolean }
   );
 
 const OP_WORDS: Record<string, Op> = {
@@ -98,7 +104,7 @@ const isOp = (t: Token | undefined, op: string) => t?.type === 'op' && t.op === 
 function endsOperand(t: RToken | undefined): boolean {
   if (!t) return false;
   if (t.t === 'op') return t.op === ')' || t.op === '%' || t.op === '!';
-  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit'].includes(t.t);
+  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit', 'date'].includes(t.t);
 }
 
 /** Longest unit name starting at src[i]: "fl oz", "square feet", "km". */
@@ -113,6 +119,7 @@ function unitAt(src: Token[], i: number): { unit: UnitDef; length: number } | un
 }
 
 const INCHES = lookupUnit('inch')!;
+const TIME = dim({ time: 1 });
 const MINUTES = lookupUnit('minute')!;
 
 function startsOperand(t: Token | undefined): boolean {
@@ -124,10 +131,23 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
   const maxVarWords = Math.max(0, ...[...vars].map((v) => v.split(' ').length));
   const last = () => out[out.length - 1];
   const span = (a: Token, b: Token = a): Span => ({ from: a.from, to: b.to });
+  const loneDateWords = new Set<RToken>();
 
   let i = 0;
   while (i < src.length) {
     const tok = src[i]!;
+
+    // Dates and times: "Dec 25", "next friday at 3pm", "2026-07-04", "noon PST".
+    const date =
+      tok.type === 'word' && vars.has(tok.text.toLowerCase()) ? undefined : dateAt(src, i);
+    if (date) {
+      const token: RToken = { t: 'date', spec: date.spec, ...span(tok, src[i + date.length - 1]) };
+      // A lone date word may just be prose; see the filter at the end.
+      if (date.length === 1 && tok.type === 'word') loneDateWords.add(token);
+      out.push(token);
+      i += date.length;
+      continue;
+    }
 
     if (tok.type === 'number') {
       let value = tok.value!;
@@ -208,6 +228,51 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       continue;
     }
 
+    // "time in Tokyo" is the current time there.
+    const conversion = lower(src[i + 1]);
+    if (w === 'time' && (conversion === 'in' || conversion === 'to') && zoneAt(src, i + 2)) {
+      out.push({ t: 'date', spec: { base: { kind: 'now' }, timeOnly: true }, ...span(tok) });
+      i += 1;
+      continue;
+    }
+
+    // "days until Dec 25", "time since 9am", "until friday"
+    const untilAt = (j: number) => ['until', 'till', 'since'].includes(lower(src[j]) ?? '');
+    if (w === 'time' && untilAt(i + 1)) {
+      out.push({ t: 'until', since: lower(src[i + 1]) === 'since', ...span(tok, src[i + 1]) });
+      i += 2;
+      continue;
+    }
+    const unitBefore = unitAt(src, i);
+    if (unitBefore && sameDim(unitBefore.unit.dim, TIME) && untilAt(i + unitBefore.length)) {
+      const word = src[i + unitBefore.length]!;
+      out.push({
+        t: 'until',
+        unit: unitBefore.unit,
+        since: lower(word) === 'since',
+        ...span(tok, word),
+      });
+      i += unitBefore.length + 1;
+      continue;
+    }
+    if (untilAt(i) && !endsOperand(last())) {
+      out.push({ t: 'until', since: w === 'since', ...span(tok) });
+      i += 1;
+      continue;
+    }
+
+    // "2 weeks from today", "3 days ago"
+    if (w === 'from' && endsOperand(last()) && dateAt(src, i + 1)) {
+      out.push({ t: 'kw', kw: 'from', ...span(tok) });
+      i += 1;
+      continue;
+    }
+    if ((w === 'ago' || w === 'later') && endsOperand(last())) {
+      out.push({ t: 'kw', kw: w, ...span(tok) });
+      i += 1;
+      continue;
+    }
+
     // "km per hour": `per` divides between two operands.
     if (w === 'per') {
       if (endsOperand(last()) && src[i + 1]) out.push({ t: 'op', op: '/', ...span(tok) });
@@ -262,6 +327,20 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
         out.push({ t: 'kw', kw: 'conv', ...span(tok) });
         out.push({ t: 'target', target, ...span(next) });
         i = j + 1;
+        continue;
+      }
+      // "now in Tokyo", "3pm PST to London"
+      const zone = endsOperand(last()) && !unitAt(src, j) ? zoneAt(src, j) : undefined;
+      if (zone) {
+        out.push({ t: 'kw', kw: 'conv', ...span(tok) });
+        out.push({ t: 'zone', zone: zone.zone, ...span(src[j]!, src[j + zone.length - 1]) });
+        i = j + zone.length;
+        continue;
+      }
+      // "in 3 days": a time from now.
+      if (w === 'in' && !endsOperand(last()) && src[i + 1]?.type === 'number') {
+        out.push({ t: 'kw', kw: 'later', ...span(tok) });
+        i += 1;
         continue;
       }
       // "5 km in miles": the unit tokens that follow are the target. In "6 ft 2 in in cm" the
@@ -335,5 +414,7 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
     }
     i += 1;
   }
-  return out;
+  // "I now have 5", "today I ran 5 km": a lone date word followed directly by a number (once the
+  // descriptive words are gone) is prose, not a date.
+  return out.filter((t, k) => !(loneDateWords.has(t) && out[k + 1]?.t === 'num'));
 }

@@ -1,4 +1,5 @@
 import type { Aggregate, Target } from './resolve';
+import type { DateSpec } from './dates';
 import type { UnitDef, UnitExpr } from './units';
 import type { Decimal } from './values';
 
@@ -32,7 +33,14 @@ export type Node =
   /** `5 km`, `$30` */
   | { k: 'withUnit'; arg: Node; unit: UnitDef; power: number }
   /** `5 km in miles` */
-  | { k: 'convertUnit'; arg: Node; unit: UnitExpr };
+  | { k: 'convertUnit'; arg: Node; unit: UnitExpr }
+  | { k: 'date'; spec: DateSpec }
+  /** `now in Tokyo` */
+  | { k: 'convertZone'; arg: Node; zone: string }
+  /** `days until Dec 25`, `time since 9am` */
+  | { k: 'until'; arg: Node; unit?: UnitDef; since: boolean }
+  /** `3 days ago` (sign -1), `in 3 days` / `3 days later` (sign 1) */
+  | { k: 'fromNow'; arg: Node; sign: 1 | -1 };
 
 /** True if the expression reads a sum/avg/count/min/max aggregate. */
 export function usesAggregate(node: Node): boolean {
@@ -45,6 +53,9 @@ export function usesAggregate(node: Node): boolean {
     case 'convert':
     case 'withUnit':
     case 'convertUnit':
+    case 'convertZone':
+    case 'until':
+    case 'fromNow':
       return usesAggregate(node.arg);
     case 'binary':
       return usesAggregate(node.left) || usesAggregate(node.right);

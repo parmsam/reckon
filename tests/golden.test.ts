@@ -7,6 +7,8 @@ const FIXTURES = join(import.meta.dirname, 'fixtures');
 const ARROW = ' => ';
 const NONE = '(none)';
 /** Fixed exchange rates (units per USD), so currency fixtures are deterministic. */
+/** Fixed clock for date fixtures: Thursday, Jan 15, 2026, 12:00 UTC. */
+const NOW = Date.parse('2026-01-15T12:00:00Z');
 const RATES = JSON.parse(readFileSync(join(FIXTURES, 'rates.json'), 'utf8')) as Record<
   string,
   number
@@ -29,6 +31,8 @@ for (const file of readdirSync(FIXTURES).filter((f) => f.endsWith('.calc'))) {
     const results = evaluateDocument(cases.map((c) => c.source).join('\n'), {
       locale: 'en-US',
       rates: RATES,
+      now: NOW,
+      timeZone: 'UTC',
     });
 
     for (const c of cases) {

@@ -17,6 +17,12 @@ $30 in EUR
 72 °F in °C
 1 GB / 4 MB
 
+# Dates and times
+today + 2 weeks
+days until Dec 25
+3pm PST in London
+time in Tokyo
+
 # Try these
 1.5k + 250
 20% of 50

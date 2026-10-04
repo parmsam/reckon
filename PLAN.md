@@ -141,10 +141,22 @@ above it. A line with no recognizable expression produces no result.
 - Rates are refreshed at most hourly while online and cached in IndexedDB. When offline, the last known rates are used, and currency results have a "rates from …" tooltip.
 
 ### 3.8 Dates and times
-- `today`, `now`, `tomorrow`, `yesterday`, `next friday`
-- `today + 2 weeks`, `Dec 25 - today` (as a duration), `days until Dec 25`, `3 business days from today` (later)
-- Time zones: `now in Tokyo`, `3pm PST in London`, `9:00 EST to CET`
-- Durations: `2h 30min in minutes`, `90 days in weeks`
+- Dates: `today`, `now`, `tomorrow`, `yesterday`, `friday`, `next friday`, `last monday`, `next month`,
+  `Dec 25`, `December 25th, 2027`, `25 Dec`, `3rd of March`, `2026-07-04`
+- Times: `3pm`, `3:30 pm`, `11 a.m.`, `15:45`, `noon`, `midnight`, combined as `tomorrow at 9am`, `3pm tomorrow`, `Dec 25 3pm`
+- Arithmetic: `today + 2 weeks`, `Jan 31 + 1 month` (= Feb 28, calendar-aware), `now + 3 h`, `3pm + 90 min`,
+  `Dec 25 - today` (= 344 days), `5pm - 3pm` (= 2 h). Durations are ordinary time quantities.
+- Phrases: `days until Dec 25`, `weeks until …`, `days since Jan 1`, `time until 5pm`, `3 days ago`,
+  `2 weeks from today`, `3 days from now`, `in 3 days`, `in 45 min`, `3 days later`
+- `days until Jan 1` after Jan 1 has passed counts to next year's.
+- Time zones: `now in Tokyo`, `time in New York`, `3pm PST in London`, `9:00 EST to CET`, `3pm in UTC+5:30`.
+  Abbreviations (PST, EST, CET, JST…) map to places so daylight saving is right. Every IANA city works
+  (`in Lisbon`), plus common places and countries (`in San Francisco`, `in Japan`).
+- Display: dates as `Thu, Jan 15, 2026`, times as `3:00 PM`; the zone name shows when it isn't yours,
+  and a time on another day gets its weekday (`10pm in Tokyo` = `Fri, 7:00 AM GMT+9`).
+- Prose stays prose: `I now have 5` = 5. Weekday abbreviations only count after next/last/this
+  (`sat` is satoshis), and `may` needs a day after it.
+- Later: business days (`3 business days from today`), unix timestamps.
 
 ### 3.9 Functions and constants
 `sqrt cbrt abs round floor ceil sin cos tan asin acos atan log ln exp min max root fact`
@@ -188,7 +200,7 @@ above it. A line with no recognizable expression produces no result.
 | UI | Vanilla TS with small modules (no framework) | The UI surface is small, and this keeps the bundle tiny. Revisit Preact or Svelte only if UI state gets hairy. |
 | Editor | CodeMirror 6 | Multi-cursor, undo, search, autocomplete, decorations, mobile support |
 | Numbers | `decimal.js` (40 significant digits) | Exact decimal arithmetic, plus the trig and hex/bin/oct conversion that the light build lacks |
-| Dates | `Temporal`, with `temporal-polyfill` loaded only when needed | Time zones and calendar math done right |
+| Dates | `Temporal`, with `temporal-polyfill` (20 KB gzipped) loaded only when the browser lacks it | Time zones and calendar math done right |
 | Storage | IndexedDB via `idb` | Async, indexed, large capacity. `localStorage` holds tiny UI prefs only. |
 | Search | In-memory index built from IndexedDB, with MiniSearch if needed | Fuzzy search across note titles and bodies |
 | PWA | `vite-plugin-pwa` (Workbox, `generateSW`) | Precache the app shell; runtime-cache rate APIs |
@@ -310,9 +322,9 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Crypto (lazy)
 
 ### M5 — Dates and time
-- [ ] Temporal (with polyfill), date and duration values
-- [ ] Relative phrases (`today`, `next friday`, `days until …`)
-- [ ] Time zones via an IANA city/abbreviation table
+- [x] Temporal (with polyfill), date and duration values
+- [x] Relative phrases (`today`, `next friday`, `days until …`)
+- [x] Time zones via an IANA city/abbreviation table
 
 ### M6 — Polish and v1.0
 - [ ] Settings panel (§6)

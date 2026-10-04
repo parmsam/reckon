@@ -10,6 +10,10 @@ export interface Settings {
   ppi: number;
   /** Size of 1em, in px. */
   emPx: number;
+  /** The current time, in epoch milliseconds. Without it, "now" and "today" have no result. */
+  now?: number;
+  /** IANA time zone for dates and times ("America/New_York"). */
+  timeZone: string;
   /** Units of each currency per 1 USD. Without rates, only same-currency math works. */
   rates?: Readonly<Record<string, number>>;
 }
@@ -21,4 +25,5 @@ export const defaultSettings: Settings = {
   unitPrecision: 4,
   ppi: 96,
   emPx: 16,
+  timeZone: 'UTC',
 };

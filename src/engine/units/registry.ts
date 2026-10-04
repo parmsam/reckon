@@ -171,7 +171,7 @@ export const PHYSICAL_UNITS: UnitSpec[] = [
 
   // Time (s)
   unit('ns', TIME, '1e-9', 'ns', 'nanosecond, nanoseconds'),
-  unit('us', TIME, '1e-6', 'µs μs us', 'microsecond, microseconds'),
+  unit('us', TIME, '1e-6', 'µs μs', 'microsecond, microseconds'),
   unit('ms', TIME, '0.001', 'ms', 'millisecond, milliseconds'),
   unit('s', TIME, 1, 's sec secs', 'second, seconds'),
   unit('min', TIME, 60, 'min mins', 'minute, minutes'),

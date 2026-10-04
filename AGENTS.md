@@ -39,6 +39,8 @@ src/
     functions.ts   functions and constants
     format.ts      result formatting (Intl.NumberFormat + settings)
     context.ts     engine Settings and defaults
+    dates.ts       date phrase grammar (DateSpec), months/weekdays, time zone names
+    datetime.ts    date math with Temporal: resolve specs, add durations, differences, formatting
     units/         units as data: dims.ts (dimension vectors), registry.ts (physical units),
                    currency.ts (fiat + crypto), quantity.ts (conversion, unit algebra, formatting)
     line.ts        parses one line (label, assignment, tokens, AST, highlights), with a cache
@@ -68,8 +70,9 @@ public/            icons, manifest assets
 ```
 
 ## Rules
-1. **Keep the engine pure.** Anything in `src/engine` must run in Node with no browser globals. Inject the clock,
-   rates, locale, and settings through the evaluation context. This keeps tests deterministic and lets the engine move into a Web Worker later.
+1. **Keep the engine pure.** Anything in `src/engine` must run in Node with no browser globals. Inject the clock
+   (`settings.now`, `settings.timeZone`), rates, locale, and settings through the evaluation context. Use the global
+   `Temporal` (natively or from the polyfill) for dates, never `Date`. This keeps tests deterministic and lets the engine move into a Web Worker later.
 2. **Spec, then fixture, then code.** New syntax goes into PLAN.md §3 first, then gets golden-fixture lines, then
    the implementation. Each ambiguity you resolve (for example `in` as inches vs. the conversion keyword) gets a fixture line.
 3. **Never use floats for user math.** Use the Decimal type. `0.1 + 0.2` must be `0.3`.
@@ -109,8 +112,8 @@ x * 2 => 8
 `tests/golden.test.ts` evaluates each file as **one document**, so variables, blank lines and headings
 affect the lines below them. The ` => expected` part is stripped before evaluation and compared with the
 formatted result. `=> (none)` asserts that the line shows no result, and lines without `=>` aren't checked.
-Results use locale `en-US` and the fixed rates in `tests/fixtures/rates.json`. From M5 on, the runner will also inject a
-fixed clock (`2026-01-15T12:00:00Z`).
+Results use locale `en-US`, the fixed rates in `tests/fixtures/rates.json`, and a fixed clock: Thursday,
+Jan 15, 2026, 12:00 in UTC. Vitest loads `temporal-polyfill` in `tests/setup.ts`, because Node has no native Temporal.
 
 ## Git
 - Use small, focused commits with imperative messages (`engine: support "x% off y"`).

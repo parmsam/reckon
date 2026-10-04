@@ -1,7 +1,9 @@
 import { CURRENCY_SYMBOL_CHARS } from './units';
 import { D, type Decimal } from './values';
 
-export type TokenType = 'number' | 'word' | 'op' | 'other';
+import type { TimeOfDay } from './dates';
+
+export type TokenType = 'number' | 'word' | 'op' | 'time' | 'date' | 'other';
 
 export interface Token {
   type: TokenType;
@@ -13,6 +15,8 @@ export interface Token {
   value?: Decimal;
   /** Normalized operator (`×` → `*`, `**` → `^`), for `op` tokens. */
   op?: string;
+  /** Time of day, for `time` tokens ("3pm", "15:30"). */
+  time?: TimeOfDay;
 }
 
 const OP_ALIASES: Record<string, string> = {
@@ -44,6 +48,37 @@ const FRACTIONS: Record<string, [number, number]> = {
   '⅞': [7, 8],
 };
 const SUFFIXES: Record<string, number> = { k: 1e3, K: 1e3, M: 1e6, bn: 1e9 };
+
+/** 2026-07-04, 2026-07-04T09:30, 2026-07-04 09:30:15 */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{1,2}:\d{2}(?::\d{2})?)?(?![\d:])/;
+/** 3pm, 3:30 pm, 11 a.m. */
+const TIME_12H = /^(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?\s*([ap])\.?m\b\.?/i;
+/** 15:30, 09:05:30 */
+const TIME_24H = /^(\d{1,2}):(\d{2})(?::(\d{2}))?(?![\d:])/;
+
+function matchTime(rest: string): { length: number; time: TimeOfDay } | null {
+  const m12 = TIME_12H.exec(rest);
+  if (m12) {
+    const hour = Number(m12[1]);
+    if (hour < 1 || hour > 12) return null;
+    const pm = m12[4]!.toLowerCase() === 'p';
+    return {
+      length: m12[0].length,
+      time: {
+        hour: (hour % 12) + (pm ? 12 : 0),
+        minute: Number(m12[2] ?? 0),
+        second: Number(m12[3] ?? 0),
+      },
+    };
+  }
+  const m24 = TIME_24H.exec(rest);
+  if (m24) {
+    const [hour, minute, second] = [Number(m24[1]), Number(m24[2]), Number(m24[3] ?? 0)];
+    if (hour > 23 || minute > 59 || second > 59) return null;
+    return { length: m24[0].length, time: { hour, minute, second } };
+  }
+  return null;
+}
 
 const RADIX = /^0(?:x[0-9a-f]+|b[01]+|o[0-7]+)(?![\p{L}\p{N}_])/iu;
 /** `1,000,000.5`. Only outside parentheses, where `,` separates arguments. */
@@ -97,6 +132,27 @@ export function lex(input: string, offset = 0): Token[] {
     const ch = input[i]!;
     if (/\s/.test(ch)) {
       i++;
+      continue;
+    }
+
+    const iso = ISO_DATE.exec(rest);
+    if (iso) {
+      tokens.push({ type: 'date', text: iso[0], from: offset + i, to: offset + i + iso[0].length });
+      i += iso[0].length;
+      continue;
+    }
+
+    const time = /\d/.test(ch) ? matchTime(rest) : null;
+    if (time) {
+      const text = rest.slice(0, time.length);
+      tokens.push({
+        type: 'time',
+        text,
+        from: offset + i,
+        to: offset + i + text.length,
+        time: time.time,
+      });
+      i += time.length;
       continue;
     }
 

@@ -41,6 +41,7 @@ own device.
 - **Units**: `5 km in miles`, `60 mph in km/h`, `6 ft 2 in in cm`, `72 °F in °C`, `1 GiB in MB`, `2 cups in ml`, CSS `12pt in px`
 - **Currencies and crypto**: `$30 in EUR`, `€20 + $5`, `0.01 BTC in USD`, with rates cached for offline use
 - **Units that cancel**: `hourly rate = $85/h`, then `12.5 h × hourly rate` is `$1,062.50`
+- **Dates and time zones**: `today + 2 weeks`, `days until Dec 25`, `next friday at 3pm`, `3pm PST in London`, `time in Tokyo`
 - **Precise decimals**: `0.1 + 0.2` is `0.3`, not `0.30000000000000004`
 - **Many notes** with search, pinning, trash and undo
 - **Share links**: the note is compressed into the URL itself, so no server ever sees it
@@ -49,7 +50,6 @@ own device.
 - **Light and dark themes**, a phone layout, and screen reader support
 
 **Coming next** (see the [roadmap](PLAN.md#7-milestones))
-- **Dates and time zones**: `today + 2 weeks`, `days until Dec 25`, `3pm PST in London`
 - **Settings, autocomplete and a command palette**
 - **Docs for people and AI**: a docs site, `llms.txt`, a copy-paste prompt for LLMs, and an agent skill
 
@@ -67,6 +67,8 @@ own device.
 | Constants | `pi` / `π` · `e` · `tau` · `phi` |
 | Output formats | `255 in hex` · `10 in binary` · `8 as oct` · `1500 in sci` |
 | Units | `5 km in miles` · `1 m + 20 cm` · `60 km/h in m/s` · `3 m × 4 m` · `sqrt(16 m²)` · `1/2 cup` · `5' 10"` · `1 h 30 min` · `100 °C in °F` · `1 GB in MiB` · `24px in pt` |
+| Dates | `today` · `tomorrow at 9am` · `next friday` · `Dec 25` · `2026-07-04` · `today + 2 weeks` · `Jan 31 + 1 month` · `Dec 25 - today` · `days until Dec 25` · `3 days ago` · `in 45 min` |
+| Times and zones | `3pm` · `15:45` · `noon` · `3pm + 90 min` · `5pm - 3pm` · `now in Tokyo` · `time in New York` · `3pm PST in London` · `9:00 EST to CET` · `3pm in UTC+5:30` |
 | Currency | `$30` · `€20 + $5` · `100 GBP to yen` · `20 canadian dollars in USD` · `0.5 BTC in USD` · `100k sats in USD` · `$85/h × 37.5 h` |
 | Structure | `# Heading` · `// comment` · `label: 42` (text before a colon is ignored) |
 
@@ -96,7 +98,7 @@ Every push to `main` runs CI and deploys to GitHub Pages.
 - [PLAN.md](PLAN.md) has the product spec, full syntax reference and roadmap.
 - [AGENTS.md](AGENTS.md) covers project structure, conventions and how-to recipes (adding a unit, a function, or new syntax).
 
-Built with TypeScript, Vite, CodeMirror 6, decimal.js, IndexedDB (via `idb`) and vite-plugin-pwa. Exchange rates
+Built with TypeScript, Vite, CodeMirror 6, decimal.js, Temporal (with `temporal-polyfill`), IndexedDB (via `idb`) and vite-plugin-pwa. Exchange rates
 come from [ExchangeRate-API](https://www.exchangerate-api.com), [Frankfurter](https://frankfurter.dev) and
 [CoinGecko](https://www.coingecko.com).
 
