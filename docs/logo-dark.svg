@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" width="360" height="96" role="img" aria-label="Reckon">
+  <rect x="0" y="0" width="96" height="96" rx="21" fill="#f4f1ea"/>
+  <rect x="22.5" y="35" width="51" height="8.25" rx="4.1" fill="#1c1b22"/>
+  <rect x="22.5" y="52.9" width="51" height="8.25" rx="4.1" fill="#f2a541"/>
+  <text x="118" y="66" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="56" font-weight="700" letter-spacing="-1.5" fill="#f4f1ea">Reckon</text>
+</svg>
