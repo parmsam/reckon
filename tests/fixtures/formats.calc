@@ -1,0 +1,13 @@
+255 in hex => 0xFF
+255 to hex => 0xFF
+10 in binary => 0b1010
+8 as oct => 0o10
+-255 in hex => -0xFF
+0xFF + 1 => 256
+1500 in sci => 1.5e3
+0.00012 in scientific => 1.2e-4
+0xFF in dec => 255
+(255 in hex) + 1 => 256
+paid 20 to John => 20
+5 in apples => 5
+3.7 in hex => (none)

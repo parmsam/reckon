@@ -1,0 +1,11 @@
+# Heading => (none)
+// a comment => (none)
+Just some text => (none)
+rent: 1200 => 1,200
+Q1 rent: 1,500 => 1,500
+3 apples + 2 apples => 5
+paid 20 for lunch => 20
+I spent 20 on food => 20
+the cost of 5 => 5
+5 + 5 // inline comment => 10
+#hashtag 5 => 5

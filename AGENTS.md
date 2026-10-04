@@ -27,15 +27,18 @@ Before calling a task done, run `npm run lint && npm run typecheck && npm test`.
 ```
 src/
   engine/        PURE calculation engine. No DOM, fetch, Date.now, or navigator.
-    lexer.ts       tokens with source ranges (also used for highlighting)
-    parser.ts      Pratt parser, error tolerant
+    lexer.ts       raw tokens with source ranges (also used for highlighting)
+    resolve.ts     classifies words: variables, keywords, functions; drops descriptive text
+    parser.ts      Pratt parser over resolved tokens
     ast.ts
-    evaluate.ts    evaluates one line given a scope
-    document.ts    evaluates a whole note: scope, line refs, sum/avg blocks, cache
-    values/        Decimal, Quantity, Money, Percent, DateTime, Duration
-    units/         unit registry + dimension vectors
-    currency/      currency registry (symbols, codes, names)
+    evaluate.ts    evaluates one line's AST given an Env (vars, prev, block, settings)
+    document.ts    evaluates a whole note: labels, comments, headings, assignments, blocks
+    values.ts      Decimal constructor `D`, the Value union, CalcError
+    functions.ts   functions and constants
     format.ts      result formatting (Intl.NumberFormat + settings)
+    context.ts     engine Settings and defaults
+    units/         (M4) unit registry + dimension vectors
+    currency/      (M4) currency registry (symbols, codes, names)
   editor/        CodeMirror 6 setup, highlighting, results column, autocomplete
   storage/       IndexedDB (idb): notes repo, settings, rates cache, migrations
   data/          rate fetching (open.er-api.com → Frankfurter fallback), bundled snapshot
@@ -67,7 +70,7 @@ public/            icons, manifest assets
 
 ## Recipes
 - **Add a unit**: add it to `src/engine/units/registry.ts` with its dimension vector, factor (and offset for
-  temperature), and its names (singular, plural, abbreviations). Add conversion lines to `tests/fixtures/units.calc`.
+  temperature), and its names (singular, plural, abbreviations). Add conversion lines to `tests/fixtures/units.calc`. Unit and currency words plug into `resolve.ts`.
 - **Add a function**: register it in `src/engine/functions.ts` with its arity and a Decimal implementation, then add fixtures.
 - **Add a keyword or phrase** (for example `x% off y`): update the parser and the PLAN.md §3 table, then add fixtures.
 - **Add a setting**: add the type and default in `src/storage/settings.ts`, add the UI in `src/app/settings`, and thread it through the
@@ -75,14 +78,17 @@ public/            icons, manifest assets
 
 ## Golden fixture format
 ```
-// comments start with //, blank lines separate independent cases unless marked
+// comment lines are part of the document too (they evaluate to nothing)
 20% of 50 => 10
-5 km in miles => 3.106856 mi
 x = 4
 x * 2 => 8
+1 / 0 => (none)
 ```
-The runner evaluates each file as one document, compares the formatted result per line, and uses locale `en-US`, a fixed
-clock (`2026-01-15T12:00:00Z`), and the fixed rates in `tests/fixtures/rates.json`.
+`tests/golden.test.ts` evaluates each file as **one document**, so variables, blank lines and headings
+affect the lines below them. The ` => expected` part is stripped before evaluation and compared with the
+formatted result. `=> (none)` asserts that the line shows no result, and lines without `=>` aren't checked.
+Results use locale `en-US`. From M4/M5 on, the runner will also inject a fixed clock (`2026-01-15T12:00:00Z`) and the fixed
+rates in `tests/fixtures/rates.json`.
 
 ## Git
 - Use small, focused commits with imperative messages (`engine: support "x% off y"`).

@@ -1,0 +1,31 @@
+10 => 10
+20 => 20
+30 => 30
+sum => 60
+total => 60
+avg => 20
+average => 20
+count => 3
+min => 10
+max => 30
+sum * 2 => 120
+prev + 1 => 121
+ans => 121
+line1 + line 2 => 30
+
+# New block
+5 => 5
+sum => 5
+
+7
+3
+sum => 10
+
+sum => 0
+avg => (none)
+
+# Functions over arguments
+sum(1, 2, 3) => 6
+avg(2, 4) => 3
+max(100,200) => 200
+min(4; 2) => 2

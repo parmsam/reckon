@@ -81,12 +81,12 @@ above it. A line with no recognizable expression produces no result.
 | `# Groceries` | Heading. It renders bold and resets the `sum` block. |
 | `// note to self` | Comment line, never evaluated |
 | `rent: $1,200` | Label. Text before `:` is ignored and the rest is evaluated. |
-| `3 apples + 2 apples` | Free words are ignored, so this evaluates to `5` |
+| `3 apples + 2 apples` | Free words are ignored, so this evaluates to `5`. An unknown word where a value belongs (`z + 1` with no `z`) gives no result rather than a wrong one. |
 | `cost = 12 * 4` | Variable assignment. Multi-word names like `monthly rent = 1200` are allowed. |
 | (blank line) | Ends the current `sum`/`avg` block |
 
 ### 3.2 Numbers
-`1,000` · `1_000` · `1.5e3` · `1.5k` · `2M` · `3bn` / `3B` · `0xFF` · `0b1010` · `0o17` · `½` (Unicode fractions)
+`1,000` (outside parentheses, where `,` separates arguments, as in `max(100,200)`) · `1_000` · `1.5e3` · `1.5k` · `2M` · `3bn` · `2 million` (`B` is reserved for bytes) · `0xFF` · `0b1010` · `0o17` · `½` (Unicode fractions)
 
 ### 3.3 Operators
 | Kind | Forms |
@@ -110,8 +110,8 @@ above it. A line with no recognizable expression produces no result.
 | Token | Meaning |
 |---|---|
 | `prev` / `ans` | Result of the previous non-empty line |
-| `line3` / `$3` | Result of line 3 |
-| `sum` / `total` | Sum of results since the last heading or blank line |
+| `line3` / `line 3` | Result of line 3. (`$3` is reserved for dollars.) |
+| `sum` / `total` | Sum of results since the last heading or blank line. Lines that themselves use an aggregate are left out, so `sum` then `avg` doesn't double count. |
 | `avg` / `average` | Mean of the same block |
 | `count`, `min`, `max` | Same block |
 | `subtotal` / `grand total` (later) | Soulver-style nested totals |
@@ -175,7 +175,7 @@ above it. A line with no recognizable expression produces no result.
 | Build | Vite | Fast, simple static output, first-class PWA plugin |
 | UI | Vanilla TS with small modules (no framework) | The UI surface is small, and this keeps the bundle tiny. Revisit Preact or Svelte only if UI state gets hairy. |
 | Editor | CodeMirror 6 | Multi-cursor, undo, search, autocomplete, decorations, mobile support |
-| Numbers | `decimal.js-light` (or `big.js`) | Exact decimal arithmetic |
+| Numbers | `decimal.js` (40 significant digits) | Exact decimal arithmetic, plus the trig and hex/bin/oct conversion that the light build lacks |
 | Dates | `Temporal`, with `temporal-polyfill` loaded only when needed | Time zones and calendar math done right |
 | Storage | IndexedDB via `idb` | Async, indexed, large capacity. `localStorage` holds tiny UI prefs only. |
 | Search | In-memory index built from IndexedDB, with MiniSearch if needed | Fuzzy search across note titles and bodies |
@@ -263,15 +263,15 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Add a `LICENSE` file (MIT)
 
 ### M1 — Engine core
-- [ ] Lexer with source ranges; Pratt parser; AST; Decimal evaluator
-- [ ] Numbers (separators, suffixes `k/M/bn`, hex/bin/oct, scientific)
-- [ ] Operators, including word and Unicode forms; implicit multiplication
-- [ ] Variables (multi-word), labels, comments, headings, free-text filtering
-- [ ] `prev`, `lineN`, `sum`/`total`, `avg`, `count`, `min`, `max`
-- [ ] Percentages (all forms in §3.4)
-- [ ] Functions and constants (§3.9)
-- [ ] Output formats (hex/bin/oct/sci)
-- [ ] Golden test suite (`tests/fixtures/*.calc`)
+- [x] Lexer with source ranges; Pratt parser; AST; Decimal evaluator
+- [x] Numbers (separators, suffixes `k/M/bn`, hex/bin/oct, scientific)
+- [x] Operators, including word and Unicode forms; implicit multiplication
+- [x] Variables (multi-word), labels, comments, headings, free-text filtering
+- [x] `prev`, `lineN`, `sum`/`total`, `avg`, `count`, `min`, `max`
+- [x] Percentages (all forms in §3.4)
+- [x] Functions and constants (§3.9)
+- [x] Output formats (hex/bin/oct/sci)
+- [x] Golden test suite (`tests/fixtures/*.calc`)
 
 ### M2 — Editor
 - [ ] CodeMirror 6 setup and theme

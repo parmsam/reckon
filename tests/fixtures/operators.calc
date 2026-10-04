@@ -1,0 +1,42 @@
+// Arithmetic
+2 + 3 => 5
+10 - 4 => 6
+6 * 7 => 42
+10 / 4 => 2.5
+2 ^ 10 => 1,024
+2 ** 3 => 8
+10 mod 3 => 1
+2 + 3 * 4 => 14
+(2 + 3) * 4 => 20
+-2 ^ 2 => -4
+2 ^ 3 ^ 2 => 512
+-(3 + 4) => -7
+5! => 120
+3! + 1 => 7
+
+// Unicode and words
+6 × 7 => 42
+10 ÷ 4 => 2.5
+10 − 4 => 6
+5 plus 3 => 8
+5 minus 3 => 2
+5 times 3 => 15
+10 divided by 4 => 2.5
+3 multiplied by 4 => 12
+3 x 4 => 12
+10 modulo 4 => 2
+
+// Implicit multiplication
+2(3 + 4) => 14
+(1 + 2)(3 + 4) => 21
+2pi => 6.2831853072
+
+// Errors show nothing
+1 / 0 => (none)
+2 + => (none)
+3 cats and 2 dogs => (none)
+(-1)! => (none)
+
+// Lenient input
+2 + 2 = => 4
+(2 + 3 => 5

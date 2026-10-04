@@ -1,0 +1,22 @@
+x = 4 => 4
+x * 2 => 8
+2x => 8
+x x x => 16
+monthly rent = 1,200 => 1,200
+monthly rent * 12 => 14,400
+Monthly Rent / 2 => 600
+tax rate = 8% => 8%
+100 + tax rate => 108
+tax rate of 50 => 4
+y = x + 1 => 5
+y => 5
+x = 10 => 10
+y => 5
+z = => (none)
+z + 1 => (none)
+1 + undefined thing => (none)
+undefined * 3 => (none)
+Groceries => (none)
+x1 = 3 => 3
+x1 * 2 => 6
+my var 2 = 5 => (none)
