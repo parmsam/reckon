@@ -1,6 +1,6 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
-import { EditorState } from '@codemirror/state';
+import { Annotation, Compartment, EditorSelection, EditorState } from '@codemirror/state';
 import {
   drawSelection,
   EditorView,
@@ -18,14 +18,32 @@ export interface EditorOptions {
   parent: HTMLElement;
   doc: string;
   settings?: Partial<Settings>;
+  /** Called for edits made by the user, not for `setDoc` or `applyExternal`. */
   onChange?: (doc: string) => void;
 }
 
-export function createEditor({ parent, doc, settings = {}, onChange }: EditorOptions): EditorView {
-  return new EditorView({
-    parent,
-    state: EditorState.create({
-      doc,
+export interface Editor {
+  view: EditorView;
+  /** Shows a different note, with fresh undo history. */
+  setDoc(doc: string, options?: { readOnly?: boolean }): void;
+  /** Replaces the text after a change from another tab, keeping the cursor nearby. */
+  applyExternal(doc: string): void;
+  getDoc(): string;
+}
+
+/** Marks transactions that didn't come from the user typing. */
+const external = Annotation.define<boolean>();
+
+export function createEditor({ parent, doc, settings = {}, onChange }: EditorOptions): Editor {
+  const readOnly = new Compartment();
+  const readOnlyExtensions = (on: boolean) => [
+    EditorState.readOnly.of(on),
+    EditorView.editable.of(!on),
+  ];
+
+  const createState = (text: string, ro: boolean) =>
+    EditorState.create({
+      doc: text,
       extensions: [
         history(),
         drawSelection(),
@@ -49,10 +67,33 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
         engineSettings.of(settings),
         results,
         reckonTheme,
+        readOnly.of(readOnlyExtensions(ro)),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) onChange?.(update.state.doc.toString());
+          const userEdit = update.transactions.some(
+            (tr) => tr.docChanged && !tr.annotation(external),
+          );
+          if (userEdit) onChange?.(update.state.doc.toString());
         }),
       ],
-    }),
-  });
+    });
+
+  const view = new EditorView({ parent, state: createState(doc, false) });
+
+  return {
+    view,
+    setDoc(text, { readOnly: ro = false } = {}) {
+      view.setState(createState(text, ro));
+    },
+    applyExternal(text) {
+      const current = view.state.doc.toString();
+      if (text === current) return;
+      const head = Math.min(view.state.selection.main.head, text.length);
+      view.dispatch({
+        changes: { from: 0, to: current.length, insert: text },
+        selection: EditorSelection.cursor(head),
+        annotations: [external.of(true)],
+      });
+    },
+    getDoc: () => view.state.doc.toString(),
+  };
 }

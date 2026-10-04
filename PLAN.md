@@ -180,7 +180,7 @@ above it. A line with no recognizable expression produces no result.
 | Storage | IndexedDB via `idb` | Async, indexed, large capacity. `localStorage` holds tiny UI prefs only. |
 | Search | In-memory index built from IndexedDB, with MiniSearch if needed | Fuzzy search across note titles and bodies |
 | PWA | `vite-plugin-pwa` (Workbox, `generateSW`) | Precache the app shell; runtime-cache rate APIs |
-| Sharing | `lz-string` compressed text in the URL hash | numbr-style links that need no backend |
+| Sharing | `deflate-raw` via the native `CompressionStream`, base64url in the URL hash | numbr-style links that need no backend, and no dependency |
 | Tests | Vitest (engine and storage), Playwright (e2e smoke) | |
 | Lint/format | ESLint + Prettier, or Biome | |
 | Hosting | GitHub Pages via GitHub Actions | |
@@ -222,6 +222,9 @@ interface Note {
 - On first load the app calls `navigator.storage.persist()` to ask the browser not to evict data.
 - Backup and restore use a JSON export of every note. Single notes export as `.txt` or `.md`.
 - Schema migrations go in `src/storage/migrations.ts`, keyed by DB version.
+- Leaving an untouched empty note deletes it, so "New note" never litters the list.
+- Import accepts Reckon JSON backups (detected by name or content) and `.txt`/`.md` files. For a note
+  that already exists, the more recently edited copy wins.
 
 ### 4.5 Exchange-rate sources (free, CORS-enabled, keyless)
 - Fiat: `https://open.er-api.com/v6/latest/USD` (daily), with Frankfurter (`api.frankfurter.app`, ECB data) as the fallback.
@@ -240,7 +243,7 @@ interface Note {
 - Phones get a single column, with each result right-aligned on the same row.
 - Light, dark, and system themes, plus an adjustable font size.
 - A command palette (`Mod-K`) for new note, search, export, share, and settings.
-- Shortcuts: `Mod-N` new note, `Mod-P` or `Mod-K` palette, `Mod-/` toggle comment, `Mod-Shift-C` copy result.
+- Shortcuts: `Mod-K` palette, `Mod-/` toggle comment, `Mod-Shift-C` copy result. (`Mod-N` can't be used: browsers reserve it for a new window.)
 - An empty first-run note doubles as an interactive tutorial (sample lines the user can edit).
 - Accessibility: results are readable by screen readers (`aria-live` on the focused line's result), keyboard reachable, and meet WCAG AA contrast.
 
@@ -281,12 +284,12 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Persist a single note to IndexedDB
 
 ### M3 — Notes and storage
-- [ ] Multiple notes: create, rename (derived title), pin, delete to trash, restore
-- [ ] Sidebar list sorted by pinned, then updatedAt
-- [ ] Search across notes
-- [ ] Export and import (JSON backup, `.txt`/`.md`)
-- [ ] Share link (`#/share/<lz>`) with read-only view and a "Save a copy" action
-- [ ] Multi-tab sync via BroadcastChannel; `storage.persist()`
+- [x] Multiple notes: create, rename (derived title), pin, delete to trash, restore
+- [x] Sidebar list sorted by pinned, then updatedAt
+- [x] Search across notes
+- [x] Export and import (JSON backup, `.txt`/`.md`)
+- [x] Share link (`#/share/<lz>`) with read-only view and a "Save a copy" action
+- [x] Multi-tab sync via BroadcastChannel; `storage.persist()`
 
 ### M4 — Units and currency
 - [ ] Unit registry with a dimension vector; conversions; compound units

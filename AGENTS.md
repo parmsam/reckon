@@ -49,7 +49,14 @@ src/
     migrations.ts  versioned upgrades (DB_VERSION comes from here)
     notes.ts       note CRUD; settings.ts key/value settings; autosave.ts debounced saver
   data/          rate fetching (open.er-api.com → Frankfurter fallback), bundled snapshot
-  app/           UI shell: sidebar, search, command palette, settings, routing (hash based)
+  app/           UI shell (vanilla TS + the `h()` helper in dom.ts)
+    app.ts         controller: routing, opening notes, autosave, share, import/export, tab sync
+    store.ts       NotesStore: in-memory notes, written through to IndexedDB, BroadcastChannel sync
+    sidebar.ts     note list, search, pin/trash actions, trash view
+    router.ts      hash routes (#/note/<id>, #/share/<payload>)
+    share.ts       share-link encoding (deflate-raw + base64url)
+    backup.ts      JSON backup format, import merge rules
+    search.ts      sorting and search; title.ts derived titles; welcome.ts first-run note
   main.ts
 tests/
   fixtures/*.calc  golden files: `input => expected`

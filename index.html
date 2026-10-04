@@ -7,21 +7,7 @@
     <title>Reckon</title>
   </head>
   <body>
-    <div class="app">
-      <header class="topbar">
-        <span class="brand" aria-hidden="true">
-          <svg viewBox="0 0 512 512" width="22" height="22">
-            <rect width="512" height="512" rx="112" fill="currentColor" />
-            <rect x="120" y="186" width="272" height="44" rx="22" fill="var(--bg)" />
-            <rect x="120" y="282" width="272" height="44" rx="22" fill="var(--accent)" />
-          </svg>
-        </span>
-        <h1 id="note-title" class="note-title">Reckon</h1>
-        <span id="save-status" class="save-status" role="status"></span>
-      </header>
-      <main id="editor" class="editor"></main>
-      <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
