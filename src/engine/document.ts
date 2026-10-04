@@ -2,7 +2,7 @@ import { usesAggregate } from './ast';
 import { defaultSettings, type Settings } from './context';
 import { evaluate } from './evaluate';
 import { formatValue } from './format';
-import { parseLineCached, type Highlight } from './line';
+import { parseLineCached, VariableNames, type Highlight } from './line';
 import type { Value } from './values';
 
 export type LineKind = 'blank' | 'comment' | 'heading' | 'text' | 'value' | 'error';
@@ -28,23 +28,23 @@ export interface LineResult {
 export function evaluateDocument(source: string, settings: Partial<Settings> = {}): LineResult[] {
   const s: Settings = { ...defaultSettings, ...settings };
   const vars = new Map<string, Value>();
-  const names = new Set<string>();
-  let namesKey = '';
+  const names = new VariableNames();
   const results: LineResult[] = [];
   let block: Value[] = [];
   let prev: Value | undefined;
 
   const setVar = (name: string, value: Value | undefined) => {
-    if (value) vars.set(name, value);
-    else vars.delete(name);
-    const had = names.has(name);
-    if (value && !had) names.add(name);
-    if (!value && had) names.delete(name);
-    if (had !== Boolean(value)) namesKey = [...names].sort().join('\u0001');
+    if (value) {
+      vars.set(name, value);
+      names.add(name);
+    } else {
+      vars.delete(name);
+      names.delete(name);
+    }
   };
 
   for (const raw of source.split('\n')) {
-    const line = parseLineCached(raw, names, namesKey);
+    const line = parseLineCached(raw, names.all, names.relevantKey(raw));
     const { highlights, variable } = line;
 
     switch (line.kind) {

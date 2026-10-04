@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateDocument } from '../src/engine';
+import { parseCacheStats } from '../src/engine/line';
 
 /** Renders highlights as `type:text` pairs for readable assertions. */
 function spans(line: string, doc = line): string[] {
@@ -53,17 +54,24 @@ describe('highlights', () => {
   });
 });
 
-describe('evaluateDocument performance', () => {
-  it('re-evaluates a 2,000-line note quickly after a one-line edit', () => {
-    const lines = Array.from({ length: 2000 }, (_, i) =>
+describe('parse cache', () => {
+  const note = () =>
+    Array.from({ length: 2000 }, (_, i) =>
       i % 50 === 0 ? `# Section ${i}` : `item ${i}: x${i} = ${i} * 1.5 + 10%`,
     );
+
+  it('re-parses only the edited line, even when it removes a variable', () => {
+    const lines = note();
     evaluateDocument(lines.join('\n'));
+    const before = parseCacheStats.misses;
     lines[1000] = 'item edited: 42';
-    const start = performance.now();
     const results = evaluateDocument(lines.join('\n'));
-    const elapsed = performance.now() - start;
     expect(results[1000]!.display).toBe('42');
-    expect(elapsed).toBeLessThan(100);
+    expect(parseCacheStats.misses - before).toBe(1);
+  });
+
+  it('re-parses a line when a variable it mentions becomes defined', () => {
+    expect(evaluateDocument('trip cost + 1').at(-1)!.display).toBe(undefined);
+    expect(evaluateDocument('trip cost = 2\ntrip cost + 1').at(-1)!.display).toBe('3');
   });
 });

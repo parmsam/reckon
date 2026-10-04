@@ -117,21 +117,59 @@ export function parseLine(raw: string, vars: ReadonlySet<string>): ParsedLine {
 const MAX_CACHE = 5000;
 const cache = new Map<string, ParsedLine>();
 
+/** Cache misses, for tests that check edits don't re-parse unrelated lines. */
+export const parseCacheStats = { misses: 0 };
+
 /**
- * Cached `parseLine`. Parsing depends only on the line text and the variable names in scope, so
- * editing one line re-parses just that line (and lines whose scope changed).
+ * Cached `parseLine`. Parsing depends only on the line text and on the in-scope variables the
+ * line mentions, so `scopeKey` should name exactly those (see `VariableNames.relevantKey`).
+ * Editing one line then re-parses just that line, plus lines that mention a variable whose
+ * definition changed.
  */
 export function parseLineCached(
   raw: string,
   vars: ReadonlySet<string>,
-  varsKey: string,
+  scopeKey: string,
 ): ParsedLine {
-  const key = `${varsKey}\u0000${raw}`;
+  const key = `${scopeKey}\u0000${raw}`;
   let parsed = cache.get(key);
   if (!parsed) {
+    parseCacheStats.misses++;
     if (cache.size >= MAX_CACHE) cache.clear();
     parsed = parseLine(raw, vars);
     cache.set(key, parsed);
   }
   return parsed;
+}
+
+const WORDS = /[\p{L}_][\p{L}\p{N}_]*/gu;
+
+/** Indexes variable names by their first word, to find the ones a line could mention. */
+export class VariableNames {
+  readonly all = new Set<string>();
+  private byFirstWord = new Map<string, Set<string>>();
+
+  add(name: string): void {
+    if (this.all.has(name)) return;
+    this.all.add(name);
+    const first = name.split(' ')[0]!;
+    let names = this.byFirstWord.get(first);
+    if (!names) this.byFirstWord.set(first, (names = new Set()));
+    names.add(name);
+  }
+
+  delete(name: string): void {
+    if (!this.all.delete(name)) return;
+    this.byFirstWord.get(name.split(' ')[0]!)?.delete(name);
+  }
+
+  /** Cache key covering the variables that could affect how `raw` parses. */
+  relevantKey(raw: string): string {
+    if (this.all.size === 0) return '';
+    const relevant = new Set<string>();
+    for (const word of raw.toLowerCase().match(WORDS) ?? []) {
+      for (const name of this.byFirstWord.get(word) ?? []) relevant.add(name);
+    }
+    return [...relevant].sort().join('\u0001');
+  }
 }
