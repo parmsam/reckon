@@ -17,7 +17,7 @@ npm run dev          # Vite dev server
 npm run build        # typecheck + production build to dist/
 npm run preview      # serve dist/ (needed to test the service worker)
 npm test             # Vitest (engine + storage)
-npm run test:e2e     # Playwright smoke tests (added in M6)
+npm run test:e2e     # Playwright against a production build (Chromium desktop + mobile)
 npm run lint         # ESLint + Prettier check
 npm run typecheck    # tsc --noEmit
 ```
@@ -39,14 +39,22 @@ src/
     context.ts     engine Settings and defaults
     units/         (M4) unit registry + dimension vectors
     currency/      (M4) currency registry (symbols, codes, names)
-  editor/        CodeMirror 6 setup, highlighting, results column, autocomplete
-  storage/       IndexedDB (idb): notes repo, settings, rates cache, migrations
+    line.ts        parses one line (label, assignment, tokens, AST, highlights), with a cache
+  editor/        CodeMirror 6
+    index.ts       createEditor(): extensions and keymap
+    results.ts     results StateField, aligned result widgets, highlight marks, copy, live region
+    theme.ts       editor chrome, driven by CSS variables in styles.css
+  storage/       IndexedDB (idb)
+    db.ts          schema types + getDB()
+    migrations.ts  versioned upgrades (DB_VERSION comes from here)
+    notes.ts       note CRUD; settings.ts key/value settings; autosave.ts debounced saver
   data/          rate fetching (open.er-api.com → Frankfurter fallback), bundled snapshot
   app/           UI shell: sidebar, search, command palette, settings, routing (hash based)
   main.ts
 tests/
   fixtures/*.calc  golden files: `input => expected`
-  e2e/             Playwright
+  e2e/             Playwright specs (*.spec.ts)
+  *.test.ts        Vitest: golden runner, highlights/perf, storage (fake-indexeddb)
 public/            icons, manifest assets
 ```
 

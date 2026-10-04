@@ -3,9 +3,25 @@
   --bg: #f7f5f0;
   --fg: #1c1b22;
   --muted: #6b6875;
-  --accent: #b86e00;
+  --accent: #a35f00;
   --panel: #ffffff;
   --border: #e3dfd6;
+  --results-bg: #efebe2;
+  --selection: #f2a54140;
+  --active-line: #00000008;
+  --search-match: #f2a54166;
+  --result: #8a5000;
+  --tok-number: #1c1b22;
+  --tok-operator: #8a5000;
+  --tok-keyword: #6b4fbb;
+  --tok-function: #1f6f8b;
+  --tok-variable: #2f7a3a;
+  --tok-reference: #b03a5b;
+  --tok-label: #6b6875;
+  --tok-comment: #8d8996;
+  --results-width: clamp(7rem, 32%, 18rem);
+  --editor-font-size: 16px;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
   font-family:
     ui-sans-serif,
     system-ui,
@@ -22,6 +38,19 @@
     --accent: #f2a541;
     --panel: #25242c;
     --border: #36343f;
+    --results-bg: #222129;
+    --selection: #f2a54133;
+    --active-line: #ffffff08;
+    --search-match: #f2a54155;
+    --result: #f2a541;
+    --tok-number: #f4f1ea;
+    --tok-operator: #f2a541;
+    --tok-keyword: #b9a3ff;
+    --tok-function: #6cc4e0;
+    --tok-variable: #8fd694;
+    --tok-reference: #ff8fab;
+    --tok-label: #a19dab;
+    --tok-comment: #7d7987;
   }
 }
 
@@ -29,54 +58,167 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  height: 100%;
   margin: 0;
-  min-height: 100vh;
+}
+
+body {
   background: var(--bg);
   color: var(--fg);
+}
+
+.app {
   display: grid;
-  place-items: center;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  height: 100dvh;
 }
 
-.shell {
-  width: 100%;
-  max-width: 44rem;
-  padding: 2rem 1rem;
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  padding-top: max(0.6rem, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border);
 }
 
-h1 {
+.brand {
+  display: flex;
+  color: var(--fg);
+}
+
+.note-title {
+  flex: 1;
   margin: 0;
-  font-size: 2.5rem;
-  letter-spacing: -0.02em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.tagline,
-.status {
+.save-status {
   color: var(--muted);
+  font-size: 0.8rem;
 }
 
-.sample {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  overflow-x: auto;
-  font:
-    0.95rem/1.7 ui-monospace,
-    'SF Mono',
-    Menlo,
-    monospace;
+.editor {
+  min-height: 0;
 }
 
-.sample .h {
+/* Results column */
+.cm-result {
+  position: absolute;
+  top: 0;
+  right: 1rem;
+  max-width: var(--results-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--result);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  padding: 0 0.25rem;
+  transition: background-color 0.15s;
+}
+
+.cm-result:hover {
+  background: var(--selection);
+}
+
+.cm-result-copied {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* Syntax highlighting (classes come from engine highlight types) */
+.cm-tok-number {
+  color: var(--tok-number);
+}
+.cm-tok-operator {
+  color: var(--tok-operator);
+}
+.cm-tok-keyword {
+  color: var(--tok-keyword);
+}
+.cm-tok-function,
+.cm-tok-constant {
+  color: var(--tok-function);
+}
+.cm-tok-variable {
+  color: var(--tok-variable);
+}
+.cm-tok-reference {
+  color: var(--tok-reference);
+}
+.cm-tok-label {
+  color: var(--tok-label);
+}
+.cm-tok-comment {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+.cm-tok-heading {
   font-weight: 700;
 }
-
-.sample b {
-  color: var(--accent);
-  font-weight: 600;
+.cm-heading-line {
+  font-size: 1.1em;
 }
 
-a {
-  color: var(--accent);
+.cm-live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  transform: translate(-50%, 1rem);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 600px) {
+  :root {
+    --results-width: clamp(4.5rem, 32%, 10rem);
+    --editor-font-size: 15px;
+  }
+
+  /* No shaded column on phones, so lines without a result can use the full width. */
+  .cm-editor .cm-scroller {
+    background-image: none;
+  }
+  .cm-editor .cm-line.cm-no-result {
+    padding-right: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .cm-result {
+    transition: none;
+  }
 }

@@ -274,11 +274,11 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Golden test suite (`tests/fixtures/*.calc`)
 
 ### M2 — Editor
-- [ ] CodeMirror 6 setup and theme
-- [ ] Aligned results column; click to copy
-- [ ] Syntax highlighting from engine tokens
-- [ ] Incremental evaluation cache
-- [ ] Persist a single note to IndexedDB
+- [x] CodeMirror 6 setup and theme
+- [x] Aligned results column; click to copy
+- [x] Syntax highlighting from engine tokens
+- [x] Incremental evaluation cache
+- [x] Persist a single note to IndexedDB
 
 ### M3 — Notes and storage
 - [ ] Multiple notes: create, rename (derived title), pin, delete to trash, restore
@@ -304,7 +304,7 @@ rate source on or off (privacy: allow turning off all network calls).
 - [ ] Autocomplete; command palette; keyboard shortcuts; mobile accessory row
 - [ ] First-run tutorial note
 - [ ] Lighthouse: PWA installable, Performance ≥ 95, Accessibility ≥ 95
-- [ ] Playwright smoke tests (type, see result, reload, persisted, offline reload works)
+- [ ] Playwright offline test (reload works with the network off). Typing, results, persistence and copy are covered since M2.
 
 ### Later
 - [ ] Conditionals and comparisons; bitwise ops
