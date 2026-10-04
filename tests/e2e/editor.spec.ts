@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const editor = (page: Page) => page.locator('.cm-content');
 const resultOnLine = (page: Page, text: string) =>
@@ -21,8 +22,8 @@ async function setNote(page: Page, text: string) {
 test('first run shows the welcome note with results', async ({ page }) => {
   await page.goto('./');
   await expect(page.locator('#note-title')).toHaveText('Welcome to Reckon');
-  await expect(resultOnLine(page, 'flights: 420 × 2')).toHaveText('840');
-  await expect(resultAt(page, 9)).toHaveText('1,346.25');
+  await expect(resultOnLine(page, 'flights: $420 × 2')).toHaveText('$840.00');
+  await expect(resultAt(page, 9)).toHaveText('$1,346.25');
 });
 
 test('typing updates results and highlighting live', async ({ page }) => {
@@ -51,4 +52,15 @@ test('clicking a result copies it', async ({ page, context, browserName }) => {
   await resultOnLine(page, '1,000 * 3').click();
   await expect(page.locator('#toast')).toHaveText('Copied 3,000');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('3,000');
+});
+
+test('converts units and currencies with live rates', async ({ page }) => {
+  await page.goto('./');
+  await setNote(page, '5 km in miles\n$30 in EUR\n0.01 BTC in USD');
+  await expect(resultOnLine(page, '5 km in miles')).toHaveText('3.1069 mi');
+  // Mocked rates: 1 USD = 0.9 EUR, 1 BTC = $100,000.
+  await expect(resultOnLine(page, '$30 in EUR')).toHaveText('€27.00');
+  await expect(resultOnLine(page, '$30 in EUR')).toHaveAttribute('title', /Exchange rates from/);
+  await expect(resultOnLine(page, 'BTC')).toHaveText('$1,000.00');
+  await expect(page.locator('.cm-tok-unit', { hasText: 'km' })).toBeVisible();
 });

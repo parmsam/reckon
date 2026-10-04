@@ -1,5 +1,6 @@
 import { CONSTANTS, FUNCTIONS, FUNCTION_ALIASES } from './functions';
 import type { Token } from './lexer';
+import { lookupUnit, MAX_UNIT_WORDS, type UnitDef } from './units';
 import { CalcError, type Decimal } from './values';
 
 /**
@@ -30,6 +31,7 @@ export type RToken = Span &
     | { t: 'prev' }
     | { t: 'line'; n: number }
     | { t: 'agg'; name: Aggregate }
+    | { t: 'unit'; unit: UnitDef }
   );
 
 const OP_WORDS: Record<string, Op> = {
@@ -96,8 +98,22 @@ const isOp = (t: Token | undefined, op: string) => t?.type === 'op' && t.op === 
 function endsOperand(t: RToken | undefined): boolean {
   if (!t) return false;
   if (t.t === 'op') return t.op === ')' || t.op === '%' || t.op === '!';
-  return ['num', 'var', 'const', 'prev', 'line', 'agg'].includes(t.t);
+  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit'].includes(t.t);
 }
+
+/** Longest unit name starting at src[i]: "fl oz", "square feet", "km". */
+function unitAt(src: Token[], i: number): { unit: UnitDef; length: number } | undefined {
+  for (let length = Math.min(MAX_UNIT_WORDS, src.length - i); length >= 1; length--) {
+    const words = src.slice(i, i + length);
+    if (!words.every((t) => t.type === 'word')) continue;
+    const unit = lookupUnit(words.map((t) => t.text).join(' '));
+    if (unit) return { unit, length };
+  }
+  return undefined;
+}
+
+const INCHES = lookupUnit('inch')!;
+const MINUTES = lookupUnit('minute')!;
 
 function startsOperand(t: Token | undefined): boolean {
   return t?.type === 'number' || t?.type === 'word' || isOp(t, '(');
@@ -192,6 +208,25 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       continue;
     }
 
+    // "km per hour": `per` divides between two operands.
+    if (w === 'per') {
+      if (endsOperand(last()) && src[i + 1]) out.push({ t: 'op', op: '/', ...span(tok) });
+      i += 1;
+      continue;
+    }
+
+    // `min` is minutes after an amount ("5 min", "in min", "km/min"), otherwise the minimum.
+    const before = last();
+    const unitPosition =
+      endsOperand(before) ||
+      (before?.t === 'kw' && before.kw === 'conv') ||
+      (before?.t === 'op' && before.op === '/');
+    if (w === 'min' && unitPosition && !isOp(src[i + 1], '(')) {
+      out.push({ t: 'unit', unit: MINUTES, ...span(tok) });
+      i += 1;
+      continue;
+    }
+
     const fnName = FUNCTION_ALIASES[w] ?? w;
     const aggregate = AGGREGATES[w];
     if (aggregate && !(isOp(src[i + 1], '(') && FUNCTIONS[fnName])) {
@@ -229,6 +264,34 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
         i = j + 1;
         continue;
       }
+      // "5 km in miles": the unit tokens that follow are the target. In "6 ft 2 in in cm" the
+      // first `in` is inches.
+      if (unitAt(src, j) && !(w === 'in' && lower(src[i + 1]) === 'in')) {
+        out.push({ t: 'kw', kw: 'conv', ...span(tok) });
+        i = j;
+        continue;
+      }
+      // Otherwise `in` is inches, but only straight after an amount and not before more words,
+      // so "6 ft 2 in" is a length and "5 people in the room" is just 5.
+      const prevRaw = src[i - 1];
+      const amountBefore = prevRaw?.type === 'number' || isOp(prevRaw, ')');
+      const wordAfter = src[i + 1]?.type === 'word' && !CONVERSIONS.has(lower(src[i + 1])!);
+      if (w === 'in' && amountBefore && endsOperand(last()) && !wordAfter) {
+        out.push({ t: 'unit', unit: INCHES, ...span(tok) });
+      }
+      i += 1;
+      continue;
+    }
+
+    const unit = unitAt(src, i);
+    if (unit) {
+      const after = src[i + unit.length];
+      // A unit word right before a number is text ("s 5"), except currencies: $5, EUR 20.
+      const descriptive = !unit.unit.prefix && !endsOperand(last()) && after?.type === 'number';
+      if (!descriptive)
+        out.push({ t: 'unit', unit: unit.unit, ...span(tok, src[i + unit.length - 1]) });
+      i += unit.length;
+      continue;
     }
 
     if (w === 'of' || w === 'off' || w === 'on') {

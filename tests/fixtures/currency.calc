@@ -1,0 +1,38 @@
+// Rates come from rates.json: 1 USD = 0.9 EUR = 0.8 GBP = 150 JPY = 1.4 CAD = 0.00001 BTC
+$30 => $30.00
+$30 in EUR => €27.00
+€20 + $5 => €24.50
+$5 + €20 => $27.22
+30 USD in GBP => £24.00
+100 eur to usd => $111.11
+1 BTC in USD => $100,000.00
+$1,000 in BTC => 0.01 BTC
+100k sats in USD => $100.00
+¥1500 in USD => $10.00
+5,000 JPY => ¥5,000
+CAD 20 in USD => $14.29
+20 canadian dollars in USD => $14.29
+50 euros in pounds sterling => £44.44
+50 euros in dollars => $55.56
+5 CHF in USD => (none)
+-$30 => -$30.00
+
+// Arithmetic
+hourly rate = $85/h => $85.00/h
+12.5 h × hourly rate => $1,062.50
+20% of $50 => $10.00
+$50 - 10% => $45.00
+10% off $80 => $72.00
+$100 / 4 => $25.00
+$100 / $20 => 5
+3 × €4.50 => €13.50
+
+// Totals convert to the first currency
+$10
+$20
+€9
+sum => $40.00
+avg => $13.33
+
+// Lowercase codes only for common currencies
+all 5 => 5

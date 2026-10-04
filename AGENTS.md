@@ -18,6 +18,8 @@ npm run build        # typecheck + production build to dist/
 npm run preview      # serve dist/ (needed to test the service worker)
 npm test             # Vitest (engine + storage)
 npm run test:e2e     # Playwright against a production build (Chromium desktop + mobile)
+npm run update-rates # refresh the bundled exchange-rate snapshot
+npm run screenshots  # regenerate README screenshots
 npm run lint         # ESLint + Prettier check
 npm run typecheck    # tsc --noEmit
 ```
@@ -37,8 +39,8 @@ src/
     functions.ts   functions and constants
     format.ts      result formatting (Intl.NumberFormat + settings)
     context.ts     engine Settings and defaults
-    units/         (M4) unit registry + dimension vectors
-    currency/      (M4) currency registry (symbols, codes, names)
+    units/         units as data: dims.ts (dimension vectors), registry.ts (physical units),
+                   currency.ts (fiat + crypto), quantity.ts (conversion, unit algebra, formatting)
     line.ts        parses one line (label, assignment, tokens, AST, highlights), with a cache
   editor/        CodeMirror 6
     index.ts       createEditor(): extensions and keymap
@@ -48,7 +50,7 @@ src/
     db.ts          schema types + getDB()
     migrations.ts  versioned upgrades (DB_VERSION comes from here)
     notes.ts       note CRUD; settings.ts key/value settings; autosave.ts debounced saver
-  data/          rate fetching (open.er-api.com → Frankfurter fallback), bundled snapshot
+  data/          rate fetching (open.er-api.com → Frankfurter fallback, CoinGecko), bundled snapshot
   app/           UI shell (vanilla TS + the `h()` helper in dom.ts)
     app.ts         controller: routing, opening notes, autosave, share, import/export, tab sync
     store.ts       NotesStore: in-memory notes, written through to IndexedDB, BroadcastChannel sync
@@ -84,8 +86,13 @@ public/            icons, manifest assets
 10. **Keep PLAN.md current.** Tick milestone checkboxes as work lands, and record decisions that change the plan.
 
 ## Recipes
-- **Add a unit**: add it to `src/engine/units/registry.ts` with its dimension vector, factor (and offset for
-  temperature), and its names (singular, plural, abbreviations). Add conversion lines to `tests/fixtures/units.calc`. Unit and currency words plug into `resolve.ts`.
+- **Add a unit**: add a `unit(id, DIM, factor, 'symbols', 'names')` line to `src/engine/units/registry.ts`.
+  The factor converts to the base unit (m, kg, s, K, byte, rad). Symbols match exactly and names case-insensitively.
+  Add `offset` for affine scales, `plural` for word-like symbols ("cups"), and `expand` for area/volume units.
+  Check that new names don't swallow common words in prose, then add lines to `tests/fixtures/units.calc`.
+- **Add a currency name**: extend `NAMES` (or `CRYPTO`) in `src/engine/units/currency.ts`, then add a line to
+  `tests/fixtures/currency.calc`. Fixtures use the fixed rates in `tests/fixtures/rates.json`.
+- **Browser tests** import `test`/`expect` from `tests/e2e/fixtures.ts`, which mocks every rate API.
 - **Add a function**: register it in `src/engine/functions.ts` with its arity and a Decimal implementation, then add fixtures.
 - **Add a keyword or phrase** (for example `x% off y`): update the parser and the PLAN.md §3 table, then add fixtures.
 - **Add a setting**: add the type and default in `src/storage/settings.ts`, add the UI in `src/app/settings`, and thread it through the
@@ -102,8 +109,8 @@ x * 2 => 8
 `tests/golden.test.ts` evaluates each file as **one document**, so variables, blank lines and headings
 affect the lines below them. The ` => expected` part is stripped before evaluation and compared with the
 formatted result. `=> (none)` asserts that the line shows no result, and lines without `=>` aren't checked.
-Results use locale `en-US`. From M4/M5 on, the runner will also inject a fixed clock (`2026-01-15T12:00:00Z`) and the fixed
-rates in `tests/fixtures/rates.json`.
+Results use locale `en-US` and the fixed rates in `tests/fixtures/rates.json`. From M5 on, the runner will also inject a
+fixed clock (`2026-01-15T12:00:00Z`).
 
 ## Git
 - Use small, focused commits with imperative messages (`engine: support "x% off y"`).

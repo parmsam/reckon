@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const editor = (page: Page) => page.locator('.cm-content');
 const items = (page: Page) => page.locator('.note-item');
@@ -100,7 +101,7 @@ test('share links open read-only and can be saved', async ({ page, context, brow
   await shared.goto(url);
   await expect(shared.locator('.banner')).toContainText('read-only');
   await expect(shared.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
-  await expect(shared.locator('.cm-result').first()).toHaveText('840');
+  await expect(shared.locator('.cm-result').first()).toHaveText('$840.00');
   await shared.locator('.banner').getByRole('button', { name: 'Save a copy' }).click();
   await expect(shared.locator('#toast')).toHaveText('Saved to your notes');
   await expect(shared).toHaveURL(/#\/note\//);

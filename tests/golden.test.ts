@@ -6,10 +6,16 @@ import { evaluateDocument } from '../src/engine';
 const FIXTURES = join(import.meta.dirname, 'fixtures');
 const ARROW = ' => ';
 const NONE = '(none)';
+/** Fixed exchange rates (units per USD), so currency fixtures are deterministic. */
+const RATES = JSON.parse(readFileSync(join(FIXTURES, 'rates.json'), 'utf8')) as Record<
+  string,
+  number
+>;
 
 /**
  * Each fixture file is evaluated as one document. A line ending in ` => expected` asserts the
- * formatted result of that line; `=> (none)` asserts that the line shows no result.
+ * formatted result of that line; `=> (none)` asserts that the line shows no result. Currency
+ * fixtures use the fixed rates in rates.json.
  */
 for (const file of readdirSync(FIXTURES).filter((f) => f.endsWith('.calc'))) {
   describe(file, () => {
@@ -20,7 +26,10 @@ for (const file of readdirSync(FIXTURES).filter((f) => f.endsWith('.calc'))) {
         ? { index, source: line }
         : { index, source: line.slice(0, at), expected: line.slice(at + ARROW.length).trim() };
     });
-    const results = evaluateDocument(cases.map((c) => c.source).join('\n'), { locale: 'en-US' });
+    const results = evaluateDocument(cases.map((c) => c.source).join('\n'), {
+      locale: 'en-US',
+      rates: RATES,
+    });
 
     for (const c of cases) {
       if (c.expected === undefined) continue;

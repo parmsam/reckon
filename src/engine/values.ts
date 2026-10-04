@@ -1,4 +1,5 @@
 import { Decimal } from 'decimal.js';
+import type { UnitExpr } from './units/types';
 
 /** Decimal constructor used for all user math. Never use JS floats for results. */
 export const D = Decimal.clone({
@@ -14,10 +15,17 @@ export type NumberFormat = 'hex' | 'bin' | 'oct' | 'sci';
 export type Value =
   | { kind: 'number'; value: Decimal; format?: NumberFormat }
   /** `value` holds the percentage, so `20%` is stored as 20. */
-  | { kind: 'percent'; value: Decimal };
+  | { kind: 'percent'; value: Decimal }
+  /** An amount in `unit`: 5 km is { value: 5, unit: [{ km, 1 }] }. Never has an empty unit. */
+  | { kind: 'quantity'; value: Decimal; unit: UnitExpr };
 
 export function num(value: Decimal, format?: NumberFormat): Value {
   return format ? { kind: 'number', value, format } : { kind: 'number', value };
+}
+
+/** A quantity, or a plain number when `unit` is empty. */
+export function qty(value: Decimal, unit: UnitExpr): Value {
+  return unit.length ? { kind: 'quantity', value, unit } : num(value);
 }
 
 export function pct(value: Decimal): Value {

@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "screenshots": "npm run build && node scripts/screenshots.mjs"
+    "screenshots": "npm run build && node scripts/screenshots.mjs",
+    "update-rates": "node scripts/update-rates.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

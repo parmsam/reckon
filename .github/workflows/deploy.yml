@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Refresh bundled exchange rates
+        run: npm run update-rates || echo "::warning::Rate refresh failed; using the committed snapshot"
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

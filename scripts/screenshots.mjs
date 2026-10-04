@@ -5,9 +5,9 @@ import { preview } from 'vite';
 const PORT = 4175;
 const NOTES = [
   `# Groceries
-apples: 6 × 0.45
-milk = 2.49
-bread: 3.25
+apples: 6 × $0.45
+milk = $2.49
+bread: $3.25
 sum`,
   `# Trip budget
 flights: 420 × 2
@@ -15,11 +15,11 @@ hotel = 3 nights × 135
 food: 25% of hotel
 sum`,
   `# Freelance invoice
-hourly rate = 85
+hourly rate = $85/h
 
-design: 12.5 hours × hourly rate
-development: 31 hours × hourly rate
-meetings: 4.5 hours × hourly rate
+design: 12.5 h × hourly rate
+development: 31 h × hourly rate
+meetings: 4.5 h × hourly rate
 subtotal = sum
 discounted = 10% off subtotal
 tax = 8.25% of discounted
@@ -28,8 +28,9 @@ total due = discounted + tax
 # Quick math
 monthly savings = 1.2k
 monthly savings × 12 // per year
-5 as % of 40
-round(sqrt(2) × 100, 2)
+$1,200 in EUR
+5 km in miles
+72 °F in °C
 255 in hex`,
 ];
 

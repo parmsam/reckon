@@ -9,15 +9,23 @@ import {
 } from '@codemirror/view';
 import { evaluateDocument, type LineResult, type Settings } from '../engine';
 
-/** Engine settings (locale, precision, …) for this editor. */
-export const engineSettings = Facet.define<Partial<Settings>, Partial<Settings>>({
+export type EditorSettings = Partial<Settings> & {
+  /** When the exchange rates were fetched, shown on currency results. */
+  ratesAsOf?: number;
+};
+
+/** Engine settings (locale, precision, rates…) for this editor. */
+export const engineSettings = Facet.define<EditorSettings, EditorSettings>({
   combine: (values) => Object.assign({}, ...values),
 });
 
-/** Per-line results for the current document. */
+/** Per-line results for the current document. Recomputed when the text or settings change. */
 export const resultsField = StateField.define<LineResult[]>({
   create: (state) => evaluate(state),
-  update: (results, tr) => (tr.docChanged ? evaluate(tr.state) : results),
+  update: (results, tr) =>
+    tr.docChanged || tr.startState.facet(engineSettings) !== tr.state.facet(engineSettings)
+      ? evaluate(tr.state)
+      : results,
 });
 
 function evaluate(state: EditorState): LineResult[] {
@@ -37,19 +45,22 @@ async function copyResult(view: EditorView, text: string): Promise<void> {
 }
 
 class ResultWidget extends WidgetType {
-  constructor(readonly display: string) {
+  constructor(
+    readonly display: string,
+    readonly title: string,
+  ) {
     super();
   }
 
   eq(other: ResultWidget): boolean {
-    return other.display === this.display;
+    return other.display === this.display && other.title === this.title;
   }
 
   toDOM(view: EditorView): HTMLElement {
     const el = document.createElement('span');
     el.className = 'cm-result';
     el.textContent = this.display;
-    el.title = 'Click to copy';
+    el.title = this.title;
     // Screen readers get the result through the live region instead.
     el.setAttribute('aria-hidden', 'true');
     // Keep the caret where it is when the result is clicked.
@@ -81,12 +92,19 @@ const noResultLine = Decoration.line({ class: 'cm-no-result' });
 
 const decorationsField = StateField.define<DecorationSet>({
   create: (state) => buildDecorations(state),
-  update: (decos, tr) => (tr.docChanged ? buildDecorations(tr.state) : decos),
+  update: (decos, tr) =>
+    tr.state.field(resultsField) !== tr.startState.field(resultsField)
+      ? buildDecorations(tr.state)
+      : decos,
   provide: (field) => EditorView.decorations.from(field),
 });
 
 function buildDecorations(state: EditorState): DecorationSet {
   const results = state.field(resultsField);
+  const { ratesAsOf, locale } = state.facet(engineSettings);
+  const ratesTitle = ratesAsOf
+    ? `Exchange rates from ${new Date(ratesAsOf).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })}. Click to copy`
+    : 'Click to copy';
   const ranges: Range<Decoration>[] = [];
   for (let i = 0; i < results.length; i++) {
     const result = results[i]!;
@@ -97,7 +115,11 @@ function buildDecorations(state: EditorState): DecorationSet {
       if (h.to > h.from) ranges.push(mark(h.type).range(line.from + h.from, line.from + h.to));
     }
     if (result.display !== undefined) {
-      const widget = Decoration.widget({ widget: new ResultWidget(result.display), side: 1 });
+      const title = result.usesRates ? ratesTitle : 'Click to copy';
+      const widget = Decoration.widget({
+        widget: new ResultWidget(result.display, title),
+        side: 1,
+      });
       ranges.push(widget.range(line.to));
     }
   }

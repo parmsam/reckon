@@ -119,14 +119,26 @@ above it. A line with no recognizable expression produces no result.
 ### 3.6 Units
 - Conversion keywords: `in`, `to`, `as`, `into`, for example `5 km in miles`
 - Categories: length, area, volume, mass, temperature, time/duration, speed, data (`KB`/`KiB`/`MB`/`MiB`…), angle, frequency, energy, power, pressure
-- CSS: `px`, `pt`, `em`, `rem`, `%`, configurable via `ppi = 96` and `em = 16px`
-- Mixed arithmetic: `1 m + 20 cm` = `1.2 m`. Compound units: `60 km/h in m/s`.
-- Unit spelling: singular, plural, and abbreviation (`meter`, `meters`, `m`)
+- CSS: `px`, `pt`, `em`, `rem`, via the `ppi` (96) and `emPx` (16) settings
+- Mixed arithmetic: `1 m + 20 cm` = `1.2 m`. Compound units: `60 km/h in m/s`, `$85/h × 12.5 h` = `$1,062.50`.
+- A plain number adopts the other side's unit: `5 km + 3` = `8 km`. Totals convert to the block's first unit.
+- Compound amounts: `6 ft 2 in`, `5' 10"`, `1 h 30 min`. Fractions of units: `1/2 cup`, `1 ¾ cups`.
+- Powers bind to the unit: `16 m²` is 16 square metres, and `sqrt(16 m²)` = `4 m`.
+- Unit spelling: singular, plural, and abbreviation (`meter`, `meters`, `m`). Variables win over units, so after `F = 5`, `F` is the variable.
+- Ambiguous words:
+  - `in` converts when a unit or format follows (`5 km in miles`). Otherwise it means inches only straight after an amount and not before another word (`6 ft 2 in`, but `5 people in the room` = 5).
+  - `min` means minutes after an amount (`5 min`) or a conversion (`in min`), and the minimum elsewhere.
+  - A unit word right before a number is text (`it's 5`), except currencies (`$5`, `EUR 20`).
+- Results with units show up to 4 decimal places (the `unitPrecision` setting).
 
 ### 3.7 Currency
-- Symbols and codes: `$`, `€`, `£`, `¥`, `₹`, `USD`, `eur`, `bitcoin`/`BTC`, `ETH`
+- Symbols and codes: `$`, `€`, `£`, `¥`, `₹` and more, all 166 ISO codes in uppercase, common ones in lowercase (`eur`), names (`euros`, `canadian dollars`)
+- Crypto: `BTC`/`bitcoin`, `ETH`, `SOL`, `DOGE`, `LTC`, `XRP`, `ADA`, `USDT`, `USDC`, `sats`
 - `$30 in EUR`, `€20 + $5` (the result uses the first currency), `100 GBP to yen`
-- Rates are fetched at most hourly and cached in IndexedDB. When offline, the last known rates are used, and the result shows a "rates as of …" hint.
+- Currency is a unit dimension like length, with factors from the rates, so all unit math works with money.
+- Results use the locale's currency format (`$1,062.50`, `1.062,50 €`); crypto shows up to 8 decimals.
+- Lowercase codes are limited to common currencies, since many codes are words (`all`, `top`, `cup`).
+- Rates are refreshed at most hourly while online and cached in IndexedDB. When offline, the last known rates are used, and currency results have a "rates from …" tooltip.
 
 ### 3.8 Dates and times
 - `today`, `now`, `tomorrow`, `yesterday`, `next friday`
@@ -227,9 +239,9 @@ interface Note {
   that already exists, the more recently edited copy wins.
 
 ### 4.5 Exchange-rate sources (free, CORS-enabled, keyless)
-- Fiat: `https://open.er-api.com/v6/latest/USD` (daily), with Frankfurter (`api.frankfurter.app`, ECB data) as the fallback.
-- Crypto: CoinGecko simple price API, fetched lazily the first time a crypto unit appears.
-- A bundled snapshot of rates (`src/data/rates.snapshot.json`), refreshed at build time, so the very first offline use still works.
+- Fiat: `https://open.er-api.com/v6/latest/USD` (daily), with Frankfurter (`api.frankfurter.dev/v1`, ECB data) as the fallback.
+- Crypto: CoinGecko simple price API, fetched only once a note mentions crypto.
+- A bundled snapshot of rates (`src/data/rates.snapshot.json`, `npm run update-rates`), refreshed by the deploy workflow, so the very first offline use still works. A failed refresh keeps the committed snapshot.
 
 ### 4.6 Routing and hosting
 - Routing is hash based (`#/note/<id>`, `#/share/<payload>`), so GitHub Pages never returns a 404 for deep links.
@@ -292,10 +304,10 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Multi-tab sync via BroadcastChannel; `storage.persist()`
 
 ### M4 — Units and currency
-- [ ] Unit registry with a dimension vector; conversions; compound units
-- [ ] CSS units with ppi and em settings
-- [ ] Currency registry (symbols, codes, names); rate fetching and caching; offline snapshot
-- [ ] Crypto (lazy)
+- [x] Unit registry with a dimension vector; conversions; compound units
+- [x] CSS units with ppi and em settings
+- [x] Currency registry (symbols, codes, names); rate fetching and caching; offline snapshot
+- [x] Crypto (lazy)
 
 ### M5 — Dates and time
 - [ ] Temporal (with polyfill), date and duration values
@@ -308,6 +320,17 @@ rate source on or off (privacy: allow turning off all network calls).
 - [ ] First-run tutorial note
 - [ ] Lighthouse: PWA installable, Performance ≥ 95, Accessibility ≥ 95
 - [ ] Playwright offline test (reload works with the network off). Typing, results, persistence and copy are covered since M2.
+
+### M7 — Docs and AI-friendly access
+- [ ] Docs site on GitHub Pages (`/reckon/docs/`): getting started, the full syntax reference, FAQ.
+  The reference is generated from the golden fixtures, so examples are always tested.
+- [ ] `llms.txt` at `/reckon/llms.txt` ([llmstxt.org](https://llmstxt.org) format), linking to the docs,
+  plus `llms-full.txt` with the whole syntax reference in one Markdown file
+- [ ] LLM prompt note: a copy-paste prompt that teaches any LLM Reckon's syntax, so people can ask an
+  assistant to draft a note ("make me a trip budget in Reckon syntax") and paste it in
+- [ ] Agent skill: a `SKILL.md` (in the repo under `skills/reckon/` and served at `/reckon/skill/`) that teaches
+  coding agents to write Reckon notes and build share links (`#/share/<deflate-raw, base64url>`), with a
+  small script that encodes a note into a link
 
 ### Later
 - [ ] Conditionals and comparisons; bitwise ops

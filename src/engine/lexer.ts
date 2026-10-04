@@ -1,3 +1,4 @@
+import { CURRENCY_SYMBOL_CHARS } from './units';
 import { D, type Decimal } from './values';
 
 export type TokenType = 'number' | 'word' | 'op' | 'other';
@@ -49,7 +50,11 @@ const RADIX = /^0(?:x[0-9a-f]+|b[01]+|o[0-7]+)(?![\p{L}\p{N}_])/iu;
 const GROUPED = /^\d{1,3}(?:,\d{3})+(?:\.\d+)?(?!\d)/;
 const PLAIN = /^(?:\d[\d_]*(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/i;
 const SUFFIX = /^(?:k|K|M|bn)(?![\p{L}\p{N}_])/u;
-const WORD = /^[\p{L}_][\p{L}\p{N}_]*/u;
+/** Words, including "°C" and contractions like "it's". */
+const WORD = /^[\p{L}_°][\p{L}\p{N}_]*(?:['’]\p{L}+)*/u;
+/** Single characters that act as words: currency symbols and foot/inch marks. */
+const SYMBOL_WORDS = new Set([...CURRENCY_SYMBOL_CHARS, '′', '″']);
+const SUPERSCRIPT_POWERS: Record<string, string> = { '²': '2', '³': '3' };
 
 function fraction(ch: string | undefined): Decimal | undefined {
   const f = ch === undefined ? undefined : FRACTIONS[ch];
@@ -69,13 +74,15 @@ function matchNumber(rest: string, inParens: boolean): { length: number; value: 
   let value = new D(m[0].replace(/[,_]/g, ''));
 
   const suffix = SUFFIX.exec(rest.slice(length));
-  const frac = fraction(rest[length]);
+  // "1¾" or "1 ¾"
+  const gap = /^ +/.exec(rest.slice(length))?.[0].length ?? 0;
+  const frac = fraction(rest[length + gap]);
   if (suffix) {
     value = value.times(SUFFIXES[suffix[0]]!);
     length += suffix[0].length;
   } else if (frac && value.isInteger()) {
     value = value.plus(frac);
-    length += 1;
+    length += gap + 1;
   }
   return { length, value };
 }
@@ -104,6 +111,22 @@ export function lex(input: string, offset = 0): Token[] {
         value: number.value,
       });
       i += number.length;
+      continue;
+    }
+
+    if (SYMBOL_WORDS.has(ch)) {
+      tokens.push({ type: 'word', text: ch, from: offset + i, to: offset + i + 1 });
+      i += 1;
+      continue;
+    }
+
+    // m² is m^2.
+    const power = SUPERSCRIPT_POWERS[ch];
+    if (power) {
+      const at = offset + i;
+      tokens.push({ type: 'op', text: ch, from: at, to: at + 1, op: '^' });
+      tokens.push({ type: 'number', text: ch, from: at, to: at + 1, value: new D(power) });
+      i += 1;
       continue;
     }
 
@@ -137,6 +160,19 @@ export function lex(input: string, offset = 0): Token[] {
     }
 
     // Surrogate pairs (emoji) stay together as one token.
+    // 5' 10" — straight quotes right after a number are feet and inches.
+    const prev = tokens[tokens.length - 1];
+    if ((ch === "'" || ch === '"') && prev?.type === 'number' && prev.to === offset + i) {
+      tokens.push({
+        type: 'word',
+        text: ch === "'" ? '′' : '″',
+        from: offset + i,
+        to: offset + i + 1,
+      });
+      i += 1;
+      continue;
+    }
+
     const other = String.fromCodePoint(input.codePointAt(i)!);
     tokens.push({ type: 'other', text: other, from: offset + i, to: offset + i + other.length });
     i += other.length;

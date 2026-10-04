@@ -21,7 +21,12 @@ export interface ReckonDB extends DBSchema {
   settings: { key: string; value: { key: string; value: unknown } };
   rates: {
     key: string;
-    value: { base: string; fetchedAt: number; rates: Record<string, number> };
+    value: {
+      base: string;
+      fetchedAt: number;
+      rates: Record<string, number>;
+      cryptoFetchedAt?: number;
+    };
   };
 }
 

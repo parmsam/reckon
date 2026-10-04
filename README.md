@@ -38,6 +38,9 @@ own device.
 - **Answers as you type**, aligned beside each line. Click an answer, or press <kbd>⌘/Ctrl</kbd> <kbd>⇧</kbd> <kbd>C</kbd>, to copy it.
 - **Natural syntax**: `20% of 50`, `10% off 80`, `5 as % of 20`, `3 apples + 2 apples`
 - **Variables and references**: `hourly rate = 85`, `prev`, `line3`, `sum`, `avg`, `count`, `min`, `max`
+- **Units**: `5 km in miles`, `60 mph in km/h`, `6 ft 2 in in cm`, `72 °F in °C`, `1 GiB in MB`, `2 cups in ml`, CSS `12pt in px`
+- **Currencies and crypto**: `$30 in EUR`, `€20 + $5`, `0.01 BTC in USD`, with rates cached for offline use
+- **Units that cancel**: `hourly rate = $85/h`, then `12.5 h × hourly rate` is `$1,062.50`
 - **Precise decimals**: `0.1 + 0.2` is `0.3`, not `0.30000000000000004`
 - **Many notes** with search, pinning, trash and undo
 - **Share links**: the note is compressed into the URL itself, so no server ever sees it
@@ -46,10 +49,9 @@ own device.
 - **Light and dark themes**, a phone layout, and screen reader support
 
 **Coming next** (see the [roadmap](PLAN.md#7-milestones))
-- **Units**: `5 km in miles`, `60 km/h in m/s`, `1 m + 20 cm`, data sizes, temperatures, CSS `px`/`em`
-- **Currencies and crypto**: `$30 in EUR`, with cached rates that keep working offline
 - **Dates and time zones**: `today + 2 weeks`, `days until Dec 25`, `3pm PST in London`
 - **Settings, autocomplete and a command palette**
+- **Docs for people and AI**: a docs site, `llms.txt`, a copy-paste prompt for LLMs, and an agent skill
 
 ## Syntax at a glance
 
@@ -64,12 +66,16 @@ own device.
 | Functions | `sqrt` · `cbrt` · `root(x, n)` · `round(x, 2)` · `floor` · `ceil` · `abs` · `sin` / `cos` / `tan` (degrees) · `log` · `ln` · `exp` · `fact` |
 | Constants | `pi` / `π` · `e` · `tau` · `phi` |
 | Output formats | `255 in hex` · `10 in binary` · `8 as oct` · `1500 in sci` |
+| Units | `5 km in miles` · `1 m + 20 cm` · `60 km/h in m/s` · `3 m × 4 m` · `sqrt(16 m²)` · `1/2 cup` · `5' 10"` · `1 h 30 min` · `100 °C in °F` · `1 GB in MiB` · `24px in pt` |
+| Currency | `$30` · `€20 + $5` · `100 GBP to yen` · `20 canadian dollars in USD` · `0.5 BTC in USD` · `100k sats in USD` · `$85/h × 37.5 h` |
 | Structure | `# Heading` · `// comment` · `label: 42` (text before a colon is ignored) |
 
 A line Reckon can't make sense of shows no answer, never a wrong one.
 
 ## Your data
 - Notes are stored in your browser (IndexedDB). There are no accounts, no servers and no analytics.
+- The only network requests fetch exchange rates (open.er-api.com, falling back to Frankfurter; CoinGecko only if a
+  note mentions crypto). They never include your notes.
 - Clearing site data deletes your notes, so use **Export all notes** (sidebar footer) for a backup.
 - A share link holds the whole note in the part of the URL after `#`, which browsers never send to a server.
 
@@ -90,7 +96,9 @@ Every push to `main` runs CI and deploys to GitHub Pages.
 - [PLAN.md](PLAN.md) has the product spec, full syntax reference and roadmap.
 - [AGENTS.md](AGENTS.md) covers project structure, conventions and how-to recipes (adding a unit, a function, or new syntax).
 
-Built with TypeScript, Vite, CodeMirror 6, decimal.js, IndexedDB (via `idb`) and vite-plugin-pwa.
+Built with TypeScript, Vite, CodeMirror 6, decimal.js, IndexedDB (via `idb`) and vite-plugin-pwa. Exchange rates
+come from [ExchangeRate-API](https://www.exchangerate-api.com), [Frankfurter](https://frankfurter.dev) and
+[CoinGecko](https://www.coingecko.com).
 
 ## How Reckon compares
 Reckon builds on ideas from these notepad calculators. Details come from each project's site or repo as of

@@ -8,8 +8,7 @@ import {
   keymap,
   placeholder,
 } from '@codemirror/view';
-import type { Settings } from '../engine';
-import { copyCurrentResult, engineSettings, results } from './results';
+import { copyCurrentResult, engineSettings, results, type EditorSettings } from './results';
 import { reckonTheme } from './theme';
 
 export { COPIED_EVENT } from './results';
@@ -17,7 +16,7 @@ export { COPIED_EVENT } from './results';
 export interface EditorOptions {
   parent: HTMLElement;
   doc: string;
-  settings?: Partial<Settings>;
+  settings?: EditorSettings;
   /** Called for edits made by the user, not for `setDoc` or `applyExternal`. */
   onChange?: (doc: string) => void;
 }
@@ -29,6 +28,8 @@ export interface Editor {
   /** Replaces the text after a change from another tab, keeping the cursor nearby. */
   applyExternal(doc: string): void;
   getDoc(): string;
+  /** Merges new engine settings (locale, rates…) and recomputes results. */
+  setSettings(settings: EditorSettings): void;
 }
 
 /** Marks transactions that didn't come from the user typing. */
@@ -36,6 +37,8 @@ const external = Annotation.define<boolean>();
 
 export function createEditor({ parent, doc, settings = {}, onChange }: EditorOptions): Editor {
   const readOnly = new Compartment();
+  const settingsCompartment = new Compartment();
+  let currentSettings = settings;
   const readOnlyExtensions = (on: boolean) => [
     EditorState.readOnly.of(on),
     EditorView.editable.of(!on),
@@ -64,7 +67,7 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
           ...historyKeymap,
           ...searchKeymap,
         ]),
-        engineSettings.of(settings),
+        settingsCompartment.of(engineSettings.of(currentSettings)),
         results,
         reckonTheme,
         readOnly.of(readOnlyExtensions(ro)),
@@ -95,5 +98,11 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
       });
     },
     getDoc: () => view.state.doc.toString(),
+    setSettings(next) {
+      currentSettings = { ...currentSettings, ...next };
+      view.dispatch({
+        effects: settingsCompartment.reconfigure(engineSettings.of(currentSettings)),
+      });
+    },
   };
 }

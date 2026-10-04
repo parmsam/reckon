@@ -1,7 +1,16 @@
 import type { BinaryOp, Node } from './ast';
 import type { Settings } from './context';
 import { CONSTANTS, callFunction, factorial } from './functions';
-import { CalcError, D, finite, num, pct, type Decimal, type Value } from './values';
+import { getUnit, type UnitContext, type UnitExpr } from './units';
+import {
+  compatible,
+  convert,
+  expand,
+  isUnitless,
+  multiplyUnits,
+  powerUnits,
+} from './units/quantity';
+import { CalcError, D, finite, num, pct, qty, type Decimal, type Value } from './values';
 
 export interface Env {
   vars: ReadonlyMap<string, Value>;
@@ -12,13 +21,26 @@ export interface Env {
   /** Results in the current block (since the last heading or blank line). */
   block: readonly Value[];
   settings: Settings;
+  units: UnitContext;
 }
 
 const ONE = new D(1);
 const HUNDRED = new D(100);
+const RADIANS: UnitExpr = [{ unit: getUnit('rad')!, power: 1 }];
 
-function expectNumber(v: Value, what = 'a number'): Decimal {
-  if (v.kind !== 'number') throw new CalcError(`Expected ${what}`);
+/** A number or quantity. A plain number has an empty unit. */
+interface Amount {
+  value: Decimal;
+  unit: UnitExpr;
+}
+
+function amount(v: Value): Amount {
+  if (v.kind === 'percent') throw new CalcError('Expected a number, not a percentage');
+  return { value: v.value, unit: v.kind === 'quantity' ? v.unit : [] };
+}
+
+function expectNumber(v: Value): Decimal {
+  if (v.kind !== 'number') throw new CalcError('Expected a plain number');
   return v.value;
 }
 
@@ -27,9 +49,17 @@ function expectPercent(v: Value): Decimal {
   return v.value.div(HUNDRED);
 }
 
-/** Numbers pass through; percentages become fractions (50% → 0.5). */
-function toDecimal(v: Value): Decimal {
-  return v.kind === 'percent' ? v.value.div(HUNDRED) : v.value;
+/** Builds a value, collapsing units that cancel to a plain number (km/m → number). */
+function make(a: Amount, ctx: UnitContext): Value {
+  if (a.unit.length && isUnitless(a.unit)) return num(convert(a.value, a.unit, [], ctx));
+  return qty(a.value, a.unit);
+}
+
+/** Expresses both amounts in the first one's unit. A plain number adopts the other's unit. */
+function align(a: Amount, b: Amount, ctx: UnitContext): [Amount, Amount] {
+  if (!a.unit.length) return [{ value: a.value, unit: b.unit }, b];
+  if (!b.unit.length) return [a, { value: b.value, unit: a.unit }];
+  return [a, { value: convert(b.value, b.unit, a.unit, ctx), unit: a.unit }];
 }
 
 function arithmetic(op: BinaryOp, a: Decimal, b: Decimal): Decimal {
@@ -51,39 +81,150 @@ function arithmetic(op: BinaryOp, a: Decimal, b: Decimal): Decimal {
   }
 }
 
-function binary(op: BinaryOp, a: Value, b: Value): Value {
-  if (a.kind === 'number' && b.kind === 'number') return num(arithmetic(op, a.value, b.value));
-
-  // 50 + 10% = 55, 50 - 10% = 45, 50 * 10% = 5, 50 / 10% = 500
-  if (a.kind === 'number' && b.kind === 'percent') {
+function binary(op: BinaryOp, a: Value, b: Value, ctx: UnitContext): Value {
+  // 50 + 10% = 55, $50 - 10% = $45, 50 * 10% = 5, 50 / 10% = 500
+  if (a.kind !== 'percent' && b.kind === 'percent') {
     const f = b.value.div(HUNDRED);
+    const base = amount(a);
+    const scaled = (value: Decimal) => make({ value, unit: base.unit }, ctx);
     switch (op) {
       case '+':
-        return num(a.value.times(ONE.plus(f)));
+        return scaled(base.value.times(ONE.plus(f)));
       case '-':
-        return num(a.value.times(ONE.minus(f)));
+        return scaled(base.value.times(ONE.minus(f)));
       case '*':
-        return num(a.value.times(f));
+        return scaled(base.value.times(f));
       case '/':
-        return num(arithmetic('/', a.value, f));
+        return scaled(arithmetic('/', base.value, f));
+    }
+    throw new CalcError(`Can't apply ${op} to a percentage`);
+  }
+  if (a.kind === 'percent') {
+    if (b.kind === 'percent' && (op === '+' || op === '-')) {
+      return pct(arithmetic(op, a.value, b.value));
+    }
+    if (b.kind === 'number' && (op === '*' || op === '/')) {
+      return pct(arithmetic(op, a.value, b.value));
+    }
+    throw new CalcError(`Can't apply ${op} to these values`);
+  }
+
+  const x = amount(a);
+  const y = amount(b);
+  switch (op) {
+    case '+':
+    case '-':
+    case 'mod': {
+      const [p, q] = align(x, y, ctx);
+      return make({ value: arithmetic(op, p.value, q.value), unit: p.unit }, ctx);
+    }
+    case '*': {
+      const { expr, scale } = multiplyUnits(x.unit, y.unit, ctx);
+      return make({ value: x.value.times(y.value).times(scale), unit: expr }, ctx);
+    }
+    case '/': {
+      const { expr, scale } = multiplyUnits(x.unit, powerUnits(y.unit, -1), ctx);
+      return make({ value: arithmetic('/', x.value, y.value).times(scale), unit: expr }, ctx);
+    }
+    case '^': {
+      if (y.unit.length) throw new CalcError('Powers must be plain numbers');
+      if (!x.unit.length) return num(x.value.pow(y.value));
+      if (!y.value.isInteger()) throw new CalcError('Units can only be raised to whole powers');
+      return make(
+        { value: x.value.pow(y.value), unit: powerUnits(x.unit, y.value.toNumber()) },
+        ctx,
+      );
     }
   }
-  if (a.kind === 'percent' && b.kind === 'percent' && (op === '+' || op === '-')) {
-    return pct(arithmetic(op, a.value, b.value));
-  }
-  if (a.kind === 'percent' && b.kind === 'number' && (op === '*' || op === '/')) {
-    return pct(arithmetic(op, a.value, b.value));
-  }
-  throw new CalcError(`Can't apply ${op} to these values`);
 }
 
-function aggregate(name: string, block: readonly Value[]): Value {
-  const values = block.filter((v) => v.kind === 'number').map((v) => v.value);
+/** Numbers and quantities in a block, expressed in the unit of the first quantity. */
+function blockAmounts(
+  block: readonly Value[],
+  ctx: UnitContext,
+): { values: Decimal[]; unit: UnitExpr } {
+  const amounts = block.filter((v) => v.kind !== 'percent').map(amount);
+  const unit = amounts.find((a) => a.unit.length)?.unit ?? [];
+  const values = amounts.map((a) =>
+    a.unit.length ? convert(a.value, a.unit, unit, ctx) : a.value,
+  );
+  return { values, unit };
+}
+
+function aggregate(name: string, block: readonly Value[], ctx: UnitContext): Value {
+  const { values, unit } = blockAmounts(block, ctx);
   if (name === 'count') return num(new D(values.length));
-  if (name === 'sum') return num(values.length ? D.sum(...values) : new D(0));
-  if (!values.length) throw new CalcError(`Nothing to ${name}`);
-  if (name === 'avg') return num(D.sum(...values).div(values.length));
-  return num(name === 'min' ? D.min(...values) : D.max(...values));
+  if (!values.length) {
+    if (name === 'sum') return num(new D(0));
+    throw new CalcError(`Nothing to ${name}`);
+  }
+  const result =
+    name === 'sum'
+      ? D.sum(...values)
+      : name === 'avg'
+        ? D.sum(...values).div(values.length)
+        : name === 'min'
+          ? D.min(...values)
+          : D.max(...values);
+  return make({ value: result, unit }, ctx);
+}
+
+const KEEPS_UNIT = new Set(['abs', 'round', 'floor', 'ceil', 'trunc']);
+const COMBINES = new Set(['min', 'max', 'sum', 'avg']);
+const TRIG = new Set(['sin', 'cos', 'tan']);
+const ROOT_DEGREE: Record<string, number> = { sqrt: 2, cbrt: 3 };
+
+function call(name: string, args: Value[], env: Env): Value {
+  const ctx = env.units;
+  const amounts = args.map((a) =>
+    a.kind === 'percent' ? { value: a.value.div(HUNDRED), unit: [] } : amount(a),
+  );
+  const plain = (d: Decimal[], settings = env.settings) => finite(callFunction(name, d, settings));
+
+  const unitArg = amounts.find((a) => a.unit.length);
+  if (!unitArg) return num(plain(amounts.map((a) => a.value)));
+
+  // min(3 m, 250 cm), sum($5, 7): everything in the first unit.
+  if (COMBINES.has(name)) {
+    const values = amounts.map((a) =>
+      a.unit.length ? convert(a.value, a.unit, unitArg.unit, ctx) : a.value,
+    );
+    return make({ value: plain(values), unit: unitArg.unit }, ctx);
+  }
+
+  const [first, ...rest] = amounts;
+  if (first !== unitArg || rest.some((a) => a.unit.length)) {
+    throw new CalcError(`${name} doesn't take units there`);
+  }
+
+  // round(3.14159 m, 2) keeps the unit.
+  if (KEEPS_UNIT.has(name)) {
+    return make(
+      { value: plain([first.value, ...rest.map((a) => a.value)]), unit: first.unit },
+      ctx,
+    );
+  }
+
+  // sqrt(16 m²) = 4 m.
+  const degree = ROOT_DEGREE[name] ?? (name === 'root' ? rest[0]?.value.toNumber() : undefined);
+  if (degree) {
+    const terms = expand(first.unit);
+    if (!terms.every((t) => Number.isInteger(t.power / degree))) {
+      throw new CalcError(
+        `Can't take that root of ${name === 'sqrt' ? 'that unit' : 'those units'}`,
+      );
+    }
+    const unit = terms.map((t) => ({ unit: t.unit, power: t.power / degree }));
+    return make({ value: plain([first.value, ...rest.map((a) => a.value)]), unit }, ctx);
+  }
+
+  // sin(90°), cos(pi rad)
+  if (TRIG.has(name) && compatible(first.unit, RADIANS)) {
+    const radians = convert(first.value, first.unit, RADIANS, ctx);
+    return num(plain([radians], { ...env.settings, angleUnit: 'rad' }));
+  }
+
+  throw new CalcError(`${name} doesn't work with units`);
 }
 
 export function evaluate(node: Node, env: Env): Value {
@@ -94,6 +235,7 @@ export function evaluate(node: Node, env: Env): Value {
 
 function evaluateNode(node: Node, env: Env): Value {
   const ev = (n: Node) => evaluateNode(n, env);
+  const ctx = env.units;
 
   switch (node.k) {
     case 'num':
@@ -114,51 +256,67 @@ function evaluateNode(node: Node, env: Env): Value {
       return v;
     }
     case 'agg':
-      return aggregate(node.name, env.block);
+      return aggregate(node.name, env.block, ctx);
     case 'neg': {
       const v = ev(node.arg);
-      return v.kind === 'percent' ? pct(v.value.neg()) : num(v.value.neg());
+      if (v.kind === 'percent') return pct(v.value.neg());
+      return v.kind === 'quantity' ? qty(v.value.neg(), v.unit) : num(v.value.neg());
     }
     case 'binary':
-      return binary(node.op, ev(node.left), ev(node.right));
+      return binary(node.op, ev(node.left), ev(node.right), ctx);
     case 'percent':
       return pct(expectNumber(ev(node.arg)));
     case 'fact':
       return num(factorial(expectNumber(ev(node.arg))));
     case 'call':
-      return num(
-        finite(
-          callFunction(
-            node.name,
-            node.args.map((a) => toDecimal(ev(a))),
-            env.settings,
-          ),
-        ),
-      );
-    case 'pctOf':
-      return num(expectNumber(ev(node.base)).times(expectPercent(ev(node.pct))));
-    case 'pctOff':
-      return num(expectNumber(ev(node.base)).times(ONE.minus(expectPercent(ev(node.pct)))));
-    case 'pctOn':
-      return num(expectNumber(ev(node.base)).times(ONE.plus(expectPercent(ev(node.pct)))));
+      return call(node.name, node.args.map(ev), env);
+    case 'pctOf': {
+      const base = amount(ev(node.base));
+      return make({ value: base.value.times(expectPercent(ev(node.pct))), unit: base.unit }, ctx);
+    }
+    case 'pctOff': {
+      const base = amount(ev(node.base));
+      const p = expectPercent(ev(node.pct));
+      return make({ value: base.value.times(ONE.minus(p)), unit: base.unit }, ctx);
+    }
+    case 'pctOn': {
+      const base = amount(ev(node.base));
+      const p = expectPercent(ev(node.pct));
+      return make({ value: base.value.times(ONE.plus(p)), unit: base.unit }, ctx);
+    }
     case 'pctWhatOf': {
-      const part = expectNumber(ev(node.part));
-      const whole = expectNumber(ev(node.whole));
-      return pct(arithmetic('/', part, whole).times(HUNDRED));
+      const [part, whole] = align(amount(ev(node.part)), amount(ev(node.whole)), ctx);
+      return pct(arithmetic('/', part.value, whole.value).times(HUNDRED));
     }
     case 'pctOfWhat': {
       const p = expectPercent(ev(node.pct));
-      return num(arithmetic('/', expectNumber(ev(node.result)), p));
+      const result = amount(ev(node.result));
+      return make({ value: arithmetic('/', result.value, p), unit: result.unit }, ctx);
     }
     case 'convert': {
       const v = ev(node.arg);
-      if (node.target === 'percent') return v.kind === 'percent' ? v : pct(v.value.times(HUNDRED));
+      if (node.target === 'percent') {
+        return v.kind === 'percent' ? v : pct(expectNumber(v).times(HUNDRED));
+      }
       const value = expectNumber(v);
       if (node.target === 'dec') return num(value);
       if (node.target !== 'sci' && !value.isInteger()) {
         throw new CalcError(`Only whole numbers can be shown in ${node.target}`);
       }
       return num(value, node.target);
+    }
+    case 'unit':
+      return qty(ONE, [{ unit: node.unit, power: 1 }]);
+    case 'withUnit': {
+      const a = amount(ev(node.arg));
+      const { expr, scale } = multiplyUnits(a.unit, [{ unit: node.unit, power: node.power }], ctx);
+      return make({ value: a.value.times(scale), unit: expr }, ctx);
+    }
+    case 'convertUnit': {
+      const a = amount(ev(node.arg));
+      // A plain number takes the target unit: "5 in cm" is 5 cm.
+      const value = a.unit.length ? convert(a.value, a.unit, node.unit, ctx) : a.value;
+      return qty(value, node.unit);
     }
   }
 }

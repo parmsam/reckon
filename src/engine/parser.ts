@@ -1,10 +1,13 @@
 import type { BinaryOp, Node } from './ast';
 import type { Keyword, RToken } from './resolve';
+import type { UnitTerm } from './units';
 import { CalcError } from './values';
 
 /** Binding power of prefix operators and of functions called without parentheses. */
 const PREFIX_BP = 35;
 const IMPLICIT_BP = 20;
+/** Units bind tightest: 2 × 5 km is 2 × (5 km). */
+const UNIT_BP = 60;
 
 const isOp = (t: RToken | undefined, op: string) => t?.t === 'op' && t.op === op;
 const isKw = (t: RToken | undefined, kw: Keyword) => t?.t === 'kw' && t.kw === kw;
@@ -13,7 +16,7 @@ const isKw = (t: RToken | undefined, kw: Keyword) => t?.t === 'kw' && t.kw === k
 function startsImplicitOperand(t: RToken | undefined): boolean {
   if (!t) return false;
   // Two bare numbers in a row ("3 cats and 2 dogs") is ambiguous, so it's an error.
-  if (t.t === 'num' || t.t === 'kw' || t.t === 'target') return false;
+  if (t.t === 'num' || t.t === 'kw' || t.t === 'target' || t.t === 'unit') return false;
   if (t.t === 'op') return t.op === '(';
   return true;
 }
@@ -36,6 +39,7 @@ function infixBp(t: RToken | undefined): number {
         return 50;
     }
   }
+  if (t.t === 'unit') return UNIT_BP;
   if (t.t === 'kw') {
     switch (t.kw) {
       case 'of':
@@ -83,6 +87,15 @@ export function parse(tokens: RToken[]): Node {
         return { k: 'line', n: t.n };
       case 'agg':
         return { k: 'agg', name: t.name };
+      case 'unit': {
+        // Currency before the amount: $30, € (2 + 3), EUR 20.
+        const n = peek();
+        const amountFollows =
+          n && (n.t === 'num' || n.t === 'var' || n.t === 'const' || isOp(n, '('));
+        if (t.unit.prefix && amountFollows)
+          return { k: 'withUnit', arg: expr(UNIT_BP - 1), unit: t.unit, power: 1 };
+        return { k: 'unit', unit: t.unit };
+      }
       case 'fn': {
         if (!isOp(peek(), '(')) return { k: 'call', name: t.name, args: [expr(PREFIX_BP)] };
         next();
@@ -109,7 +122,37 @@ export function parse(tokens: RToken[]): Node {
     throw new CalcError('Unexpected token');
   }
 
+  /** A power written right after a unit (`m²`, `m^2`) belongs to the unit. */
+  function unitPower(): number {
+    const n = tokens[pos + 1];
+    if (isOp(peek(), '^') && n?.t === 'num' && n.value.isInteger()) {
+      pos += 2;
+      return n.value.toNumber();
+    }
+    return 1;
+  }
+
+  /** Unit expression after a conversion keyword: `m/s`, `kg·m^2`, `km per h`. */
+  function unitExpr(): UnitTerm[] {
+    const terms: UnitTerm[] = [];
+    let sign = 1;
+    for (;;) {
+      const t = next();
+      if (t.t !== 'unit') throw new CalcError('Expected a unit');
+      terms.push({ unit: t.unit, power: unitPower() * sign });
+      if (isOp(peek(), '/')) {
+        next();
+        sign = -1;
+      } else if (isOp(peek(), '*')) {
+        next();
+      } else if (peek()?.t !== 'unit') {
+        return terms;
+      }
+    }
+  }
+
   function infix(left: Node, t: RToken): Node {
+    if (t.t === 'unit') return { k: 'withUnit', arg: left, unit: t.unit, power: unitPower() };
     if (t.t === 'op') {
       switch (t.op) {
         case '%':
@@ -119,8 +162,14 @@ export function parse(tokens: RToken[]): Node {
         case '^':
           // Right associative: 2^3^2 = 2^9.
           return { k: 'binary', op: '^', left, right: expr(39) };
-        default:
-          return { k: 'binary', op: t.op as BinaryOp, left, right: expr(infixBp(t)) };
+        default: {
+          const right = expr(infixBp(t));
+          // "1/3 m", "1/2 cup": a fraction of a unit, not 1 ÷ (3 m).
+          if (t.op === '/' && left.k === 'num' && right.k === 'withUnit' && right.arg.k === 'num') {
+            return { ...right, arg: { k: 'binary', op: '/', left, right: right.arg } };
+          }
+          return { k: 'binary', op: t.op as BinaryOp, left, right };
+        }
       }
     }
     if (t.t === 'kw') {
@@ -143,6 +192,7 @@ export function parse(tokens: RToken[]): Node {
           return { k: 'pctWhatOf', part: left, whole: expr(5) };
         }
         case 'conv': {
+          if (peek()?.t === 'unit') return { k: 'convertUnit', arg: left, unit: unitExpr() };
           const target = next();
           if (target.t !== 'target') throw new CalcError('Expected a conversion target');
           if (target.target === 'percent' && isKw(peek(), 'of')) {
@@ -160,6 +210,16 @@ export function parse(tokens: RToken[]): Node {
     let left = prefix(next());
     for (;;) {
       const t = peek();
+      // Compound amounts: 6 ft 2 in, 1 h 30 min.
+      if (
+        left.k === 'withUnit' &&
+        t?.t === 'num' &&
+        tokens[pos + 1]?.t === 'unit' &&
+        minBp < UNIT_BP - 1
+      ) {
+        left = { k: 'binary', op: '+', left, right: expr(UNIT_BP - 1) };
+        continue;
+      }
       const bp = infixBp(t);
       if (bp <= minBp || !t) break;
       if (startsImplicitOperand(t)) {

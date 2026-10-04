@@ -1,4 +1,6 @@
 import type { Settings } from './context';
+import { formatUnit, powerUnits } from './units/quantity';
+import type { UnitExpr } from './units';
 import { D, type Decimal, type Value } from './values';
 
 const SCI_ABOVE = new D('1e21');
@@ -34,8 +36,38 @@ export function formatNumber(d: Decimal, s: Settings): string {
   return numberFormat(s).format(d.toFixed() as Intl.StringNumericLiteral);
 }
 
+const CRYPTO_PRECISION = 8;
+const moneyFormatters = new Map<string, Intl.NumberFormat>();
+
+/** $1,062.50 / 1.062,50 € / ¥1,063, following the locale and the currency's usual decimals. */
+function money(value: Decimal, code: string, s: Settings): string {
+  const key = `${s.locale}|${code}`;
+  let nf = moneyFormatters.get(key);
+  if (!nf) {
+    nf = new Intl.NumberFormat(s.locale, { style: 'currency', currency: code });
+    moneyFormatters.set(key, nf);
+  }
+  return nf.format(value.toFixed() as Intl.StringNumericLiteral);
+}
+
+function formatQuantity(value: Decimal, unit: UnitExpr, s: Settings): string {
+  const [first, ...rest] = unit;
+  const code = first!.unit.currency;
+  if (code && first!.power === 1 && rest.every((t) => t.power < 0)) {
+    const amount = first!.unit.crypto
+      ? `${formatNumber(value, { ...s, precision: CRYPTO_PRECISION })} ${code}`
+      : money(value, code, s);
+    // $85/h
+    return rest.length ? `${amount}/${formatUnit(powerUnits(rest, -1))}` : amount;
+  }
+  const text = formatNumber(value, { ...s, precision: s.unitPrecision });
+  const symbol = formatUnit(unit, !value.abs().eq(1));
+  return symbol === '°' ? `${text}°` : `${text} ${symbol}`;
+}
+
 export function formatValue(v: Value, s: Settings): string {
   if (v.kind === 'percent') return `${formatNumber(v.value, s)}%`;
+  if (v.kind === 'quantity') return formatQuantity(v.value, v.unit, s);
   const d = v.value;
   switch (v.format) {
     case 'hex':

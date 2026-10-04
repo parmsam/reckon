@@ -1,3 +1,4 @@
+import { MENTIONS_CRYPTO } from '../data/rates';
 import { COPIED_EVENT, createEditor } from '../editor';
 import { createAutosave } from '../storage/autosave';
 import { getSetting, setSetting } from '../storage/settings';
@@ -11,6 +12,7 @@ import {
 } from './backup';
 import { download, h, pickFiles, svg } from './dom';
 import { ICONS } from './icons';
+import { RatesManager } from './rates';
 import { parseRoute, routeHash, type Route } from './router';
 import { decodeShare, encodeShare } from './share';
 import { Sidebar } from './sidebar';
@@ -147,6 +149,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const id = currentId();
       if (!id) return;
       showTitle(body);
+      checkCrypto(body);
       if (storageError) return;
       statusEl.textContent = 'Saving…';
       autosave.schedule({ id, body });
@@ -156,6 +159,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   editor.view.dom.addEventListener(COPIED_EVENT, (e) =>
     toast(`Copied ${(e as CustomEvent<string>).detail}`),
   );
+
+  // ---- Exchange rates -----------------------------------------------------------------------
+  const rates = new RatesManager((snapshot) =>
+    editor.setSettings({ rates: snapshot.rates, ratesAsOf: snapshot.fetchedAt }),
+  );
+  /** Crypto prices are fetched only once a note mentions crypto. */
+  const checkCrypto = (body: string) => {
+    if (MENTIONS_CRYPTO.test(body)) rates.needCrypto();
+  };
+  void rates.init().then(() => rates.refresh());
+  window.addEventListener('online', () => void rates.refresh());
+  setInterval(() => void rates.refresh(), 15 * 60 * 1000);
 
   // ---- Sidebar ------------------------------------------------------------------------------
   const sidebar = new Sidebar(store, {
@@ -269,6 +284,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const trashed = note.deletedAt !== undefined;
     editor.setDoc(note.body, { readOnly: trashed });
     showTitle(note.body);
+    checkCrypto(note.body);
     statusEl.textContent = storageError ? 'Not saved: storage unavailable' : '';
     noteActions.hidden = false;
     showBanner(
@@ -317,6 +333,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     await leaveCurrent();
     mode = { kind: 'share', body };
     editor.setDoc(body, { readOnly: true });
+    checkCrypto(body);
     showTitle(body);
     statusEl.textContent = '';
     noteActions.hidden = true;
@@ -462,6 +479,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     editor.applyExternal(note.body);
     showTitle(note.body);
+    checkCrypto(note.body);
   });
 
   // Flush pending edits when the tab is hidden or closed.

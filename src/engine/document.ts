@@ -3,6 +3,7 @@ import { defaultSettings, type Settings } from './context';
 import { evaluate } from './evaluate';
 import { formatValue } from './format';
 import { parseLineCached, VariableNames, type Highlight } from './line';
+import type { UnitContext } from './units';
 import type { Value } from './values';
 
 export type LineKind = 'blank' | 'comment' | 'heading' | 'text' | 'value' | 'error';
@@ -18,6 +19,8 @@ export interface LineResult {
   variable?: string;
   /** Syntax highlighting ranges, relative to the start of the line. */
   highlights: Highlight[];
+  /** True when the result used an exchange rate. */
+  usesRates?: boolean;
 }
 
 /**
@@ -32,6 +35,13 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
   const results: LineResult[] = [];
   let block: Value[] = [];
   let prev: Value | undefined;
+  let usedRates: boolean;
+  const units: UnitContext = {
+    ppi: s.ppi,
+    emPx: s.emPx,
+    rates: s.rates,
+    onRate: () => (usedRates = true),
+  };
 
   const setVar = (name: string, value: Value | undefined) => {
     if (value) {
@@ -66,6 +76,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         continue;
     }
 
+    usedRates = false;
     try {
       const value = evaluate(line.ast!, {
         vars,
@@ -73,11 +84,20 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         lineValue: (n) => (n >= 1 && n <= results.length ? results[n - 1]!.value : undefined),
         block,
         settings: s,
+        units,
       });
       prev = value;
       if (variable) setVar(variable, value);
       if (!usesAggregate(line.ast!)) block.push(value);
-      results.push({ kind: 'value', value, display: formatValue(value, s), variable, highlights });
+      const display = formatValue(value, s);
+      results.push({
+        kind: 'value',
+        value,
+        display,
+        variable,
+        highlights,
+        usesRates: usedRates || undefined,
+      });
     } catch (e) {
       if (variable) setVar(variable, undefined);
       const error = e instanceof Error ? e.message : String(e);

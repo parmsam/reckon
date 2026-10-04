@@ -1,4 +1,5 @@
 import type { Aggregate, Target } from './resolve';
+import type { UnitDef, UnitExpr } from './units';
 import type { Decimal } from './values';
 
 export type BinaryOp = '+' | '-' | '*' | '/' | '^' | 'mod';
@@ -25,7 +26,13 @@ export type Node =
   | { k: 'pctWhatOf'; part: Node; whole: Node }
   /** `20% of what is 5` */
   | { k: 'pctOfWhat'; pct: Node; result: Node }
-  | { k: 'convert'; arg: Node; target: Target };
+  | { k: 'convert'; arg: Node; target: Target }
+  /** A bare unit, worth 1 of it: the `h` in km/h. */
+  | { k: 'unit'; unit: UnitDef }
+  /** `5 km`, `$30` */
+  | { k: 'withUnit'; arg: Node; unit: UnitDef; power: number }
+  /** `5 km in miles` */
+  | { k: 'convertUnit'; arg: Node; unit: UnitExpr };
 
 /** True if the expression reads a sum/avg/count/min/max aggregate. */
 export function usesAggregate(node: Node): boolean {
@@ -36,6 +43,8 @@ export function usesAggregate(node: Node): boolean {
     case 'percent':
     case 'fact':
     case 'convert':
+    case 'withUnit':
+    case 'convertUnit':
       return usesAggregate(node.arg);
     case 'binary':
       return usesAggregate(node.left) || usesAggregate(node.right);

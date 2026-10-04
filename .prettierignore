@@ -4,3 +4,4 @@ package-lock.json
 *.md
 test-results
 playwright-report
+src/data/rates.snapshot.json
