@@ -28,6 +28,28 @@ Status: **planning**. Progress is tracked with the checkboxes in [Milestones](#m
 
 ## 2. What we learned from the references
 
+### 2.1 Landscape at a glance
+Details come from each project's site or repo as of October 2026. "See site" means we didn't confirm the detail.
+The same table appears in README.md, so update both together.
+
+| App | Platforms | Open source | Price |
+|---|---|---|---|
+| **Reckon** | Any browser; installable PWA | ✅ MIT | Free |
+| [Numi](https://numi.app) | macOS, Windows, Linux CLI, Alfred | CLI only ([repo](https://github.com/nikolaeu/numi)) | See site |
+| [numbr](https://numbr.dev) | Web, Chrome extension | ✅ ([repo](https://github.com/antonmedv/numbr)) | Free |
+| [Soulver](https://soulver.app) | macOS, iOS, iPadOS | ❌ | Paid |
+| [Parsify](https://parsify.app) | macOS, Windows, web | ❌ | Free (5 lines) or €30 one-time |
+| [Notes Calculator](https://notescalculator.com) | Mac, Windows, Linux, iOS, Android, web | ❌ | One free note; lifetime purchase for more |
+| [Antinote](https://antinote.io) | macOS | ❌ | See site |
+| [Calcator](https://calcator.app) | macOS, Windows, Linux | See site | Free |
+| [Ganaka](https://github.com/spdeepak/Ganaka) | macOS 14+ | ✅ | Free |
+| [Figr](https://www.figr.app) | See site | See site | See site |
+
+**Positioning:** open source, free, cross-platform through the browser, offline-first, and local-only, with many notes and
+search built in.
+
+### 2.2 Borrow / avoid
+
 | Reference | What to borrow | What to avoid |
 |---|---|---|
 | **Numi** (numi.app, nikolaeu/numi) | Natural phrases (`$20 in euro - 5% discount`, `today + 2 weeks`), `#` headers, `//` comments, `prev`/`sum`/`avg` tokens, CSS units (px/pt/em with configurable ppi), extensions written in JS | macOS-first, closed source; the CLI version lacks most features |
@@ -237,7 +259,7 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Vite + TS (strict) project, ESLint/Prettier, Vitest
 - [x] GitHub Actions: CI (lint, typecheck, test) and Pages deploy
 - [x] PWA manifest and icons (generated from `public/favicon.svg`), service worker precaching the shell
-- [ ] Hello-world page live at `https://parmsam.github.io/reckon/`
+- [x] Hello-world page live at `https://parmsam.github.io/reckon/`
 - [x] Add a `LICENSE` file (MIT)
 
 ### M1 — Engine core

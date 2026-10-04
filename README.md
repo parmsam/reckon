@@ -55,16 +55,27 @@ Every push to `main` runs CI, which builds the app and deploys `dist/` to GitHub
 ## Tech
 TypeScript · Vite · CodeMirror 6 · decimal.js-light · Temporal (with polyfill) · IndexedDB (`idb`) · vite-plugin-pwa · Vitest · Playwright
 
-## Inspiration
-[Numi](https://github.com/nikolaeu/numi) ·
-[numbr](https://github.com/antonmedv/numbr) ·
-[Soulver](https://soulver.app) ·
-[Parsify](https://parsify.app) ·
-[Notes Calculator](https://notescalculator.com) ·
-[Antinote](https://antinote.io) ·
-[Figr](https://www.figr.app) ·
-[Calcator](https://calcator.app) ·
-[Ganaka](https://github.com/spdeepak/Ganaka)
+## How Reckon compares
+Reckon builds on ideas from these notepad calculators. Details come from each project's site or repo as of
+October 2026. "See site" means we didn't confirm the detail.
+
+| App | Platforms | Open source | Price | Ideas Reckon borrows |
+|---|---|---|---|---|
+| **Reckon** | Any browser; installable PWA | ✅ MIT | Free | Works offline, stores everything locally, shares notes by link |
+| [Numi](https://numi.app) | macOS, Windows, Linux CLI, Alfred | CLI only ([repo](https://github.com/nikolaeu/numi)) | See site | Natural phrases (`$20 in euro - 5% discount`), `#` headers, `prev`/`sum`/`avg`, CSS units, JS extensions |
+| [numbr](https://numbr.dev) | Web, Chrome extension | ✅ ([repo](https://github.com/antonmedv/numbr)) | Free | TypeScript parser/evaluator split, share by URL, `k`/`M` suffixes, ignores surrounding text |
+| [Soulver](https://soulver.app) | macOS, iOS, iPadOS | ❌ | Paid | Live line references, subtotals and totals, multi-word variables, percentage phrasing, calendar math |
+| [Parsify](https://parsify.app) | macOS, Windows, web | ❌ | Free (5 lines) or €30 one-time | Over 200 currencies with hourly rates, time zones, plugins, theming |
+| [Notes Calculator](https://notescalculator.com) | Mac, Windows, Linux, iOS, Android, web | ❌ | One free note; lifetime purchase for more | Large-number shorthand, hex/binary, conditionals, offline-first |
+| [Antinote](https://antinote.io) | macOS | ❌ | See site | Scratchpad feel, `sum`/`average`/`count`, reactive variables, local-only privacy |
+| [Calcator](https://calcator.app) | macOS, Windows, Linux | See site | Free | Variable autocomplete, multi-cursor editing, number-format settings, tabs |
+| [Ganaka](https://github.com/spdeepak/Ganaka) | macOS 14+ | ✅ | Free | `$1`/`$last` line refs, `min`/`max`/`count`, Unicode `× ÷ −`, tabbed workspaces |
+| [Figr](https://www.figr.app) | See site | See site | See site | The minimal notepad-calculator framing |
+
+Reckon aims to be **open source, free, cross-platform through the browser, offline-first, and local-only**, with
+many notes and search built in.
+
+PLAN.md §2 has a longer breakdown that includes what to avoid.
 
 ## License
 MIT
