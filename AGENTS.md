@@ -17,7 +17,7 @@ npm run dev          # Vite dev server
 npm run build        # typecheck + production build to dist/
 npm run preview      # serve dist/ (needed to test the service worker)
 npm test             # Vitest (engine + storage)
-npm run test:e2e     # Playwright smoke tests
+npm run test:e2e     # Playwright smoke tests (added in M6)
 npm run lint         # ESLint + Prettier check
 npm run typecheck    # tsc --noEmit
 ```

@@ -234,11 +234,11 @@ rate source on or off (privacy: allow turning off all network calls).
 ## 7. Milestones
 
 ### M0 — Scaffold
-- [ ] Vite + TS (strict) project, ESLint/Prettier, Vitest
-- [ ] GitHub Actions: CI (lint, typecheck, test) and Pages deploy
-- [ ] PWA manifest and icons, service worker precaching the shell
+- [x] Vite + TS (strict) project, ESLint/Prettier, Vitest
+- [x] GitHub Actions: CI (lint, typecheck, test) and Pages deploy
+- [x] PWA manifest and icons (generated from `public/favicon.svg`), service worker precaching the shell
 - [ ] Hello-world page live at `https://parmsam.github.io/reckon/`
-- [ ] Add a `LICENSE` file (MIT)
+- [x] Add a `LICENSE` file (MIT)
 
 ### M1 — Engine core
 - [ ] Lexer with source ranges; Pratt parser; AST; Decimal evaluator
