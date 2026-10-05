@@ -95,7 +95,8 @@ export class SettingsDialog {
       h(
         'form',
         { method: 'dialog' },
-        h('h2', { id: 'settings-title' }, 'Settings'),
+        // Focus starts on the title, so no control (like the Theme picker on phones) opens by itself.
+        h('h2', { id: 'settings-title', tabindex: -1, autofocus: true }, 'Settings'),
         h(
           'fieldset',
           {},

@@ -20,7 +20,13 @@ export function watchForUpdates(onUpdate: (apply: () => Promise<void>) => void):
         await activate(false);
       }),
     onRegisteredSW: (_url, registration) => {
-      if (registration) setInterval(() => void registration.update(), CHECK_EVERY_MS);
+      if (!registration) return;
+      setInterval(() => void registration.update(), CHECK_EVERY_MS);
+      // Home-screen apps (iOS especially) resume from the background without reloading, and
+      // timers pause there, so also check whenever the app comes back to the foreground.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void registration.update();
+      });
     },
   });
 }

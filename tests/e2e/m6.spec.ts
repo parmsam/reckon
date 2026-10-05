@@ -29,6 +29,8 @@ test('settings change the theme and precision, and persist', async ({ page, isMo
   await expect(page.locator('#save-status')).toHaveText('Saved');
 
   await openSettings(page, isMobile);
+  // Nothing is focused (or opened) inside the dialog until the user picks it.
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeFocused();
   await page.getByLabel('Theme').selectOption('dark');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByLabel('Decimal places', { exact: true }).fill('2');
