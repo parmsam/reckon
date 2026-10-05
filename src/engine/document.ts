@@ -33,6 +33,8 @@ export interface LineResult {
   highlights: Highlight[];
   /** True when the result used an exchange rate. */
   usesRates?: boolean;
+  /** True when the line itself uses sum/avg/count/min/max, so totals leave it out. */
+  aggregate?: boolean;
 }
 
 /**
@@ -178,6 +180,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         variable,
         highlights,
         usesRates: usedRates || undefined,
+        aggregate: usesAggregate(line.ast!) || undefined,
       });
     } catch (e) {
       if (variable) setVar(variable, undefined);

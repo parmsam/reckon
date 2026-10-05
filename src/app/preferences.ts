@@ -21,6 +21,8 @@ export interface Preferences {
   showSplash: boolean;
   /** Show a tip at the bottom of the notes list. */
   showTips: boolean;
+  /** Show the total bar under the note. */
+  showTotals: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -35,6 +37,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   fetchRates: true,
   showSplash: true,
   showTips: true,
+  showTotals: true,
 };
 
 const KEY = 'preferences';
@@ -58,6 +61,7 @@ export function sanitize(input: unknown): Preferences {
   if (typeof raw.fetchRates === 'boolean') p.fetchRates = raw.fetchRates;
   if (typeof raw.showSplash === 'boolean') p.showSplash = raw.showSplash;
   if (typeof raw.showTips === 'boolean') p.showTips = raw.showTips;
+  if (typeof raw.showTotals === 'boolean') p.showTotals = raw.showTotals;
   if (typeof raw.locale === 'string' && (raw.locale === '' || isLocale(raw.locale)))
     p.locale = raw.locale;
   int('fontSize', 12, 24);

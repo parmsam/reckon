@@ -18,7 +18,7 @@ Reckon works offline after the first visit, and you can install it as an app wit
 - **Safari on a Mac:** choose **File → Add to Dock**.
 
 The tip at the bottom of the notes list shows the right steps for your device. Tips cycle each visit; turn
-them off with × or in Settings.
+them off in Settings.
 
 ## Notes, sharing and backups
 

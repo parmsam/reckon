@@ -10,9 +10,10 @@ export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate',
-      // Register the service worker without blocking the first paint.
-      injectRegister: 'script-defer',
+      // New versions wait until the user chooses to reload (see src/app/updates.ts).
+      registerType: 'prompt',
+      // Registered from the app (src/app/updates.ts), after the first paint.
+      injectRegister: false,
       pwaAssets: { config: true },
       manifest: {
         name: 'Reckon',
@@ -25,6 +26,8 @@ export default defineConfig({
       workbox: {
         // The plugin adds manifest.webmanifest itself; listing it twice breaks precaching.
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Take control on first install; later versions wait for the user's Reload.
+        clientsClaim: true,
         // Docs and machine-readable files aren't part of the app: don't answer them with index.html.
         navigateFallbackDenylist: [/\/docs\//, /\/skill\//, /\.txt$/, /\.md$/, /\/engine\.js$/],
       },

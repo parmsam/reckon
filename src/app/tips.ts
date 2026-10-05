@@ -101,15 +101,15 @@ export function tips(ctx: TipContext): Tip[] {
 const INDEX_KEY = 'reckon.tip';
 
 /**
- * One tip at a time at the bottom of the notes list. Each visit shows the next tip; "Next"
- * cycles, and × turns tips off (they can come back in Settings).
+ * One tip at a time at the bottom of the notes list. Each visit shows the next tip, and "Next"
+ * cycles. Tips are turned off in Settings.
  */
 export class TipStrip {
   readonly el: HTMLElement;
   private list: Tip[] = [];
   private index = 0;
 
-  constructor(private onHide: () => void) {
+  constructor() {
     this.el = h('aside', { class: 'tip', 'aria-label': 'Tip', hidden: true });
     try {
       this.index = Number(localStorage.getItem(INDEX_KEY) ?? 0) || 0;
@@ -145,17 +145,6 @@ export class TipStrip {
             )
           : null,
         h('button', { type: 'button', class: 'text-btn', onclick: () => this.next() }, 'Next tip'),
-        h(
-          'button',
-          {
-            type: 'button',
-            class: 'icon-btn tip-close',
-            'aria-label': 'Turn off tips',
-            title: 'Turn off tips',
-            onclick: () => this.onHide(),
-          },
-          '×',
-        ),
       ),
     );
   }

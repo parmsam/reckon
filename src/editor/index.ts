@@ -28,6 +28,8 @@ export interface EditorOptions {
   settings?: EditorSettings;
   /** Called for edits made by the user, not for `setDoc` or `applyExternal`. */
   onChange?: (doc: string) => void;
+  /** Called when the text, selection or answers change (for the total bar). */
+  onUpdate?: () => void;
 }
 
 export interface Editor {
@@ -48,7 +50,13 @@ export interface Editor {
 /** Marks transactions that didn't come from the user typing. */
 const external = Annotation.define<boolean>();
 
-export function createEditor({ parent, doc, settings = {}, onChange }: EditorOptions): Editor {
+export function createEditor({
+  parent,
+  doc,
+  settings = {},
+  onChange,
+  onUpdate,
+}: EditorOptions): Editor {
   const readOnly = new Compartment();
   const settingsCompartment = new Compartment();
   let currentSettings = settings;
@@ -91,6 +99,9 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
             (tr) => tr.docChanged && !tr.annotation(external),
           );
           if (userEdit) onChange?.(update.state.doc.toString());
+          const answersChanged =
+            update.startState.field(resultsField) !== update.state.field(resultsField);
+          if (update.docChanged || update.selectionSet || answersChanged) onUpdate?.();
         }),
       ],
     });
@@ -101,6 +112,7 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
     view,
     setDoc(text, { readOnly: ro = false } = {}) {
       view.setState(createState(text, ro));
+      onUpdate?.();
     },
     applyExternal(text) {
       const current = view.state.doc.toString();

@@ -3,6 +3,7 @@ import { openSearchPanel } from '@codemirror/search';
 import { COPIED_EVENT, createEditor } from '../editor';
 import { toggleLineComment } from '../editor/commands';
 import { copyCurrentResult } from '../editor/results';
+import { summarize } from '../editor/summary';
 import { createAutosave } from '../storage/autosave';
 import { getSetting, setSetting } from '../storage/settings';
 import {
@@ -29,6 +30,7 @@ import { RatesManager } from './rates';
 import { parseRoute, routeHash, type Route } from './router';
 import { decodeShare, shareLink } from './share';
 import { SettingsDialog } from './settings-dialog';
+import { watchForUpdates } from './updates';
 import { installTip, tips, TipStrip, type TipContext } from './tips';
 import { createShortcutsDialog } from './shortcuts-dialog';
 import { Sidebar } from './sidebar';
@@ -113,7 +115,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // ---- Feedback -----------------------------------------------------------------------------
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
-  function toast(message: string, action?: { label: string; run: () => void }): void {
+  function toast(
+    message: string,
+    action?: { label: string; run: () => void },
+    { sticky = false } = {},
+  ): void {
     toastText.textContent = message;
     toastAction.hidden = !action;
     toastAction.textContent = action?.label ?? '';
@@ -125,6 +131,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : null;
     toastEl.classList.add('visible');
     clearTimeout(toastTimer);
+    if (sticky) return;
     // Longer messages and ones with an action stay up longer.
     toastTimer = setTimeout(
       () => toastEl.classList.remove('visible'),
@@ -164,6 +171,49 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
+  // ---- Total bar (under the note) -----------------------------------------------------------
+  const totalBar = h('footer', {
+    class: 'totalbar',
+    'aria-live': 'polite',
+    'aria-label': 'Totals',
+  });
+  const copyValue = (value: string) =>
+    navigator.clipboard.writeText(value).then(
+      () => toast(`Copied ${value}`),
+      () => toast('Could not copy'),
+    );
+  const copyButton = (label: string, value: string) =>
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'totalbar-value',
+        title: 'Click to copy',
+        onclick: () => void copyValue(value),
+      },
+      h('span', { class: 'totalbar-name' }, `${label} `),
+      h('strong', {}, value),
+    );
+
+  /** The section total (or the selection's sum, average and count) for where the cursor is. */
+  function renderTotals(): void {
+    totalBar.hidden = !prefs.showTotals;
+    const summary = prefs.showTotals ? summarize(editor.view.state) : undefined;
+    if (!summary) return totalBar.replaceChildren();
+    if (summary.kind === 'section') {
+      return totalBar.replaceChildren(
+        summary.label ? h('span', { class: 'totalbar-label' }, summary.label) : '',
+        copyButton('Total', summary.total),
+      );
+    }
+    const n = summary.count;
+    totalBar.replaceChildren(
+      h('span', { class: 'totalbar-label' }, `${n} answer${n === 1 ? '' : 's'} selected`),
+      summary.sum ? copyButton('Sum', summary.sum) : '',
+      summary.avg && n > 1 ? copyButton('Average', summary.avg) : '',
+    );
+  }
+
   let prefs: Preferences = await loadPreferences();
   applyAppearance(prefs);
 
@@ -175,6 +225,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       now: Date.now(),
     },
+    onUpdate: () => renderTotals(),
     onChange: (body) => {
       const id = currentId();
       if (!id) return;
@@ -231,6 +282,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (prefs.fetchRates) void rates.refresh();
       void savePreferences(prefs).catch(() => {});
       refreshTips();
+      renderTotals();
     },
     () => void addExampleNotes(),
   );
@@ -263,10 +315,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     refreshTips();
   }
 
-  const tipStrip = new TipStrip(() => {
-    settingsDialog.apply({ ...prefs, showTips: false });
-    toast('Tips are off. You can turn them back on in Settings.');
-  });
+  const tipStrip = new TipStrip();
   function refreshTips(): void {
     tipStrip.update(tips(tipContext()), prefs.showTips);
   }
@@ -580,6 +629,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ),
       banner,
       editorEl,
+      totalBar,
     ),
     toastEl,
     accessory,
@@ -1000,4 +1050,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   await handleRoute();
+
+  // A new version is ready: offer to switch, saving any unsaved typing first.
+  watchForUpdates((apply) =>
+    toast(
+      'A new version of Reckon is available',
+      {
+        label: 'Reload',
+        run: () => void autosave.flush().then(apply),
+      },
+      { sticky: true },
+    ),
+  );
 }

@@ -80,6 +80,10 @@ export class SettingsDialog {
       'showTips',
       h('input', { id: 'pref-showTips', type: 'checkbox' }),
     );
+    const showTotals = this.register(
+      'showTotals',
+      h('input', { id: 'pref-showTotals', type: 'checkbox' }),
+    );
     const fetchRates = this.register(
       'fetchRates',
       h('input', { id: 'pref-fetchRates', type: 'checkbox', 'aria-describedby': 'rates-hint' }),
@@ -116,6 +120,12 @@ export class SettingsDialog {
             { class: 'field checkbox' },
             showTips,
             h('label', { for: 'pref-showTips' }, 'Show tips in the notes list'),
+          ),
+          h(
+            'div',
+            { class: 'field checkbox' },
+            showTotals,
+            h('label', { for: 'pref-showTotals' }, 'Show the total bar under the note'),
           ),
         ),
         h(

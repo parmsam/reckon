@@ -6,6 +6,7 @@ import { DEFAULT_PREFERENCES, sanitize } from '../src/app/preferences';
 import { toggleLineComment } from '../src/editor/commands';
 import { reckonCompletions } from '../src/editor/completion';
 import { engineSettings, resultsField } from '../src/editor/results';
+import { summarize } from '../src/editor/summary';
 import { vocabulary } from '../src/engine/vocabulary';
 
 describe('preferences', () => {
@@ -103,5 +104,41 @@ describe('autocomplete', () => {
     const labels = new Set(vocabulary().map((w) => w.label));
     for (const word of ['sqrt', 'kilometers', 'euros', 'tomorrow', 'pi'])
       expect(labels.has(word)).toBe(true);
+  });
+});
+
+describe('total bar summary', () => {
+  const state = (doc: string, anchor: number, head = anchor) =>
+    EditorState.create({
+      doc,
+      selection: EditorSelection.range(anchor, head),
+      extensions: [engineSettings.of({ locale: 'en-US' }), resultsField],
+    });
+  const note = '# Groceries\napples: $3\nbread: $2.50\nsum\n\n# Trip\n5 km\n$20';
+
+  it('totals the section around the cursor, leaving out sum lines', () => {
+    expect(summarize(state(note, note.indexOf('bread')))).toEqual({
+      kind: 'section',
+      label: 'Groceries',
+      total: '$5.50',
+    });
+    // On the heading itself: the section below it.
+    expect(summarize(state(note, 1))).toMatchObject({ total: '$5.50' });
+  });
+
+  it('stays quiet for mixed units, single answers and blank lines', () => {
+    expect(summarize(state(note, note.indexOf('5 km')))).toBeUndefined();
+    expect(summarize(state('# A\n5', 4))).toBeUndefined();
+    expect(summarize(state(note, note.indexOf('\n\n') + 1))).toBeUndefined();
+  });
+
+  it('gives sum, average and count for a multi-line selection', () => {
+    const doc = '10\n20\n30\ntext';
+    expect(summarize(state(doc, 0, doc.length))).toEqual({
+      kind: 'selection',
+      sum: '60',
+      avg: '20',
+      count: 3,
+    });
   });
 });

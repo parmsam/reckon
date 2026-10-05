@@ -92,6 +92,7 @@ export class Sidebar {
         },
         svg(LOGO),
         h('span', {}, 'Reckon'),
+        h('span', { class: 'version', title: 'Version' }, __APP_VERSION__),
       ),
       h(
         'div',

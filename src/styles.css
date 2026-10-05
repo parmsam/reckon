@@ -1029,3 +1029,55 @@ kbd {
   margin-left: auto;
   font-size: 1.1rem;
 }
+
+/* Total bar, under the note (like Numi's) */
+.totalbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 2.25rem;
+  padding: 0.2rem 1rem;
+  padding-bottom: max(0.2rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.totalbar[hidden] {
+  display: none;
+}
+
+.totalbar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.totalbar-value {
+  padding: 0.15rem 0.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.totalbar-value strong {
+  color: var(--result);
+  font-family: var(--mono);
+}
+
+.totalbar-value:hover {
+  background: var(--selection);
+}
+
+.brand .version {
+  align-self: flex-end;
+  margin-bottom: 0.1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}

@@ -95,3 +95,16 @@ test.describe('dates', () => {
     await expect(resultOnLine(page, 'tomorrow')).toHaveText('Fri, Jan 16');
   });
 });
+
+test('the total bar shows the section total, and selection sums', async ({ page }) => {
+  await page.goto('./');
+  await setNote(page, '# Groceries\napples: $3\nbread: $2.50\nmilk: $1.25');
+  const bar = page.getByRole('contentinfo', { name: 'Totals' });
+  await expect(bar).toContainText('Groceries');
+  await expect(bar).toContainText('Total $6.75');
+
+  await page.keyboard.press('ControlOrMeta+a');
+  await expect(bar).toContainText('3 answers selected');
+  await expect(bar).toContainText('Sum $6.75');
+  await expect(bar).toContainText('Average $2.25');
+});

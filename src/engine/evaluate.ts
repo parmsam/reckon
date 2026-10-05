@@ -183,7 +183,7 @@ function blockAmounts(
   return { values, unit };
 }
 
-function aggregate(name: string, block: readonly Value[], ctx: UnitContext): Value {
+export function aggregate(name: string, block: readonly Value[], ctx: UnitContext): Value {
   const { values, unit } = blockAmounts(block, ctx);
   if (name === 'count') return num(new D(values.length));
   if (!values.length) {
