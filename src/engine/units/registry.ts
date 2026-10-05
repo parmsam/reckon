@@ -28,6 +28,7 @@ const POWER = dim({ mass: 1, length: 2, time: -3 });
 const PRESSURE = dim({ mass: 1, length: -1, time: -2 });
 const FORCE = dim({ mass: 1, length: 1, time: -2 });
 const FREQUENCY = dim({ time: -1 });
+const DATA_RATE = dim({ data: 1, time: -1 });
 
 type Factor = number | string | Decimal | ((ctx: UnitContext) => Decimal);
 
@@ -201,17 +202,28 @@ export const PHYSICAL_UNITS: UnitSpec[] = [
   ),
 
   // Data (bytes)
-  unit('bit', DATA, '0.125', 'bit bits', 'bit, bits'),
+  unit('bit', DATA, '0.125', 'bit bits', 'bit, bits', { symbol: 'bit', plural: 'bits' }),
   unit('B', DATA, 1, 'B', 'byte, bytes'),
   unit('KB', DATA, 1e3, 'KB kB kb', 'kilobyte, kilobytes'),
   unit('MB', DATA, 1e6, 'MB mb', 'megabyte, megabytes'),
   unit('GB', DATA, 1e9, 'GB gb', 'gigabyte, gigabytes'),
   unit('TB', DATA, 1e12, 'TB tb', 'terabyte, terabytes'),
   unit('PB', DATA, 1e15, 'PB pb', 'petabyte, petabytes'),
+  // Bits: capital B is bytes, b is bits (kb, mb and gb stay bytes, as people often write them).
+  unit('kbit', DATA, 125, 'kbit Kbit Kb', 'kilobit, kilobits'),
+  unit('Mbit', DATA, 125e3, 'Mbit Mb', 'megabit, megabits'),
+  unit('Gbit', DATA, 125e6, 'Gbit Gb', 'gigabit, gigabits'),
+  unit('Tbit', DATA, 125e9, 'Tbit Tb', 'terabit, terabits'),
   unit('KiB', DATA, 1024, 'KiB kib', 'kibibyte, kibibytes'),
   unit('MiB', DATA, 1024 ** 2, 'MiB mib', 'mebibyte, mebibytes'),
   unit('GiB', DATA, 1024 ** 3, 'GiB gib', 'gibibyte, gibibytes'),
   unit('TiB', DATA, 1024 ** 4, 'TiB tib', 'tebibyte, tebibytes'),
+
+  // Data rate (bytes per second)
+  unit('bps', DATA_RATE, '0.125', 'bps', 'bit per second, bits per second'),
+  unit('kbps', DATA_RATE, 125, 'kbps Kbps', 'kilobit per second, kilobits per second'),
+  unit('Mbps', DATA_RATE, 125e3, 'Mbps', 'megabit per second, megabits per second'),
+  unit('Gbps', DATA_RATE, 125e6, 'Gbps', 'gigabit per second, gigabits per second'),
 
   // Angle (rad)
   unit('rad', ANGLE, 1, 'rad', 'radian, radians'),

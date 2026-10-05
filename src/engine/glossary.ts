@@ -526,6 +526,7 @@ const UNIT_KINDS: [string, ReturnType<typeof dim>][] = [
   ['Time', dim({ time: 1 })],
   ['Temperature', dim({ temperature: 1 })],
   ['Data', dim({ data: 1 })],
+  ['Data rate', dim({ data: 1, time: -1 })],
   ['Angle', dim({ angle: 1 })],
   ['Speed', dim({ length: 1, time: -1 })],
   ['Energy', dim({ mass: 1, length: 2, time: -2 })],

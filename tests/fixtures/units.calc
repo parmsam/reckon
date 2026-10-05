@@ -117,3 +117,12 @@ height: 180 cm in ft => 5.9055 ft
 $6/lb × 2.5 lb => $15.00
 2 cups => 2 cups
 min(4, 2) => 2
+
+# Bits and data rates
+1 Mbit in KB => 125 KB
+8 Gb in GB => 1 GB
+1 Mb in bits => 1,000,000 bits
+100 Mbps in MB/s => 12.5 MB/s
+48 GB / 300 Mbps in min => 21.3333 min
+1 Gbps in Mbps => 1,000 Mbps
+2 megabits per second in kbps => 2,000 kbps
