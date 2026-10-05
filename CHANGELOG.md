@@ -5,34 +5,41 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
-- Answer references: double-click an answer to use it in a line below. It shows as a chip with the answer,
-  updates live, and keeps pointing at its line as lines are added or removed above it (`line3` references
-  you type follow along too). If the line is deleted, the reference becomes its last answer.
+## 1.3.0 — 2026-10-05
 
-- Tags: `lunch $12 #food`, then `sum #food` (or `avg`, `count`, `max`… or several tags) totals every tagged
-  line above, across headings and blank lines.
+Soulver-style structure for longer notes (answer references, subtotals and tags), more to calculate with,
+and ready-made templates.
 
-- Subtotals: `subtotal` adds up the lines since the last one, and `grand total` adds up the subtotals.
+### Structure
+- **Answer references:** double-click an answer to use it in a line below. It shows as a chip with the
+  answer, updates live, and keeps pointing at its line as lines are added or removed above it (`line3`
+  references you type follow along too). If the line is deleted, the reference becomes its last answer.
+- **Subtotals:** `subtotal` adds up the lines since the last one, and `grand total` adds up the subtotals.
   Double-click a blank line under some answers to put a subtotal there (on phones, the Σ key).
+- **Tags:** `lunch $12 #food`, then `sum #food` (or `avg`, `count`, `max`… or several tags) totals every
+  tagged line above, across headings and blank lines.
 
-- Several cursors: ⌘/Ctrl-click adds one, ⌘/Ctrl-D selects the next match too, and ⌥/Alt-drag selects a box.
-
-- Cooking conversions: name an ingredient and cups convert to grams and back (`2 cups flour in g` → 240 g,
+### Calculating
+- **Statistics:** `median` and `stdev` (also `stddev`, `std`), for the lines above like `avg`, or as
+  functions (`median(5, 1, 3)`). `stdev` is the sample standard deviation, like spreadsheets' STDEV.
+- **Cooking conversions:** name an ingredient and cups convert to grams and back (`2 cups flour in g` → 240 g,
   `250 g butter in cups`). Flour, sugars, butter, cocoa, oats, milk, water, honey and oils are built in;
   add others with a weight per cup (`almond flour = 96 g/cup`).
-
-- Bits and data rates: `Mbit`/`Mb`, `Gbit`/`Gb`…, and `bps`, `kbps`, `Mbps`, `Gbps`
+- **Bits and data rates:** `Mbit`/`Mb`, `Gbit`/`Gb`…, and `bps`, `kbps`, `Mbps`, `Gbps`
   (`48 GB / 200 Mbps in min`). Lowercase `kb`, `mb` and `gb` still mean bytes.
-- Choices of bare values: `tip = 15% | [18%] | 20%`. Click the current one to pick the next.
+- **Choices of plain values:** `tip = 15% | [18%] | 20%`. Click the current one to pick the next.
 
-- `median` and `stdev` (also `stddev`, `std`): for the lines above, like `avg`, or as functions
-  (`median(5, 1, 3)`). `stdev` is the sample standard deviation, like spreadsheets' STDEV.
-- Templates in the docs: 14 ready-made notes (split a bill, runway, LTV and CAC, loan payment, unit price…)
-  to open in Reckon and adapt. Every answer is tested.
+### Editing and docs
+- **Several cursors:** <kbd>⌘/Ctrl</kbd>-click adds one, <kbd>⌘/Ctrl</kbd> <kbd>D</kbd> selects the next
+  match too, and <kbd>⌥/Alt</kbd>-drag selects a box.
+- **Templates** in the docs: 14 ready-made notes (split a bill, runway, LTV and CAC, loan payment, unit
+  price…) to open in Reckon and adapt. Every answer is tested.
+- **Backup reminder** (weekly by default; monthly or never in Settings) with a *Back up* button. It only
+  appears when notes have changed since your last backup. Sticky notices can now be dismissed.
 
-- A backup reminder (weekly by default; monthly or never in Settings) with a *Back up* button. It only
-  appears when notes have changed since your last backup.
-- Fixed: the New note button was cut off in Firefox, and long notices wrapped into a narrow column.
+### Fixes
+- The New note button was cut off in Firefox.
+- Long notices no longer wrap into a narrow column.
 
 ## 1.2.0 — 2026-10-05
 
