@@ -52,7 +52,11 @@ function print(node: Node, ctx: ExplainContext): string {
           ? 'average of the lines above'
           : node.name === 'stdev'
             ? 'standard deviation of the lines above'
-            : `${node.name} of the lines above`,
+            : node.name === 'subtotal'
+              ? 'sum since the last subtotal'
+              : node.name === 'grandTotal'
+                ? 'all the subtotals and the lines since the last one'
+                : `${node.name} of the lines above`,
       );
     case 'date':
     case 'unit':

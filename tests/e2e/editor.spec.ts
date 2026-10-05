@@ -225,6 +225,22 @@ test('several cursors: next match, ⌘/Ctrl-click and ⌥/Alt-drag', async ({ pa
   await expect(line(2)).toContainText('my pears = 4');
 });
 
+test('double-clicking a blank line under answers adds a subtotal', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'desktop only');
+  await page.goto('./');
+  await setNote(page, 'rent: 1200\npower: 80\n\nfood: 300\nfun: 120\n\nnotes');
+  const line = (n: number) => page.locator('.cm-line').nth(n - 1);
+  await line(3).dblclick({ position: { x: 5, y: 5 } });
+  await expect(resultAt(page, 3)).toHaveText('1,280');
+  await line(6).dblclick({ position: { x: 5, y: 5 } });
+  await expect(resultAt(page, 6)).toHaveText('420');
+  // Under a line without an answer, a double-click does nothing special.
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.insertText('\n\n');
+  await line(9).dblclick({ position: { x: 5, y: 5 } });
+  await expect(line(9)).toHaveText('');
+});
+
 test('sweeping a variable charts every answer that uses it', async ({ page }) => {
   await page.goto('./');
   await setNote(page, 'rent = $1,200\nfood = $400\nleft = $3,000 - rent - food\nfood × 2');

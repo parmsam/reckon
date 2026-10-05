@@ -1,4 +1,4 @@
-import { usesAggregate } from './ast';
+import { usesAggregate, usesSubtotal } from './ast';
 import { defaultSettings, type Settings } from './context';
 import { evaluate } from './evaluate';
 import { explain } from './explain';
@@ -63,6 +63,11 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
   const scope: Scope = { vars: varNames, functions: functionNames, units: userUnits, symbols };
   const results: LineResult[] = [];
   let block: Value[] = [];
+  // Since the last subtotal (within the block), and the subtotals since the last heading.
+  let section: Value[] = [];
+  let sectionLines: number[] = [];
+  let subtotals: Value[] = [];
+  let subtotalLines: number[] = [];
   let prev: Value | undefined;
   // Where things were defined, so each line can say which lines it uses.
   const definedAt = new Map<string, number>();
@@ -153,6 +158,12 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
       case 'heading':
         block = [];
         blockLines = [];
+        section = [];
+        sectionLines = [];
+        if (line.kind === 'heading') {
+          subtotals = [];
+          subtotalLines = [];
+        }
         results.push({ kind: line.kind, highlights });
         continue;
       case 'comment':
@@ -177,11 +188,19 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
       prev,
       lineValue: (n: number) => (n >= 1 && n <= results.length ? results[n - 1]!.value : undefined),
       block,
+      section,
+      subtotals,
       settings: s,
       units: lineUnits,
       functions,
     };
-    const uses = linesUsed(line.ast!, { definedAt, prevLine, blockLines });
+    const uses = linesUsed(line.ast!, {
+      definedAt,
+      prevLine,
+      blockLines,
+      sectionLines,
+      subtotalLines,
+    });
     try {
       const value = evaluate(line.ast!, env);
       const explanation =
@@ -226,6 +245,13 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
       if (!usesAggregate(line.ast!)) {
         block.push(value);
         blockLines.push(lineIndex);
+        section.push(value);
+        sectionLines.push(lineIndex);
+      } else if (usesSubtotal(line.ast!)) {
+        subtotals.push(value);
+        subtotalLines.push(lineIndex);
+        section = [];
+        sectionLines = [];
       }
       const display = formatValue(value, s);
       results.push({
@@ -257,6 +283,8 @@ function linesUsed(
     definedAt: ReadonlyMap<string, number>;
     prevLine?: number;
     blockLines: readonly number[];
+    sectionLines: readonly number[];
+    subtotalLines: readonly number[];
   },
 ): number[] {
   const found = new Set<number>();
@@ -281,7 +309,10 @@ function linesUsed(
         add(node.n - 1);
         break;
       case 'agg':
-        scope.blockLines.forEach(add);
+        if (node.name === 'subtotal') scope.sectionLines.forEach(add);
+        else if (node.name === 'grandTotal')
+          [...scope.subtotalLines, ...scope.sectionLines].forEach(add);
+        else scope.blockLines.forEach(add);
         break;
       case 'call':
         add(scope.definedAt.get(`f:${node.name}`));

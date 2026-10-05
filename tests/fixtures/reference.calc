@@ -43,7 +43,7 @@ tip($80, 18%) => $14.40
 3 dozen => 36
 
 // ## Previous answers and totals
-// prev is the last answer. sum, avg, median, stdev, count, min and max cover the lines since the last heading or blank line. line3 is the answer on line 3.
+// prev is the last answer. sum, avg, median, stdev, count, min and max cover the lines since the last heading or blank line. line3 is the answer on line 3. subtotal adds up the lines since the last subtotal, and grand total adds up the subtotals; in the app, double-click a blank line under some answers to add a subtotal.
 groceries: 80 => 80
 gas: 45 => 45
 dinner: 55 => 55
@@ -51,6 +51,13 @@ sum => 180
 median => 55
 avg => 60
 prev × 2 => 120
+
+rent: 1,200 => 1,200
+power: 80 => 80
+subtotal => 1,280
+food: 300 => 300
+subtotal => 300
+grand total => 1,580
 
 // ## Percentages
 20% of 50 => 10

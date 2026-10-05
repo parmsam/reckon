@@ -40,7 +40,8 @@ export type Op =
 export type Keyword =
   'of' | 'off' | 'on' | 'conv' | 'is' | 'what' | 'from' | 'ago' | 'later' | 'if' | 'then' | 'else';
 export type Target = 'hex' | 'bin' | 'oct' | 'sci' | 'dec' | 'percent';
-export type Aggregate = 'sum' | 'avg' | 'median' | 'stdev' | 'count' | 'min' | 'max';
+export type Aggregate =
+  'sum' | 'avg' | 'median' | 'stdev' | 'count' | 'min' | 'max' | 'subtotal' | 'grandTotal';
 
 interface Span {
   from: number;
@@ -113,6 +114,8 @@ export const AGGREGATES: Record<string, Aggregate> = {
   count: 'count',
   min: 'min',
   max: 'max',
+  subtotal: 'subtotal',
+  'grand total': 'grandTotal',
 };
 export const PREV_WORDS = new Set(['prev', 'previous', 'ans']);
 const ARTICLES = new Set(['a', 'an']);
@@ -436,6 +439,12 @@ export function resolve(
     if (w === 'min' && unitPosition && !isOp(src[i + 1], '(')) {
       out.push({ t: 'unit', unit: MINUTES, ...span(tok) });
       i += 1;
+      continue;
+    }
+
+    if (w === 'grand' && lower(src[i + 1]) === 'total') {
+      out.push({ t: 'agg', name: 'grandTotal', ...span(tok, src[i + 1]) });
+      i += 2;
       continue;
     }
 

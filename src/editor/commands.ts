@@ -23,3 +23,24 @@ export const toggleLineComment: StateCommand = ({ state, dispatch }) => {
   );
   return true;
 };
+
+/**
+ * Puts `subtotal` on the cursor's line when it's blank, or on a new line below it. The phone
+ * keyboard row's Σ key, and double-clicking a blank line under an answer.
+ */
+export const insertSubtotal: StateCommand = ({ state, dispatch }) => {
+  if (state.readOnly) return false;
+  const line = state.doc.lineAt(state.selection.main.head);
+  const blank = line.text.trim() === '';
+  const from = blank ? line.from : line.to;
+  const insert = blank ? 'subtotal' : '\nsubtotal';
+  dispatch(
+    state.update({
+      changes: { from, to: line.to, insert },
+      selection: { anchor: from + insert.length },
+      scrollIntoView: true,
+      userEvent: 'input.subtotal',
+    }),
+  );
+  return true;
+};

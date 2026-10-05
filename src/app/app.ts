@@ -427,6 +427,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         run: () => toggleLineComment(editor.view),
       },
       {
+        id: 'subtotal',
+        label: 'Add a subtotal',
+        keywords: 'sum total group',
+        run: () => editor.insertSubtotal(),
+      },
+      {
         id: 'docs',
         label: 'Help and docs',
         keywords: 'syntax reference guide manual llm prompt',
@@ -642,7 +648,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     svg(ICONS.keyboard),
   );
-  const accessory = createAccessoryRow(editor.view.dom, (text) => editor.insert(text));
+  const accessory = createAccessoryRow(
+    editor.view.dom,
+    (text) => editor.insert(text),
+    () => editor.insertSubtotal(),
+  );
 
   const app = h(
     'div',

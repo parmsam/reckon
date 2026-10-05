@@ -47,3 +47,36 @@ stdev => 1.5275 km
 
 9 => 9
 stdev => (none)
+
+# Subtotals
+rent: 1200 => 1,200
+power: 80 => 80
+subtotal => 1,280
+food: 300 => 300
+fun: 120 => 120
+subtotal => 420
+grand total => 1,700
+sum => 1,700
+
+# Grand total across blank lines, and lines after the last subtotal
+10 => 10
+20 => 20
+subtotal => 30
+
+5 => 5
+subtotal => 5
+
+7 => 7
+grand total => 42
+Grand Total => 42
+
+# Without subtotals, grand total is the block's sum
+3 => 3
+4 => 4
+grand total => 7
+subtotal => 7
+subtotal => 0
+
+# A heading starts over
+grand total => 0
+grand piano => (none)

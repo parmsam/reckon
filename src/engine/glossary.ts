@@ -65,6 +65,9 @@ const AGGREGATE_MEANINGS: Record<string, string> = {
   median: 'Middle answer above (the mean of the two middle ones when the count is even)',
   stdev: 'Sample standard deviation of the answers above (n − 1, like spreadsheets)',
   count: 'How many answers are above',
+  subtotal:
+    'Sum since the last subtotal, blank line or heading; in the app, double-click a blank line to add one',
+  grandTotal: 'Every subtotal since the last heading, plus the answers after the last one',
   min: 'Smallest answer above (min(…) with parentheses is the function)',
   max: 'Largest answer above (max(…) with parentheses is the function)',
 };

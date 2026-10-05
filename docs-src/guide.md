@@ -6,6 +6,7 @@ right as you type. Click an answer to copy it.
 - Write naturally: `3 apples + 2 apples`, `rent: 1,200`, `20% of $50`.
 - Name values with `=` (`hourly rate = $85/h`) and use them below.
 - `sum` totals the lines above it, back to the last heading or blank line.
+- Double-click a blank line under some answers for a `subtotal`; `grand total` adds up the subtotals.
 - Notes are saved in your browser as you type. Open the notes list with the ☰ button.
 - Press <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> for every command, or <kbd>?</kbd> for the keyboard shortcuts.
 

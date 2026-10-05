@@ -5,6 +5,9 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- Subtotals: `subtotal` adds up the lines since the last one, and `grand total` adds up the subtotals.
+  Double-click a blank line under some answers to put a subtotal there (on phones, the Σ key).
+
 - Several cursors: ⌘/Ctrl-click adds one, ⌘/Ctrl-D selects the next match too, and ⌥/Alt-drag selects a box.
 
 - Cooking conversions: name an ingredient and cups convert to grams and back (`2 cups flour in g` → 240 g,

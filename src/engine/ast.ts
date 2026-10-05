@@ -51,6 +51,18 @@ export type Node =
   | { k: 'if'; cond: Node; then: Node; else?: Node };
 
 /** True if the expression reads a sum/avg/count/min/max aggregate. */
+/** Whether a line's expression takes a subtotal, which starts a new group. */
+export function usesSubtotal(node: Node): boolean {
+  if (node.k === 'agg') return node.name === 'subtotal';
+  return Object.values(node).some((child: unknown) =>
+    Array.isArray(child)
+      ? child.some((c) => isNode(c) && usesSubtotal(c))
+      : isNode(child) && usesSubtotal(child),
+  );
+}
+
+const isNode = (c: unknown): c is Node => typeof c === 'object' && c !== null && 'k' in c;
+
 export function usesAggregate(node: Node): boolean {
   switch (node.k) {
     case 'agg':

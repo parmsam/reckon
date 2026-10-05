@@ -27,6 +27,7 @@ const IOS =
 export function createAccessoryRow(
   editorDom: HTMLElement,
   insert: (text: string) => void,
+  subtotal: () => void,
 ): HTMLElement {
   const row = h(
     'div',
@@ -43,6 +44,18 @@ export function createAccessoryRow(
         },
         label,
       ),
+    ),
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'accessory-key',
+        'aria-label': 'subtotal',
+        title: 'Subtotal of the lines above',
+        onpointerdown: (e: Event) => e.preventDefault(),
+        onclick: () => subtotal(),
+      },
+      'Σ',
     ),
   );
 

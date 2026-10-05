@@ -115,7 +115,8 @@ above it. A line with no recognizable expression produces no result.
 | `avg` / `average` | Mean of the same block |
 | `count`, `min`, `max` | Same block |
 | `median`, `stdev` / `stddev` / `std` | Same block. `stdev` is the sample standard deviation (n − 1, like spreadsheets' STDEV); it needs at least two answers |
-| `subtotal` / `grand total` (later) | Soulver-style nested totals |
+| `subtotal` | Sum of the answers since the last subtotal, blank line or heading, then starts a new group. In the app, double-click a blank line under some answers to put one there (on phones, the Σ key). |
+| `grand total` | Every subtotal since the last heading (blank lines don't reset it), plus the answers after the last subtotal: everything counted once |
 
 ### 3.6 Units
 - Conversion keywords: `in`, `to`, `as`, `into`, for example `5 km in miles`
@@ -458,8 +459,8 @@ first; changing numbers by direct manipulation is opt-in and guarded.
 - [ ] Answer references (Soulver): double-click (or tap, on iOS) an answer to reference it in a calculation
   below. References are live and update automatically when earlier lines change. Stored in the text as a
   stable reference that survives inserting and deleting lines above it (not a plain `line3`), shown as a chip.
-- [ ] Subtotals by gesture (Soulver): double-click (or tap, on iOS) a blank line beneath some lines to drop in a
-  subtotal of the lines above it.
+- [x] Subtotals (Soulver): `subtotal` and `grand total` (§3.5). Double-click a blank line beneath some answers
+  to drop in a subtotal; on phones, where a tap only places the cursor, the Σ key in the math row does it.
 - [ ] Tags (Soulver): tag lines (for example `#food`), then total, average and other statistics over every line
   with a tag (`sum #food`, `avg #travel`), across headings and blocks. Needs a syntax that doesn't clash with
   `#` headings. See [soulver.app](https://soulver.app).

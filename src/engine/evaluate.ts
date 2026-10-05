@@ -28,6 +28,10 @@ export interface Env {
   lineValue(n: number): Value | undefined;
   /** Results in the current block (since the last heading or blank line). */
   block: readonly Value[];
+  /** Results since the last subtotal in the block (the whole block when omitted). */
+  section?: readonly Value[];
+  /** Subtotals since the last heading, for `grand total`. */
+  subtotals?: readonly Value[];
   settings: Settings;
   units: UnitContext;
   /** Functions defined in the note. */
@@ -368,8 +372,13 @@ function evaluateNode(node: Node, env: Env): Value {
       if (!v) throw new CalcError(`Line ${node.n} has no result`);
       return v;
     }
-    case 'agg':
+    case 'agg': {
+      const section = env.section ?? env.block;
+      if (node.name === 'subtotal') return aggregate('sum', section, ctx);
+      if (node.name === 'grandTotal')
+        return aggregate('sum', [...(env.subtotals ?? []), ...section], ctx);
       return aggregate(node.name, env.block, ctx);
+    }
     case 'neg': {
       const v = ev(node.arg);
       if (v.kind === 'datetime' || v.kind === 'bool' || v.kind === 'choice')

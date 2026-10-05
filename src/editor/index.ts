@@ -11,7 +11,7 @@ import {
   placeholder,
   rectangularSelection,
 } from '@codemirror/view';
-import { toggleLineComment } from './commands';
+import { insertSubtotal, toggleLineComment } from './commands';
 import { completion } from './completion';
 import { explorable, interactiveNumbers, nextChoice } from './interactive';
 import type { LineResult } from '../engine';
@@ -48,6 +48,8 @@ export interface Editor {
   getDoc(): string;
   /** The current answers, one per line. */
   getResults(): LineResult[];
+  /** Adds `subtotal` on the cursor's line, or a new line under it (the phone keyboard row). */
+  insertSubtotal(): boolean;
   /** Replaces the selection with `text` (used by the phone keyboard row). */
   insert(text: string): void;
   /** Shows or hides line numbers. */
@@ -99,6 +101,20 @@ export function createEditor({
           autocorrect: 'off',
         }),
         placeholder('Type some math… try 20% of 50'),
+        // Double-click a blank line right under an answer to add a subtotal there.
+        EditorView.domEventHandlers({
+          dblclick(e, view) {
+            if (view.state.readOnly) return false;
+            const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+            if (pos === null) return false;
+            const line = view.state.doc.lineAt(pos);
+            if (line.text.trim() !== '' || line.number === 1) return false;
+            const above = view.state.field(resultsField)[line.number - 2];
+            if (above?.kind !== 'value') return false;
+            view.dispatch({ selection: { anchor: line.from } });
+            return insertSubtotal(view);
+          },
+        }),
         keymap.of([
           { key: 'Mod-Shift-c', run: copyCurrentResult, preventDefault: true },
           { key: 'Mod-/', run: toggleLineComment, preventDefault: true },
@@ -146,6 +162,7 @@ export function createEditor({
     },
     getDoc: () => view.state.doc.toString(),
     getResults: () => view.state.field(resultsField),
+    insertSubtotal: () => insertSubtotal(view),
     insert(text) {
       view.dispatch(view.state.replaceSelection(text), {
         userEvent: 'input.type',
