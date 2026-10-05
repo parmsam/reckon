@@ -64,6 +64,8 @@ test('autocomplete suggests variables; Tab accepts and Enter makes a new line', 
   await setNote(page, 'monthly rent = 1200\nmon');
   const popup = page.locator('.cm-tooltip-autocomplete');
   await expect(popup).toContainText('monthly rent');
+  // CodeMirror ignores accept keys for 75 ms after the popup opens, to prevent accidental picks.
+  await page.waitForTimeout(150);
   await page.keyboard.press('Tab');
   await expect(page.locator('.cm-line').nth(1)).toContainText('monthly rent');
   await expect(resultOnLine(page, 'monthly rent').nth(1)).toHaveText('1,200');
