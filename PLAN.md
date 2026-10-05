@@ -374,6 +374,42 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
     notebooks and other pages can compute results headlessly (`import { evaluateDocument } from '…/engine.js'`)
   - Later (not done): an npm package for the engine and a CLI (`npx reckon "5 km in miles"`, or piping a note file)
 
+### M8 — After 1.0: language, sharing and polish
+- [x] Comparisons and conditions (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops
+- [x] Custom functions and units defined in a note (`tip(bill, rate) = …`, `1 sprint = 2 weeks`, `1 cup = 250 ml`)
+- [x] Export with answers: aligned text, Markdown tables, HTML page (download menu, palette, engine.js)
+- [x] Glossary of every keyword and symbol, and a unit catalogue, generated from the parser's tables
+- [x] First-run notes: a five-step tutorial plus a monthly budget and a weekend trip; "Add the tutorial
+  and example notes" in Settings and the palette (Reset to defaults stays settings-only)
+- [x] Clean address: the URL stays `…/reckon/` while using notes (history entries carry the note), so copying
+  it never shares a note; share links carry the note's name (`#/share/monthly-budget/…`); opening another
+  browser's `#/note/…` link explains that note links are local
+- [x] Branding: splash screen (Settings switch, mirrored in localStorage so it never flashes when off), logo
+  and version above the notes list, Settings → Help and about, theme-coloured browser bar, branded share banners
+- [x] Top bar: docs, keyboard shortcuts and GitHub (GitHub moves to the notes list footer on phones)
+- [x] Tips at the bottom of the notes list (Next tip; off in Settings), starting with how to install on this
+  device: Install button where the browser offers it, Share → Add to Home Screen on iOS, Add to Dock in Safari
+- [x] Total bar under the note (Numi-style, but per section, so totals aren't counted twice); selection
+  sum and average; click to copy; Settings switch
+- [x] Update prompt: "A new version of Reckon is available" with Reload (sticky, saves typing first, hourly
+  checks and on returning to the foreground); verified A→B in Chromium and WebKit
+- [x] iOS: 16px fields (no zoom on focus), math keys under the top bar clear of Safari's floating bars,
+  Settings no longer opens the Theme picker by itself
+- [x] Fixes: service worker no longer answers `/docs/` and `.txt` URLs with the app; keyboard shortcuts
+  dialog focuses Done; docs contents scroll
+
+### M9 — Interactive (inspired by Bret Victor's *Inventing on Principle*)
+The aim: see the effect of a change immediately, and see how a note fits together. Showing things comes
+first; changing numbers by direct manipulation is opt-in and guarded.
+- [ ] "Why this answer?": hover an answer for how the line was read, with the values it used filled in
+  ("rent ($1,200.00) + utilities ($150.00)", "1 km = 0.6214 mi") and any ignored words. Lines without an
+  answer show a "?" with the reason once the cursor leaves them (no flicker while typing).
+- [ ] Dependencies: the cursor's line marks the lines it uses and the lines that use it (margin bars).
+- [ ] Variable slider: on a `name = number` line, a small handle opens a slider (works on phones). Setting,
+  on by default, since nothing changes until it's used.
+- [ ] Scrubbing: ⌥/Alt-drag a plain number sideways to change it. Off by default; desktop only; one drag is
+  one undo step; never on dates, `1.5k` or other non-plain numbers.
+
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)
 - [ ] Subtotals and grand totals; tag-based sums (Soulver)
