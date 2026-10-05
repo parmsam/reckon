@@ -5,6 +5,10 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- Cooking conversions: name an ingredient and cups convert to grams and back (`2 cups flour in g` → 240 g,
+  `250 g butter in cups`). Flour, sugars, butter, cocoa, oats, milk, water, honey and oils are built in;
+  add others with a weight per cup (`almond flour = 96 g/cup`).
+
 - Bits and data rates: `Mbit`/`Mb`, `Gbit`/`Gb`…, and `bps`, `kbps`, `Mbps`, `Gbps`
   (`48 GB / 200 Mbps in min`). Lowercase `kb`, `mb` and `gb` still mean bytes.
 - Choices of bare values: `tip = 15% | [18%] | 20%`. Click the current one to pick the next.

@@ -130,6 +130,11 @@ above it. A line with no recognizable expression produces no result.
   - `in` converts when a unit or format follows (`5 km in miles`). Otherwise it means inches only straight after an amount and not before another word (`6 ft 2 in`, but `5 people in the room` = 5).
   - `min` means minutes after an amount (`5 min`) or a conversion (`in min`), and the minimum elsewhere.
   - A unit word right before a number is text (`it's 5`), except currencies (`$5`, `EUR 20`).
+- Cooking: volume and weight convert when the line names one known ingredient (`2 cups flour in g` = 240 g,
+  `250 g butter in cups`), using approximate baking-chart weights per cup (`src/engine/units/ingredients.ts`).
+  Only conversions use it, so `2 cups of flour` stays `2 cups`; two different ingredients on a line give no
+  density. Other ingredients: a variable with a weight per cup (`almond flour = 96 g/cup`), which multiplies
+  as usual (`2 cups almond flour` = 192 g).
 - Results with units show up to 4 decimal places (the `unitPrecision` setting).
 
 ### 3.7 Currency

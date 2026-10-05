@@ -126,3 +126,21 @@ min(4, 2) => 2
 48 GB / 300 Mbps in min => 21.3333 min
 1 Gbps in Mbps => 1,000 Mbps
 2 megabits per second in kbps => 2,000 kbps
+
+# Cooking ingredients: volume and weight convert when the line names one
+2 cups flour in g => 240 g
+2 cups of flour => 2 cups
+1 cup brown sugar in g => 213 g
+1 cup sugar in grams => 198 g
+250 g butter in cups => 1.1013 cups
+500 g flour in cups => 4.1667 cups
+1 cup water in g => 236.5882 g
+100 ml olive oil in g => 92 g
+1 tbsp honey in g => 21 g
+flour: 2.5 cups in g => 300 g
+flour = 3 cups => 3 cups
+flour in g => 360 g
+2 cups in g => (none)
+1 cup sugar and 1 cup flour in g => (none)
+almond flour = 96 g/cup => 96 g/cup
+2 cups almond flour => 192 g

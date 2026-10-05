@@ -3,7 +3,7 @@
 servings = 4 => 4
 want = 10 => 10
 scale = want / servings => 2.5
-flour: 2.5 cups × scale => 6.25 cups
-butter: 6 tbsp × scale => 15 tbsp
+flour: 2.5 cups × scale in g => 750 g
+butter: round(6 tbsp × scale in g) => 213 g
 milk: 1.25 cups × scale in ml => 739.3382 mL
 bake: 350 °F in °C => 176.6667 °C

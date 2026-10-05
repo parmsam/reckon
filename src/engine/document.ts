@@ -8,6 +8,7 @@ import { parseLineCached, ScopeIndex, type Choice, type Highlight, type Scope } 
 import { NO_DIM } from './units/dims';
 import { dimOf, exprFactor } from './units/quantity';
 import type { UnitDef } from './units';
+import { ingredientDensity } from './units/ingredients';
 import { userUnitDef } from './units/user';
 import { CalcError, type Decimal } from './values';
 import type { UnitContext } from './units';
@@ -169,13 +170,15 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
 
     usedRates = false;
     const lineIndex = results.length;
+    const density = ingredientDensity(raw);
+    const lineUnits = density ? { ...units, density } : units;
     const env = {
       vars,
       prev,
       lineValue: (n: number) => (n >= 1 && n <= results.length ? results[n - 1]!.value : undefined),
       block,
       settings: s,
-      units,
+      units: lineUnits,
       functions,
     };
     const uses = linesUsed(line.ast!, { definedAt, prevLine, blockLines });
@@ -184,7 +187,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
       const explanation =
         explain(line.ast!, {
           settings: s,
-          units,
+          units: lineUnits,
           valueOf: (node) => {
             try {
               return evaluate(node, env);

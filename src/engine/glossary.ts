@@ -20,6 +20,7 @@ import {
 import { CRYPTO, UNIT_SPECS } from './units';
 import { ISO_CODES, LOWERCASE_CODES, NAMES, SYMBOLS } from './units/currency';
 import { dim, sameDim } from './units/dims';
+import { ingredientNames } from './units/ingredients';
 
 /**
  * Everything Reckon understands, as data for the docs and llms-full.txt. Word lists come from the
@@ -476,6 +477,17 @@ export function glossary(): GlossaryGroup[] {
           example: '100k sats in USD',
         },
       ],
+    },
+    {
+      id: 'ingredients',
+      title: 'Cooking ingredients',
+      intro:
+        'Name one of these on a line, and cups, spoons and ml convert to grams or ounces and back. Weights are approximate. For anything else, give its weight per cup: almond flour = 96 g/cup.',
+      entries: ingredientNames().map((names) => ({
+        terms: names,
+        meaning: 'Converts between volume and weight',
+        example: `1 cup ${names[0]} in g`,
+      })),
     },
     {
       id: 'context',

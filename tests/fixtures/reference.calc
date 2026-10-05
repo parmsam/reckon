@@ -85,6 +85,7 @@ fare = car $120 | [train $80] | fly $300 => $80.00
 3 m × 4 m => 12 m²
 1 m + 20 cm => 1.2 m
 12pt in px => 16 px
+2 cups flour in g => 240 g
 
 // ## Money
 // Currency symbols, codes and names, plus crypto. Rates refresh hourly and keep working offline; these examples use sample rates.

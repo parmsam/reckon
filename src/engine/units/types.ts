@@ -9,6 +9,8 @@ export interface UnitContext {
   emPx: number;
   /** Units of each currency per 1 USD. */
   rates?: Readonly<Record<string, number>>;
+  /** Density (kg/m³) of the ingredient the line names, for volume ↔ weight conversions. */
+  density?: Decimal;
   /** Called when a conversion used an exchange rate. */
   onRate?: () => void;
   /** Factors of units defined in the note ("1 sprint = 2 weeks"), by name. */

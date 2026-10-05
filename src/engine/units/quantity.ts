@@ -1,6 +1,9 @@
 import { CalcError, D, type Decimal } from '../values';
-import { addDims, isDimensionless, NO_DIM, sameDim, type Dim } from './dims';
+import { addDims, dim, isDimensionless, NO_DIM, sameDim, type Dim } from './dims';
 import type { UnitContext, UnitDef, UnitExpr, UnitTerm } from './types';
+
+const VOLUME = dim({ length: 3 });
+const MASS = dim({ mass: 1 });
 
 /** Set by index.ts, which owns the registry (avoids an import cycle). */
 let findUnit: (id: string) => UnitDef | undefined = () => undefined;
@@ -60,6 +63,14 @@ function fromBase(value: Decimal, expr: UnitExpr, ctx: UnitContext): Decimal {
 /** Converts `value` from one unit to another. Throws if the dimensions differ. */
 export function convert(value: Decimal, from: UnitExpr, to: UnitExpr, ctx: UnitContext): Decimal {
   if (sameExpr(from, to)) return value;
+  // 2 cups flour in g: volume and weight convert through the line's ingredient.
+  if (ctx.density) {
+    const [a, b] = [dimOf(from), dimOf(to)];
+    if (sameDim(a, VOLUME) && sameDim(b, MASS))
+      return fromBase(toBase(value, from, ctx).times(ctx.density), to, ctx);
+    if (sameDim(a, MASS) && sameDim(b, VOLUME))
+      return fromBase(toBase(value, from, ctx).div(ctx.density), to, ctx);
+  }
   if (!compatible(from, to)) {
     throw new CalcError(`Can't convert ${formatUnit(from)} to ${formatUnit(to)}`);
   }
