@@ -23,6 +23,8 @@ export interface Preferences {
   showTips: boolean;
   /** Show the total bar under the note. */
   showTotals: boolean;
+  /** Show line numbers beside the note. */
+  showLineNumbers: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -38,6 +40,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   showSplash: true,
   showTips: true,
   showTotals: true,
+  showLineNumbers: false,
 };
 
 const KEY = 'preferences';
@@ -62,6 +65,7 @@ export function sanitize(input: unknown): Preferences {
   if (typeof raw.showSplash === 'boolean') p.showSplash = raw.showSplash;
   if (typeof raw.showTips === 'boolean') p.showTips = raw.showTips;
   if (typeof raw.showTotals === 'boolean') p.showTotals = raw.showTotals;
+  if (typeof raw.showLineNumbers === 'boolean') p.showLineNumbers = raw.showLineNumbers;
   if (typeof raw.locale === 'string' && (raw.locale === '' || isLocale(raw.locale)))
     p.locale = raw.locale;
   int('fontSize', 12, 24);

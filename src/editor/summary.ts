@@ -35,11 +35,14 @@ export function summarize(state: EditorState): Summary | undefined {
   let end = start;
   while (end + 1 < results.length && !isBoundary(results[end + 1])) end++;
 
+  // Stricter than `sum`: only the section's raw items (lines that don't use other lines), and
+  // only when they're all the same kind, so "3 housemates" never gets added to dollars.
   const values = results
     .slice(start, end + 1)
-    .filter(countable)
+    .filter((r) => countable(r) && !r.uses?.length)
     .map((r) => r.value!);
   if (values.length < 2) return undefined;
+  if (new Set(values.map((v) => v.kind)).size > 1) return undefined;
   const total = totals(values, settings).sum;
   if (!total) return undefined;
   const heading = results[start - 1]?.kind === 'heading' ? state.doc.line(start).text : '';

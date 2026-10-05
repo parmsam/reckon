@@ -237,6 +237,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       requestPersistence();
     },
   });
+  editor.setLineNumbers(prefs.showLineNumbers);
   editor.view.dom.addEventListener(COPIED_EVENT, (e) =>
     toast(`Copied ${(e as CustomEvent<string>).detail}`),
   );
@@ -283,6 +284,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       void savePreferences(prefs).catch(() => {});
       refreshTips();
       renderTotals();
+      editor.setLineNumbers(prefs.showLineNumbers);
     },
     () => void addExampleNotes(),
   );

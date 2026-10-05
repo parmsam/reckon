@@ -1,6 +1,7 @@
 import { usesAggregate } from './ast';
 import { defaultSettings, type Settings } from './context';
 import { evaluate } from './evaluate';
+import { explain } from './explain';
 import { formatValue } from './format';
 import type { Node } from './ast';
 import { parseLineCached, ScopeIndex, type Highlight, type Scope } from './line';
@@ -35,6 +36,10 @@ export interface LineResult {
   usesRates?: boolean;
   /** True when the line itself uses sum/avg/count/min/max, so totals leave it out. */
   aggregate?: boolean;
+  /** How the line was read, with the values it used ("rent ($1,200.00) + utilities ($150.00)"). */
+  explain?: string;
+  /** 0-based lines whose answers or definitions this line uses. */
+  uses?: number[];
 }
 
 /**
@@ -55,6 +60,10 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
   const results: LineResult[] = [];
   let block: Value[] = [];
   let prev: Value | undefined;
+  // Where things were defined, so each line can say which lines it uses.
+  const definedAt = new Map<string, number>();
+  let prevLine: number | undefined;
+  let blockLines: number[] = [];
   let usedRates: boolean;
   const units: UnitContext = {
     ppi: s.ppi,
@@ -112,6 +121,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
 
     if (define?.kind === 'function') {
       if (line.kind === 'expr') {
+        definedAt.set(`f:${define.name}`, results.length);
         functions.set(define.name, { params: define.params, body: line.ast! });
         functionNames.add(define.name);
         index.set('f', define.name);
@@ -138,6 +148,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
       case 'blank':
       case 'heading':
         block = [];
+        blockLines = [];
         results.push({ kind: line.kind, highlights });
         continue;
       case 'comment':
@@ -154,24 +165,54 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
     }
 
     usedRates = false;
+    const lineIndex = results.length;
+    const env = {
+      vars,
+      prev,
+      lineValue: (n: number) => (n >= 1 && n <= results.length ? results[n - 1]!.value : undefined),
+      block,
+      settings: s,
+      units,
+      functions,
+    };
+    const uses = linesUsed(line.ast!, { definedAt, prevLine, blockLines });
     try {
-      const value = evaluate(line.ast!, {
-        vars,
-        prev,
-        lineValue: (n) => (n >= 1 && n <= results.length ? results[n - 1]!.value : undefined),
-        block,
-        settings: s,
-        units,
-        functions,
-      });
+      const value = evaluate(line.ast!, env);
+      const explanation =
+        explain(line.ast!, {
+          settings: s,
+          units,
+          valueOf: (node) => {
+            try {
+              return evaluate(node, env);
+            } catch {
+              return undefined;
+            }
+          },
+        }) + (line.ignored ? `\nIgnored: ${[...new Set(line.ignored)].join(', ')}` : '');
       if (define?.kind === 'unit') {
         defineUnit(define.name, define.plural, value);
-        results.push({ kind: 'value', value, display: formatValue(value, s), highlights });
+        definedAt.set(`u:${define.name}`, lineIndex);
+        results.push({
+          kind: 'value',
+          value,
+          display: formatValue(value, s),
+          highlights,
+          explain: explanation,
+          ...(uses.length && { uses }),
+        });
         continue;
       }
       prev = value;
-      if (variable) setVar(variable, value);
-      if (!usesAggregate(line.ast!)) block.push(value);
+      prevLine = lineIndex;
+      if (variable) {
+        setVar(variable, value);
+        definedAt.set(`v:${variable}`, lineIndex);
+      }
+      if (!usesAggregate(line.ast!)) {
+        block.push(value);
+        blockLines.push(lineIndex);
+      }
       const display = formatValue(value, s);
       results.push({
         kind: 'value',
@@ -181,6 +222,8 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         highlights,
         usesRates: usedRates || undefined,
         aggregate: usesAggregate(line.ast!) || undefined,
+        explain: explanation,
+        ...(uses.length && { uses }),
       });
     } catch (e) {
       if (variable) setVar(variable, undefined);
@@ -190,4 +233,55 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
     }
   }
   return results;
+}
+
+/** The 0-based lines an expression uses: variables, the previous answer, lineN, totals, definitions. */
+function linesUsed(
+  ast: Node,
+  scope: {
+    definedAt: ReadonlyMap<string, number>;
+    prevLine?: number;
+    blockLines: readonly number[];
+  },
+): number[] {
+  const found = new Set<number>();
+  const add = (n: number | undefined) => {
+    if (n !== undefined) found.add(n);
+  };
+  const userUnit = (id: string) => {
+    if (id.startsWith('user:')) add(scope.definedAt.get(`u:${id.slice(5)}`));
+  };
+  const walk = (node: Node): void => {
+    switch (node.k) {
+      case 'var':
+        add(scope.definedAt.get(`v:${node.name}`));
+        break;
+      case 'prev':
+        add(scope.prevLine);
+        break;
+      case 'line':
+        add(node.n - 1);
+        break;
+      case 'agg':
+        scope.blockLines.forEach(add);
+        break;
+      case 'call':
+        add(scope.definedAt.get(`f:${node.name}`));
+        break;
+      case 'unit':
+      case 'withUnit':
+        userUnit(node.unit.id);
+        break;
+      case 'convertUnit':
+        node.unit.forEach((t) => userUnit(t.unit.id));
+        break;
+    }
+    for (const child of Object.values(node) as unknown[]) {
+      const isNode = (c: unknown): c is Node => typeof c === 'object' && c !== null && 'k' in c;
+      if (Array.isArray(child)) child.filter(isNode).forEach(walk);
+      else if (isNode(child)) walk(child);
+    }
+  };
+  walk(ast);
+  return [...found].sort((a, b) => a - b);
 }

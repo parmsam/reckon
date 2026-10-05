@@ -21,6 +21,13 @@ export const reckonTheme = EditorView.theme({
     position: 'relative',
     padding: '0 calc(var(--results-width) + 3rem) 0 1rem',
   },
+  '.cm-gutters': {
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: 'var(--muted)',
+  },
+  '.cm-lineNumbers .cm-gutterElement': { padding: '0 0.25rem 0 0.75rem', minWidth: '2.25rem' },
+  '.cm-activeLineGutter': { backgroundColor: 'var(--active-line)', color: 'var(--fg)' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--accent)', borderLeftWidth: '2px' },
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection':
     { backgroundColor: 'var(--selection) !important' },

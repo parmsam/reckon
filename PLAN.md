@@ -395,16 +395,18 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
   checks and on returning to the foreground); verified A→B in Chromium and WebKit
 - [x] iOS: 16px fields (no zoom on focus), math keys under the top bar clear of Safari's floating bars,
   Settings no longer opens the Theme picker by itself
+- [x] Line numbers (Settings, off by default), useful with "Uses lines …" and `line3`
+- [x] Total bar counts only a section's raw items of one kind (no counts added to dollars, no derived values)
 - [x] Fixes: service worker no longer answers `/docs/` and `.txt` URLs with the app; keyboard shortcuts
   dialog focuses Done; docs contents scroll
 
 ### M9 — Interactive (inspired by Bret Victor's *Inventing on Principle*)
 The aim: see the effect of a change immediately, and see how a note fits together. Showing things comes
 first; changing numbers by direct manipulation is opt-in and guarded.
-- [ ] "Why this answer?": hover an answer for how the line was read, with the values it used filled in
+- [x] "Why this answer?": hover an answer for how the line was read, with the values it used filled in
   ("rent ($1,200.00) + utilities ($150.00)", "1 km = 0.6214 mi") and any ignored words. Lines without an
   answer show a "?" with the reason once the cursor leaves them (no flicker while typing).
-- [ ] Dependencies: the cursor's line marks the lines it uses and the lines that use it (margin bars).
+- [x] Dependencies: the cursor's line marks the lines it uses and the lines that use it (margin bars).
 - [ ] Variable slider: on a `name = number` line, a small handle opens a slider (works on phones). Setting,
   on by default, since nothing changes until it's used.
 - [ ] Scrubbing: ⌥/Alt-drag a plain number sideways to change it. Off by default; desktop only; one drag is

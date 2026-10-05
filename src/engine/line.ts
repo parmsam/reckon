@@ -47,6 +47,8 @@ export interface ParsedLine {
   variable?: string;
   define?: Definition;
   ast?: Node;
+  /** Words that were treated as descriptive text and ignored. */
+  ignored?: string[];
   error?: string;
   highlights: Highlight[];
 }
@@ -167,16 +169,26 @@ export function parseLine(raw: string, scope: Scope): ParsedLine {
   };
 
   let tokens: RToken[];
+  let lexed: ReturnType<typeof lex>;
   try {
-    tokens = resolve(lex(text, offset), vars, { functions, units: scope.units });
+    lexed = lex(text, offset);
+    tokens = resolve(lexed, vars, { functions, units: scope.units });
   } catch (e) {
     return finish({ kind: 'error', variable, error: (e as Error).message });
   }
   for (const t of tokens) highlights.push({ from: t.from, to: t.to, type: tokenHighlight(t) });
   if (tokens.length === 0) return finish({ kind: 'text', variable });
 
+  const ignored = lexed
+    .filter((t) => t.type === 'word' && !tokens.some((r) => r.from <= t.from && t.to <= r.to))
+    .map((t) => t.text);
   try {
-    return finish({ kind: 'expr', variable, ast: parse(tokens) });
+    return finish({
+      kind: 'expr',
+      variable,
+      ast: parse(tokens),
+      ...(ignored.length && { ignored }),
+    });
   } catch (e) {
     return finish({ kind: 'error', variable, error: (e as Error).message });
   }

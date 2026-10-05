@@ -126,6 +126,16 @@ describe('total bar summary', () => {
     expect(summarize(state(note, 1))).toMatchObject({ total: '$5.50' });
   });
 
+  it('only totals raw items of one kind, not derived values or counts', () => {
+    const split =
+      '# Rent split\nrent = $1,850\nutilities = $210\nhousemates = 3\nshare = (rent + utilities) / housemates';
+    expect(summarize(state(split, split.indexOf('share')))).toBeUndefined();
+    const named = '# Home\nrent = $1,200\nutilities = $150\nrent + utilities';
+    expect(summarize(state(named, named.indexOf('utilities')))).toMatchObject({
+      total: '$1,350.00',
+    });
+  });
+
   it('stays quiet for mixed units, single answers and blank lines', () => {
     expect(summarize(state(note, note.indexOf('5 km')))).toBeUndefined();
     expect(summarize(state('# A\n5', 4))).toBeUndefined();

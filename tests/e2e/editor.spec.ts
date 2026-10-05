@@ -67,7 +67,8 @@ test('converts units and currencies with live rates', async ({ page }) => {
   await expect(resultOnLine(page, '5 km in miles')).toHaveText('3.1069 mi');
   // Mocked rates: 1 USD = 0.9 EUR, 1 BTC = $100,000.
   await expect(resultOnLine(page, '$30 in EUR')).toHaveText('€27.00');
-  await expect(resultOnLine(page, '$30 in EUR')).toHaveAttribute('title', /Exchange rates from/);
+  await resultOnLine(page, '$30 in EUR').hover();
+  await expect(page.getByRole('tooltip')).toContainText('Exchange rates from');
   await expect(resultOnLine(page, 'BTC')).toHaveText('$1,000.00');
   await expect(page.locator('.cm-tok-unit', { hasText: 'km' })).toBeVisible();
 });
@@ -107,4 +108,32 @@ test('the total bar shows the section total, and selection sums', async ({ page 
   await expect(bar).toContainText('3 answers selected');
   await expect(bar).toContainText('Sum $6.75');
   await expect(bar).toContainText('Average $2.25');
+});
+
+test('answers explain themselves, and lines show what they use', async ({ page }) => {
+  await page.goto('./');
+  await setNote(
+    page,
+    'rent = $1,200\nutilities = $150\nrent + utilities\ntrip cost + 1\n5 km in miles',
+  );
+
+  // Hovering an answer shows how the line was read.
+  await resultOnLine(page, 'rent + utilities').hover();
+  const tip = page.getByRole('tooltip');
+  await expect(tip).toContainText('rent ($1,200.00) + utilities ($150.00)');
+  await expect(tip).toContainText('Uses lines 1, 2');
+  await resultOnLine(page, '5 km in miles').hover();
+  await expect(tip).toContainText('1 km = 0.6214 mi');
+
+  // A line without an answer gets a "?" once the cursor leaves it.
+  await page.locator('.cm-line', { hasText: 'rent + utilities' }).click();
+  const why = page.locator('.cm-line', { hasText: 'trip cost' }).locator('.cm-why');
+  await expect(why).toBeVisible();
+  await why.hover();
+  await expect(tip).toContainText('No answer');
+
+  // The cursor's line marks what it uses and what uses it.
+  await expect(page.locator('.cm-line.cm-uses')).toHaveCount(2);
+  await page.locator('.cm-line', { hasText: 'rent = ' }).click();
+  await expect(page.locator('.cm-line.cm-used-by')).toHaveCount(1);
 });

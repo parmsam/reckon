@@ -84,6 +84,10 @@ export class SettingsDialog {
       'showTotals',
       h('input', { id: 'pref-showTotals', type: 'checkbox' }),
     );
+    const showLineNumbers = this.register(
+      'showLineNumbers',
+      h('input', { id: 'pref-showLineNumbers', type: 'checkbox' }),
+    );
     const fetchRates = this.register(
       'fetchRates',
       h('input', { id: 'pref-fetchRates', type: 'checkbox', 'aria-describedby': 'rates-hint' }),
@@ -127,6 +131,12 @@ export class SettingsDialog {
             { class: 'field checkbox' },
             showTotals,
             h('label', { for: 'pref-showTotals' }, 'Show the total bar under the note'),
+          ),
+          h(
+            'div',
+            { class: 'field checkbox' },
+            showLineNumbers,
+            h('label', { for: 'pref-showLineNumbers' }, 'Show line numbers'),
           ),
         ),
         h(

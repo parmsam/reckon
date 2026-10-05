@@ -222,3 +222,13 @@ test('tips cycle, and are turned off and on in Settings', async ({ page, isMobil
   if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
   await expect(page.getByRole('complementary', { name: 'Tip' })).toBeVisible();
 });
+
+test('line numbers can be turned on in Settings', async ({ page, isMobile }) => {
+  await expect(page.locator('.cm-lineNumbers')).toHaveCount(0);
+  await openSettings(page, isMobile);
+  await page.getByLabel('Show line numbers').check();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.locator('.cm-lineNumbers .cm-gutterElement', { hasText: /^3$/ })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.cm-lineNumbers')).toHaveCount(1);
+});

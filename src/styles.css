@@ -1085,3 +1085,49 @@ kbd {
 .settings h2:focus {
   outline: none;
 }
+
+/* "Why this answer?" and "why no answer?" */
+.explain-tip {
+  position: fixed;
+  z-index: 40;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: 0 8px 24px #0003;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+.explain-tip[hidden] {
+  display: none;
+}
+
+.cm-why {
+  position: absolute;
+  top: 0;
+  right: 1rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: help;
+  user-select: none;
+}
+
+.cm-why:hover {
+  background: var(--selection);
+}
+
+/* Lines the cursor's line uses (green) and lines that use it (orange) */
+.cm-line.cm-uses {
+  box-shadow: inset 3px 0 0 var(--tok-variable);
+}
+
+.cm-line.cm-used-by {
+  box-shadow: inset 3px 0 0 var(--accent);
+}

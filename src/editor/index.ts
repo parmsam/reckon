@@ -6,6 +6,7 @@ import {
   EditorView,
   highlightActiveLine,
   keymap,
+  lineNumbers,
   placeholder,
 } from '@codemirror/view';
 import { toggleLineComment } from './commands';
@@ -43,6 +44,8 @@ export interface Editor {
   getResults(): LineResult[];
   /** Replaces the selection with `text` (used by the phone keyboard row). */
   insert(text: string): void;
+  /** Shows or hides line numbers. */
+  setLineNumbers(on: boolean): void;
   /** Merges new engine settings (locale, rates…) and recomputes results. */
   setSettings(settings: EditorSettings): void;
 }
@@ -59,6 +62,8 @@ export function createEditor({
 }: EditorOptions): Editor {
   const readOnly = new Compartment();
   const settingsCompartment = new Compartment();
+  const gutter = new Compartment();
+  let showLineNumbers = false;
   let currentSettings = settings;
   const readOnlyExtensions = (on: boolean) => [
     EditorState.readOnly.of(on),
@@ -94,6 +99,7 @@ export function createEditor({
         completion,
         reckonTheme,
         readOnly.of(readOnlyExtensions(ro)),
+        gutter.of(showLineNumbers ? lineNumbers() : []),
         EditorView.updateListener.of((update) => {
           const userEdit = update.transactions.some(
             (tr) => tr.docChanged && !tr.annotation(external),
@@ -131,6 +137,10 @@ export function createEditor({
         userEvent: 'input.type',
         scrollIntoView: true,
       });
+    },
+    setLineNumbers(on) {
+      showLineNumbers = on;
+      view.dispatch({ effects: gutter.reconfigure(on ? lineNumbers() : []) });
     },
     setSettings(next) {
       currentSettings = { ...currentSettings, ...next };
