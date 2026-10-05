@@ -5,6 +5,10 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- Answer references: double-click an answer to use it in a line below. It shows as a chip with the answer,
+  updates live, and keeps pointing at its line as lines are added or removed above it (`line3` references
+  you type follow along too). If the line is deleted, the reference becomes its last answer.
+
 - Tags: `lunch $12 #food`, then `sum #food` (or `avg`, `count`, `max`… or several tags) totals every tagged
   line above, across headings and blank lines.
 

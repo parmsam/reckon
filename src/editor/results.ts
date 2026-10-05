@@ -16,6 +16,7 @@ import {
   type SweepSeries,
 } from '../engine';
 import { D } from '../engine/values';
+import { insertReference } from './references';
 
 export type EditorSettings = Partial<Settings> & {
   /** When the exchange rates were fetched, shown on currency results. */
@@ -208,6 +209,9 @@ function evaluate(state: EditorState): LineResult[] {
   return evaluateDocument(state.doc.toString(), state.facet(engineSettings));
 }
 
+/** How long a click waits for a second one before copying. */
+const DOUBLE_CLICK_MS = 250;
+
 /** Fired on the editor DOM when a result is copied, so the app can show feedback. */
 export const COPIED_EVENT = 'reckon:copied';
 
@@ -287,15 +291,29 @@ class ResultWidget extends WidgetType {
       answer.textContent = this.display;
       el.append(answer);
     } else el.textContent = this.display;
-    explainOnHover(el, `${this.info}\nClick to copy`);
+    explainOnHover(
+      el,
+      `${this.info}\nClick to copy${view.state.readOnly ? '' : ', double-click to use it below'}`,
+    );
     // Screen readers get the result through the live region instead.
     el.setAttribute('aria-hidden', 'true');
     // Keep the caret where it is when the result is clicked.
     el.addEventListener('pointerdown', (e) => e.preventDefault());
-    el.addEventListener('click', () => {
-      el.classList.add('cm-result-copied');
-      setTimeout(() => el.classList.remove('cm-result-copied'), 600);
-      void copyResult(view, this.display);
+    // A click copies, a double-click references the answer, so wait to see which it is.
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    el.addEventListener('click', (e) => {
+      if (e.detail > 1) return;
+      clearTimeout(pending);
+      pending = setTimeout(() => {
+        el.classList.add('cm-result-copied');
+        setTimeout(() => el.classList.remove('cm-result-copied'), 600);
+        void copyResult(view, this.display);
+      }, DOUBLE_CLICK_MS);
+    });
+    el.addEventListener('dblclick', () => {
+      clearTimeout(pending);
+      const n = view.state.doc.lineAt(view.posAtDOM(el)).number;
+      insertReference(view, n);
     });
     return el;
   }

@@ -458,9 +458,12 @@ first; changing numbers by direct manipulation is opt-in and guarded.
 - [x] Multi-cursor editing: `EditorState.allowMultipleSelections` (⌘/Ctrl-click adds a cursor),
   `rectangularSelection` + `crosshairCursor` (⌥/Alt-drag for a box), and select-next-occurrence (⌘/Ctrl D).
   Alt-drag that starts on a number scrubs it when that setting is on; anywhere else it selects a box.
-- [ ] Answer references (Soulver): double-click (or tap, on iOS) an answer to reference it in a calculation
-  below. References are live and update automatically when earlier lines change. Stored in the text as a
-  stable reference that survives inserting and deleting lines above it (not a plain `line3`), shown as a chip.
+- [x] Answer references (Soulver): double-click an answer to reference it in a calculation below (at the cursor
+  when it's on a later line, otherwise on a new line under the answer). Stored as plain `line3`, so notes stay
+  portable, and shown as a chip with the answer. The editor renumbers `lineN` references (typed ones too) as
+  lines are added or removed above them, following the line's text, and turns a reference into the answer
+  itself when its line is deleted. A single click still copies (it waits 250 ms for a second click).
+  Not done: a touch gesture (a tap copies, and iOS has no reliable double-tap), so phones type `line3`.
 - [x] Subtotals (Soulver): `subtotal` and `grand total` (§3.5). Double-click a blank line beneath some answers
   to drop in a subtotal; on phones, where a tap only places the cursor, the Σ key in the math row does it.
 - [x] Tags (Soulver): `lunch $12 #food`, then `sum #food`, `avg #travel` over every tagged line above, across

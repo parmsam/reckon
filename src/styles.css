@@ -539,6 +539,14 @@ button {
 .cm-tok-label {
   color: var(--tok-label);
 }
+/* An answer reference (line3), shown as its answer. An outline, not a fill, keeps text contrast. */
+.cm-reference-chip {
+  padding: 0 0.3em;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tok-reference) 45%, transparent);
+  color: var(--tok-reference);
+  font-weight: 600;
+}
 .cm-tok-tag {
   color: var(--tok-reference);
   font-weight: 600;

@@ -22,6 +22,7 @@ import {
   resultsField,
   type EditorSettings,
 } from './results';
+import { answerReferences } from './references';
 import { reckonTheme } from './theme';
 
 export { COPIED_EVENT } from './results';
@@ -125,6 +126,7 @@ export function createEditor({
         ]),
         settingsCompartment.of(engineSettings.of(currentSettings)),
         results,
+        answerReferences,
         completion,
         interactiveNumbers,
         reckonTheme,

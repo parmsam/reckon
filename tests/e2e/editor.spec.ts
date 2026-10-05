@@ -241,6 +241,26 @@ test('double-clicking a blank line under answers adds a subtotal', async ({ page
   await expect(line(9)).toHaveText('');
 });
 
+test('double-clicking an answer references it below, and the reference follows its line', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'desktop only');
+  await page.goto('./');
+  await setNote(page, 'rent: 1200\npower: 80\n\ntotal = ');
+  await page.locator('.cm-result').nth(0).dblclick();
+  await page.keyboard.type(' + ');
+  await page.locator('.cm-result').nth(1).dblclick();
+  await expect(resultAt(page, 4)).toHaveText('1,280');
+  await expect(page.locator('.cm-reference-chip')).toHaveText(['1,200', '80']);
+
+  // A new first line: the references follow, so the total stays the same.
+  await page.keyboard.press('ControlOrMeta+Home');
+  await page.keyboard.type('# Costs\n');
+  await expect(resultAt(page, 5)).toHaveText('1,280');
+  await expect(page.locator('.cm-reference-chip')).toHaveText(['1,200', '80']);
+});
+
 test('sweeping a variable charts every answer that uses it', async ({ page }) => {
   await page.goto('./');
   await setNote(page, 'rent = $1,200\nfood = $400\nleft = $3,000 - rent - food\nfood × 2');
