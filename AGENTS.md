@@ -137,7 +137,7 @@ Jan 15, 2026, 12:00 in UTC. Vitest loads `temporal-polyfill` in `tests/setup.ts`
 ## Releasing
 1. Bump the version with `npm version X.Y.Z --no-git-tag-version` (new features bump the minor version,
    fixes the patch version). The app, Settings → About and `engine.js` all read it from `package.json`.
-2. Add a section to `CHANGELOG.md`.
+2. Turn the `## Unreleased` section of `CHANGELOG.md` into `## X.Y.Z — <date>` (add changes to Unreleased as they land).
 3. Commit as `release: X.Y.Z`, tag `vX.Y.Z`, and push both. CI deploys the site, and open apps get the
    "A new version of Reckon is available" prompt.
 4. `gh release create vX.Y.Z --title "Reckon X.Y.Z" --notes-file <notes> dist/engine.js`, with the notes taken

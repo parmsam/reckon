@@ -4,6 +4,9 @@ export const SITE_URL = 'https://parmsam.github.io/reckon/';
 /** Longest note a plain-text link may carry. */
 export const MAX_LINK_TEXT = 100_000;
 
+/** What changed in each version. */
+export const CHANGELOG_URL = 'https://github.com/parmsam/reckon/blob/main/CHANGELOG.md';
+
 /**
  * A link that opens `text` in Reckon: `…/reckon/#/new?text=<percent-encoded>`. It's the format
  * LLMs and scripts should produce, since percent-encoding is easy (unlike share links, which are

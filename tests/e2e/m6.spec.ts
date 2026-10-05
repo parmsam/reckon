@@ -234,3 +234,23 @@ test('line numbers can be turned on in Settings', async ({ page, isMobile }) => 
   await page.reload();
   await expect(page.locator('.cm-lineNumbers')).toHaveCount(1);
 });
+
+test("after an update, a one-time note links to what's new", async ({ page, context }) => {
+  // Pretend this browser last ran an older version.
+  await context.addInitScript(() => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('reckon.version', '0.9.0');
+      sessionStorage.setItem('seeded', '1');
+    }
+  });
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
+  await page.goto('./');
+  const toast = page.locator('#toast');
+  await expect(toast).toContainText(`Reckon was updated to ${version}`);
+  await expect(toast.getByRole('button', { name: "What's new" })).toBeVisible();
+
+  // Only once.
+  await page.reload();
+  await expect(page.locator('.cm-result').first()).toBeVisible();
+  await expect(toast).not.toContainText('Reckon was updated');
+});

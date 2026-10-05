@@ -3,6 +3,11 @@
 All notable changes to Reckon. Versions follow [semantic versioning](https://semver.org): new features
 bump the minor version, fixes bump the patch version.
 
+## Unreleased
+
+- **What's new:** after an update, a one-time note links to this changelog. It's also in Settings → About
+  and the command palette.
+
 ## 1.1.0 — 2026-10-05
 
 The first GitHub release. Everything since 1.0.0, which shipped on the site without a release.

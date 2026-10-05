@@ -1,3 +1,4 @@
+import { CHANGELOG_URL } from '../links';
 import { h, svg } from './dom';
 import { LOGO } from './icons';
 import { DEFAULT_PREFERENCES, type Preferences } from './preferences';
@@ -230,6 +231,7 @@ export class SettingsDialog {
             { class: 'about-links' },
             ...(
               [
+                ["What's new", CHANGELOG_URL],
                 ['Docs', `${import.meta.env.BASE_URL}docs/`],
                 ['Privacy', `${import.meta.env.BASE_URL}docs/#privacy`],
                 ['Source on GitHub', 'https://github.com/parmsam/reckon'],

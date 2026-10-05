@@ -1,4 +1,5 @@
 import { MENTIONS_CRYPTO } from '../data/rates';
+import { CHANGELOG_URL } from '../links';
 import { openSearchPanel } from '@codemirror/search';
 import { COPIED_EVENT, createEditor } from '../editor';
 import { toggleLineComment } from '../editor/commands';
@@ -40,6 +41,8 @@ import { FIRST_RUN_NOTES, WELCOME_NOTE } from './welcome';
 import { newNote } from '../storage/notes';
 
 const CURRENT_NOTE = 'currentNoteId';
+/** The version this browser last opened, to announce updates once. */
+const LAST_VERSION_KEY = 'reckon.version';
 const SIDEBAR_PREF = 'reckon.sidebarCollapsed';
 const MOBILE = window.matchMedia('(max-width: 800px)');
 /** Share links longer than this may be cut off by chat apps and email clients. */
@@ -423,6 +426,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         label: 'Add the tutorial and example notes',
         keywords: 'welcome help examples budget trip guide',
         run: () => void addExampleNotes(),
+      },
+      {
+        id: 'whats-new',
+        label: "What's new in Reckon",
+        keywords: 'changelog release notes version update',
+        hint: __APP_VERSION__,
+        run: () => window.open(CHANGELOG_URL, '_blank', 'noopener'),
       },
       {
         id: 'github',
@@ -1052,6 +1062,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   await handleRoute();
+
+  // First open after an update: say so, once, with a link to what changed. New users skip this.
+  try {
+    const seen = localStorage.getItem(LAST_VERSION_KEY);
+    if (seen && seen !== __APP_VERSION__) {
+      toast(`Reckon was updated to ${__APP_VERSION__}`, {
+        label: "What's new",
+        run: () => window.open(CHANGELOG_URL, '_blank', 'noopener'),
+      });
+    }
+    localStorage.setItem(LAST_VERSION_KEY, __APP_VERSION__);
+  } catch {
+    // Without storage there's nothing to compare against.
+  }
 
   // A new version is ready: offer to switch, saving any unsaved typing first.
   watchForUpdates((apply) =>
