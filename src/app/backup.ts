@@ -87,3 +87,25 @@ export function fileName(title: string, extension: string): string {
       .slice(0, 80) || 'note';
   return `${base}.${extension}`;
 }
+
+export type BackupReminder = 'off' | 'weekly' | 'monthly';
+
+const DAY = 24 * 60 * 60 * 1000;
+const REMINDER_PERIOD: Record<Exclude<BackupReminder, 'off'>, number> = {
+  weekly: 7 * DAY,
+  monthly: 30 * DAY,
+};
+
+/**
+ * Whether to suggest a backup: the reminder is on, a full period has passed since the clock was last
+ * reset (by a backup or a dismissed reminder), and some note changed since then.
+ */
+export function backupReminderDue(
+  frequency: BackupReminder,
+  since: number,
+  notes: readonly Note[],
+  now = Date.now(),
+): boolean {
+  if (frequency === 'off' || now - since < REMINDER_PERIOD[frequency]) return false;
+  return notes.some((n) => n.updatedAt > since || (n.deletedAt ?? 0) > since);
+}

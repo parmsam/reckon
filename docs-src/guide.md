@@ -48,7 +48,9 @@ them off in Settings.
   can be clicked, and every answer follows.
   Nothing they change is saved, and *Save a copy* keeps the note as you shared it. The address bar always shows just the app's address, so copying it shares Reckon, never your note.
 - **Backups**: *Export all notes* (in the notes list) saves a JSON file; *Import notes* restores it, or
-  turns `.txt` and `.md` files into notes.
+  turns `.txt` and `.md` files into notes. Notes live only in your browser, so Reckon reminds you to back
+  up weekly (monthly or never in Settings), and only when notes have changed since your last backup. The
+  reminder's *Back up* button saves the file.
 - **Download and export** (the ↓ button): the note as text, or with its answers as aligned text, Markdown
   (calculations become tables) or a web page you can print. *Copy with answers* puts the aligned text on
   the clipboard.

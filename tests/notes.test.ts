@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  backupReminderDue,
   createBackup,
   fileName,
   isBackupFile,
@@ -131,6 +132,21 @@ describe('backups', () => {
     expect(noteFromText('a\r\nb').body).toBe('a\nb');
     expect(fileName('Trip: Paris/Rome?', 'txt')).toBe('Trip  Paris Rome.txt');
     expect(fileName('', 'txt')).toBe('note.txt');
+  });
+
+  it('reminds after the period, only when notes changed since the last backup', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const edited = [note('A', { updatedAt: 2 * day })];
+    expect(backupReminderDue('weekly', day, edited, 8 * day)).toBe(true);
+    expect(backupReminderDue('weekly', day, edited, 7 * day)).toBe(false);
+    expect(backupReminderDue('monthly', day, edited, 8 * day)).toBe(false);
+    expect(backupReminderDue('monthly', day, edited, 31 * day)).toBe(true);
+    expect(backupReminderDue('off', day, edited, 99 * day)).toBe(false);
+    // Nothing changed since the backup.
+    expect(backupReminderDue('weekly', 3 * day, edited, 99 * day)).toBe(false);
+    // Trashing a note counts as a change.
+    const trashed = [note('A', { updatedAt: 0, deletedAt: 4 * day })];
+    expect(backupReminderDue('weekly', 3 * day, trashed, 99 * day)).toBe(true);
   });
 });
 

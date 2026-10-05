@@ -5,6 +5,10 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- A backup reminder (weekly by default; monthly or never in Settings) with a *Back up* button. It only
+  appears when notes have changed since your last backup.
+- Fixed: the New note button was cut off in Firefox, and long notices wrapped into a narrow column.
+
 ## 1.2.0 — 2026-10-05
 
 Playing with a note, after Bret Victor's *Inventing on Principle* and *Explorable Explanations*: see how far

@@ -9,6 +9,7 @@ import { summarize } from '../editor/summary';
 import { createAutosave } from '../storage/autosave';
 import { getSetting, setSetting } from '../storage/settings';
 import {
+  backupReminderDue,
   createBackup,
   fileName,
   isBackupFile,
@@ -44,6 +45,8 @@ import { newNote } from '../storage/notes';
 const CURRENT_NOTE = 'currentNoteId';
 /** The version this browser last opened, to announce updates once. */
 const LAST_VERSION_KEY = 'reckon.version';
+/** When the backup reminder's clock last started: a backup, a dismissed reminder, or first use. */
+const BACKUP_CLOCK_KEY = 'backupClock';
 const SIDEBAR_PREF = 'reckon.sidebarCollapsed';
 const MOBILE = window.matchMedia('(max-width: 800px)');
 /** Share links longer than this may be cut off by chat apps and email clients. */
@@ -66,11 +69,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const statusEl = h('span', { class: 'save-status', id: 'save-status', role: 'status' });
   const toastText = h('span');
   const toastAction = h('button', { type: 'button', class: 'toast-action', hidden: true });
+  const toastClose = h(
+    'button',
+    { type: 'button', class: 'icon-btn toast-close', 'aria-label': 'Dismiss', hidden: true },
+    svg(ICONS.close),
+  );
   const toastEl = h(
     'div',
     { class: 'toast', id: 'toast', role: 'status', 'aria-live': 'polite' },
     toastText,
     toastAction,
+    toastClose,
   );
   const bannerText = h('span');
   const bannerAction = h('button', { type: 'button', class: 'banner-action' });
@@ -122,9 +131,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function toast(
     message: string,
     action?: { label: string; run: () => void },
-    { sticky = false } = {},
+    { sticky = false, onDismiss }: { sticky?: boolean; onDismiss?: () => void } = {},
   ): void {
     toastText.textContent = message;
+    // Sticky toasts can be dismissed; others leave by themselves.
+    toastClose.hidden = !sticky;
+    toastClose.onclick = () => {
+      toastEl.classList.remove('visible');
+      onDismiss?.();
+    };
     toastAction.hidden = !action;
     toastAction.textContent = action?.label ?? '';
     toastAction.onclick = action
@@ -1010,6 +1025,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
       'application/json',
     );
     toast(`Exported ${notes.length} note${notes.length === 1 ? '' : 's'}`);
+    void setSetting(BACKUP_CLOCK_KEY, Date.now()).catch(() => {});
+  }
+
+  /** Suggests a backup when one is due (see backupReminderDue), with a button that makes it. */
+  async function remindToBackUp(): Promise<void> {
+    if (storageError || prefs.backupReminder === 'off') return;
+    try {
+      const since = await getSetting<number>(BACKUP_CLOCK_KEY);
+      // First use starts the clock, so new notes don't prompt a reminder straight away.
+      if (since === undefined) return await setSetting(BACKUP_CLOCK_KEY, Date.now());
+      const notes = [...store.active(), ...store.trashed()];
+      if (!backupReminderDue(prefs.backupReminder, since, notes)) return;
+      toast(
+        'Time for a backup? Your notes are only saved in this browser.',
+        { label: 'Back up', run: exportAll },
+        {
+          sticky: true,
+          onDismiss: () => void setSetting(BACKUP_CLOCK_KEY, Date.now()).catch(() => {}),
+        },
+      );
+    } catch {
+      // No settings store: no reminder.
+    }
   }
 
   async function importFiles(): Promise<void> {
@@ -1075,9 +1113,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   await handleRoute();
 
   // First open after an update: say so, once, with a link to what changed. New users skip this.
+  let updated = false;
   try {
     const seen = localStorage.getItem(LAST_VERSION_KEY);
     if (seen && seen !== __APP_VERSION__) {
+      updated = true;
       toast(`Reckon was updated to ${__APP_VERSION__}`, {
         label: "What's new",
         run: () => window.open(CHANGELOG_URL, '_blank', 'noopener'),
@@ -1087,6 +1127,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   } catch {
     // Without storage there's nothing to compare against.
   }
+
+  // One message at a time: after an update, the reminder waits for the next visit.
+  if (!updated) void remindToBackUp();
 
   // A new version is ready: offer to switch, saving any unsaved typing first.
   watchForUpdates((apply) =>

@@ -29,6 +29,7 @@ describe('preferences', () => {
       precision: 99,
       locale: 'de-DE',
       fetchRates: false,
+      backupReminder: 'monthly',
       evil: 1,
     });
     expect(p).toEqual({
@@ -37,10 +38,11 @@ describe('preferences', () => {
       fontSize: 18,
       locale: 'de-DE',
       fetchRates: false,
+      backupReminder: 'monthly',
     });
-    expect(sanitize({ theme: 'neon', locale: 'not a locale!', ppi: 1.5 })).toEqual(
-      DEFAULT_PREFERENCES,
-    );
+    expect(
+      sanitize({ theme: 'neon', locale: 'not a locale!', ppi: 1.5, backupReminder: 'daily' }),
+    ).toEqual(DEFAULT_PREFERENCES);
   });
 });
 

@@ -131,6 +131,7 @@ button {
 }
 
 .icon-btn {
+  flex-shrink: 0;
   display: inline-grid;
   place-items: center;
   width: 2rem;
@@ -199,6 +200,7 @@ button {
 
 .search {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -215,6 +217,7 @@ button {
 
 .search-input {
   flex: 1;
+  width: 0;
   min-width: 0;
   height: 2rem;
   border: 0;
@@ -348,6 +351,8 @@ button {
 
 .banner-action,
 .toast-action {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 0.25rem 0.7rem;
   border: 0;
   border-radius: 999px;
@@ -563,8 +568,10 @@ button {
   left: 50%;
   bottom: max(1.5rem, env(safe-area-inset-bottom));
   transform: translate(-50%, 1rem);
+  width: max-content;
+  max-width: calc(100vw - 2rem);
   padding: 0.5rem 0.9rem;
-  border-radius: 999px;
+  border-radius: 1.25rem;
   background: var(--fg);
   color: var(--bg);
   font-size: 0.85rem;
@@ -573,6 +580,22 @@ button {
   transition:
     opacity 0.2s,
     transform 0.2s;
+}
+
+.toast-close {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: -0.4rem;
+  color: inherit;
+}
+
+.toast-close:hover {
+  background: color-mix(in srgb, var(--bg) 20%, transparent);
+  color: inherit;
+}
+
+.toast-close[hidden] {
+  display: none;
 }
 
 .toast.visible {

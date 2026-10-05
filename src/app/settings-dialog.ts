@@ -200,6 +200,20 @@ export class SettingsDialog {
         h(
           'fieldset',
           {},
+          h('legend', {}, 'Backups'),
+          row(
+            'Remind me to back up',
+            select('backupReminder', [
+              ['weekly', 'Weekly'],
+              ['monthly', 'Monthly'],
+              ['off', 'Never'],
+            ]),
+            'Notes live only in this browser. The reminder appears only when notes have changed since your last backup.',
+          ),
+        ),
+        h(
+          'fieldset',
+          {},
           h('legend', {}, 'Privacy'),
           h(
             'div',

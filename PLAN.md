@@ -297,7 +297,10 @@ interface Note {
 Built in M6 (stored in IndexedDB as one `preferences` record, validated on load):
 theme (system, light, dark); font size; number and date format (locale, which sets the decimal and
 thousands separators); decimal places, plain and with units; angle unit (deg or rad); ppi and em size for
-CSS units; fetching exchange rates on or off (off means no network requests at all; saved rates keep working).
+CSS units; fetching exchange rates on or off (off means no network requests at all; saved rates keep working);
+backup reminder (weekly, monthly or never: a sticky toast with a *Back up* button, shown at startup when the
+period has passed and notes changed since the clock last started; exporting or dismissing restarts the clock,
+which lives in the `backupClock` setting and starts on first use).
 
 - Input always uses `.` for decimals and `,` for thousands; the locale only changes how answers look.
 - Deferred: rounding mode (always round-half-up for now) and a default currency for `$` (it changes how notes

@@ -1,4 +1,5 @@
 import type { Settings } from '../engine';
+import type { BackupReminder } from './backup';
 import { getSetting, setSetting } from '../storage/settings';
 
 export interface Preferences {
@@ -29,6 +30,8 @@ export interface Preferences {
   sliders: boolean;
   /** ⌥/Alt-drag numbers to change them (off by default). */
   scrub: boolean;
+  /** How often to suggest exporting a backup, when notes have changed since the last one. */
+  backupReminder: BackupReminder;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -47,6 +50,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   showLineNumbers: false,
   sliders: true,
   scrub: false,
+  backupReminder: 'weekly',
 };
 
 const KEY = 'preferences';
@@ -74,6 +78,12 @@ export function sanitize(input: unknown): Preferences {
   if (typeof raw.showLineNumbers === 'boolean') p.showLineNumbers = raw.showLineNumbers;
   if (typeof raw.sliders === 'boolean') p.sliders = raw.sliders;
   if (typeof raw.scrub === 'boolean') p.scrub = raw.scrub;
+  if (
+    raw.backupReminder === 'off' ||
+    raw.backupReminder === 'weekly' ||
+    raw.backupReminder === 'monthly'
+  )
+    p.backupReminder = raw.backupReminder;
   if (typeof raw.locale === 'string' && (raw.locale === '' || isLocale(raw.locale)))
     p.locale = raw.locale;
   int('fontSize', 12, 24);
