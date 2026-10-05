@@ -7,7 +7,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 import { D, type Decimal } from '../engine/values';
-import { engineSettings, resultsField, setAdjusting } from './results';
+import { engineSettings, resultsField, setAdjusting, setSweep, sweepField } from './results';
 
 /**
  * Changing numbers by direct manipulation (Bret Victor's "immediate connection"): a slider for
@@ -123,6 +123,8 @@ function numberSession(view: EditorView, start: NumberAt) {
 // ---- Slider -------------------------------------------------------------------------------
 
 let popover: HTMLElement | undefined;
+/** Whether the last slider was sweeping, so the next one starts the same way. */
+let sweepOn = false;
 
 function openSlider(
   view: EditorView,
@@ -157,9 +159,51 @@ function openSlider(
   });
   input.addEventListener('change', () => session.end());
   label.append(input, output);
-  el.append(label);
+
+  // Sweep: the slider's range, with a sparkline on every line that uses the variable.
+  const line = view.state.doc.lineAt(target.from).number - 1;
+  const sweepBox = document.createElement('input');
+  sweepBox.type = 'checkbox';
+  sweepBox.checked = sweepOn;
+  const sweepLabel = document.createElement('label');
+  sweepLabel.className = 'slider-sweep-toggle';
+  sweepLabel.title = `Chart every answer that uses ${target.name} across this range`;
+  sweepLabel.append(sweepBox, 'Sweep');
+  const bound = (name: string, initial: number) => {
+    const field = document.createElement('input');
+    field.type = 'number';
+    field.value = String(initial);
+    field.setAttribute('aria-label', `${name} (the slider's range)`);
+    field.addEventListener('change', applyRange);
+    return field;
+  };
+  const fromField = bound('From', min);
+  const toField = bound('To', max);
+  const note = document.createElement('p');
+  note.className = 'slider-sweep-note';
+  note.setAttribute('aria-live', 'polite');
+  function applyRange() {
+    const from = Number(fromField.value);
+    const to = Number(toField.value);
+    if (!Number.isFinite(from) || !Number.isFinite(to) || from >= to) return;
+    input.min = String(from);
+    input.max = String(to);
+    input.step = String(Math.max(10 ** -decimalsOf(target.text), niceStep(to - from, 200)));
+    sweepOn = sweepBox.checked;
+    view.dispatch({ effects: setSweep.of(sweepOn ? { line, from, to } : null) });
+    const sweeping = view.state.field(sweepField, false);
+    note.textContent = sweepOn && !sweeping?.series.size ? `No lines use ${target.name} yet.` : '';
+  }
+  sweepBox.addEventListener('change', applyRange);
+  const range = document.createElement('div');
+  range.className = 'slider-sweep';
+  range.append(sweepLabel, fromField, '–', toField);
+  el.append(label, range, note);
+  if (sweepOn) applyRange();
+
   el.addEventListener('toggle', (e) => {
     if ((e as ToggleEvent).newState === 'closed') {
+      view.dispatch({ effects: setSweep.of(null) });
       session.end();
       session.finish();
       el.remove();
@@ -169,9 +213,12 @@ function openSlider(
   document.body.append(el);
   popover = el;
 
-  const rect = anchor.getBoundingClientRect();
-  el.style.top = `${rect.bottom + 6}px`;
-  el.style.left = `${Math.max(8, Math.min(rect.left - 20, window.innerWidth - 280))}px`;
+  // On phones it docks to the bottom of the screen (see styles.css), clear of the answers below.
+  if (!matchMedia('(max-width: 600px)').matches) {
+    const rect = anchor.getBoundingClientRect();
+    el.style.top = `${rect.bottom + 6}px`;
+    el.style.left = `${Math.max(8, Math.min(rect.left - 20, window.innerWidth - 280))}px`;
+  }
   el.showPopover();
   input.focus();
 }

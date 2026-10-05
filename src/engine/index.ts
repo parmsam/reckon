@@ -5,3 +5,4 @@ export { totals, type Totals } from './totals';
 export type { Highlight, HighlightType } from './line';
 export type { Value } from './values';
 export { change } from './change';
+export { dependents, sweep, type SweepSeries, type SweepTarget } from './sweep';

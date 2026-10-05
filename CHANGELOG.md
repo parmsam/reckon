@@ -12,6 +12,9 @@ bump the minor version, fixes bump the patch version.
 - **Explorable share links:** whoever opens a share link can drag the sliders (rent, nights…) and watch the
   answers change, without saving a copy. Nothing they change is saved.
 - Sliders only appear on input lines: `left = $3,000 - rent` no longer offers one.
+- **Sweep a variable:** tick *Sweep* in a slider and give it a range; every answer that uses the variable shows a
+  small chart of how it changes across that range, with a dot where the slider is.
+- On phones, the slider sits at the bottom of the screen so the answers stay visible.
 
 ## 1.1.0 — 2026-10-05
 

@@ -11,11 +11,13 @@ import {
   lineChange,
   resultsField,
   setAdjusting,
+  setSweep,
+  sweepField,
 } from '../src/editor/results';
 import { summarize } from '../src/editor/summary';
 import { formatLike } from '../src/editor/interactive';
 import { D } from '../src/engine/values';
-import { change, evaluateDocument } from '../src/engine';
+import { change, dependents, evaluateDocument, sweep } from '../src/engine';
 import { vocabulary } from '../src/engine/vocabulary';
 
 describe('preferences', () => {
@@ -225,5 +227,55 @@ describe('ghost deltas', () => {
     expect(lineChange(state.update({ effects: setAdjusting.of(null) }).state, 1)).toBeUndefined();
     state = state.update({ changes: { from: 0, insert: 'a' } }).state;
     expect(state.field(adjustingField)).toBeNull();
+  });
+});
+
+describe('sweeps', () => {
+  const settings = { locale: 'en-US', now: Date.UTC(2026, 0, 15, 12), timeZone: 'UTC' };
+  const doc =
+    'rent = $1,200\nfood = $400\nleft = $3,000 - rent - food\nok = left > $0\nnote\nyearly = left × 12';
+  const rent = { line: 0, from: 8, to: 13 };
+
+  it('finds the lines that use a line, directly or not', () => {
+    expect(dependents(evaluateDocument(doc, settings), 0)).toEqual([2, 3, 5]);
+    expect(dependents(evaluateDocument(doc, settings), 1)).toEqual([2, 3, 5]);
+    expect(dependents(evaluateDocument(doc, settings), 5)).toEqual([]);
+  });
+
+  it('gives each dependent line its answers across the range', () => {
+    const series = sweep(doc, rent, ['0', '1300', '2600', '3900'], settings);
+    expect(series.map((s) => s.line)).toEqual([2, 3, 5]);
+    expect(series[0]).toEqual({
+      line: 2,
+      points: [2600, 1300, 0, -1300],
+      first: '$2,600.00',
+      last: '-$1,300.00',
+    });
+    expect(series[1]!.points).toEqual([1, 1, 0, 0]);
+    expect(series[2]!.points).toEqual([31200, 15600, 0, -15600]);
+  });
+
+  it('leaves gaps where a line has no answer', () => {
+    const series = sweep('x = 2\n10 / x', { line: 0, from: 4, to: 5 }, ['-1', '0', '1'], settings);
+    expect(series[0]!.points).toEqual([-10, undefined, 10]);
+  });
+
+  it('keeps the series while the swept number moves, and ends on other edits', () => {
+    let state = EditorState.create({
+      doc,
+      extensions: [engineSettings.of(settings), resultsField, sweepField],
+    });
+    state = state.update({ effects: setSweep.of({ line: 0, from: 0, to: 2400 }) }).state;
+    const before = state.field(sweepField)!;
+    expect([...before.series.keys()]).toEqual([2, 3, 5]);
+    expect(before.current).toBe(1200);
+    state = state.update({
+      changes: { from: 8, to: 13, insert: '1,500' },
+      userEvent: 'input.adjust',
+    }).state;
+    expect(state.field(sweepField)!.series).toBe(before.series);
+    expect(state.field(sweepField)!.current).toBe(1500);
+    state = state.update({ changes: { from: doc.length, insert: '\nmore' } }).state;
+    expect(state.field(sweepField)).toBeNull();
   });
 });

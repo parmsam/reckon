@@ -29,6 +29,9 @@ them off in Settings.
 - **Try other numbers:** on a line like `rent = $1,200`, tap **⇆** for a slider and watch every answer below change.
   With *Drag numbers to change them* on (Settings), hold <kbd>⌥/Alt</kbd> and drag any number. Undo puts it back.
   While you adjust, each answer that moves shows by how much next to it (`+$120.00`, `−3 days`), and so does the total.
+- **See the whole range:** tick **Sweep** in the slider and set its range (From – To). Every answer that uses the
+  variable gets a small chart of how it changes across that range, with a dot where the slider is. Hover an
+  answer for its values at both ends.
 - **Totals:** the bar under the note shows the total of the section you're in; select lines for their sum and average.
 
 ## Notes, sharing and backups

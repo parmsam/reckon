@@ -418,6 +418,11 @@ first; changing numbers by direct manipulation is opt-in and guarded.
   keep their sliders, with a handle on every slider line (a reader has no cursor). Changes stay in the view and
   are never saved; *Save a copy* saves the note as shared. Trashed notes stay static. Slider lines are inputs
   only: `left = $3,000 - rent` uses other lines, so it gets no slider.
+- [x] Sweep (*Up and Down the Ladder of Abstraction*): the slider's Sweep switch and From–To range (which is also
+  the slider's range) give every line that depends on the variable, directly or not, a sparkline of its answer
+  across the range, with a dot at the current value. The engine's pure `sweep()` re-evaluates the note 33 times
+  with the number replaced, stopping at the last dependent line; moving the slider reuses the series. Gaps where
+  a line has no answer; true/false plot as a step. On phones the slider docks to the bottom of the screen.
 
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)

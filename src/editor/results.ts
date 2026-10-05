@@ -7,7 +7,15 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from '@codemirror/view';
-import { change, evaluateDocument, type LineResult, type Settings } from '../engine';
+import {
+  change,
+  evaluateDocument,
+  sweep,
+  type LineResult,
+  type Settings,
+  type SweepSeries,
+} from '../engine';
+import { D } from '../engine/values';
 
 export type EditorSettings = Partial<Settings> & {
   /** When the exchange rates were fetched, shown on currency results. */
@@ -54,6 +62,146 @@ export function lineChange(state: EditorState, i: number): string | undefined {
   const results = state.field(resultsField);
   if (!before || before.length !== results.length) return undefined;
   return change(before[i]?.value, results[i]?.value, state.facet(engineSettings));
+}
+
+/** A sweep: the `name = number` line (0-based) and the range its number runs over. */
+export interface SweepRange {
+  line: number;
+  from: number;
+  to: number;
+}
+
+/** Starts, changes (a new range) or ends (null) a sweep. */
+export const setSweep = StateEffect.define<SweepRange | null>();
+
+/** How many answers each sparkline plots. */
+const SWEEP_SAMPLES = 33;
+
+interface SweepState {
+  range: SweepRange;
+  /** The variable being swept. */
+  name: string;
+  /** Its current value, for the dot on each sparkline. */
+  current: number;
+  /** The note without the swept number, so moving the slider reuses the series. */
+  key: string;
+  settings: object;
+  series: Map<number, SweepSeries>;
+}
+
+/** The swept line's single number, if it still has exactly one. */
+function sweptNumber(state: EditorState, line: number) {
+  const result = state.field(resultsField)[line];
+  if (!result?.variable || line >= state.doc.lines) return undefined;
+  const numbers = result.highlights.filter((h) => h.type === 'number');
+  if (numbers.length !== 1) return undefined;
+  const { from, to } = numbers[0]!;
+  const text = state.doc.line(line + 1).text;
+  const current = Number(text.slice(from, to).replace(/,/g, ''));
+  return Number.isFinite(current) ? { from, to, text, current, name: result.variable } : undefined;
+}
+
+/**
+ * The answers of every line that depends on the swept variable, across its range ("Up and Down
+ * the Ladder of Abstraction"). Recomputed only when something other than the swept number
+ * changes, so dragging the slider just moves the dots.
+ */
+export const sweepField = StateField.define<SweepState | null>({
+  create: () => null,
+  update: (value, tr) => {
+    let range = value?.range ?? null;
+    for (const e of tr.effects) if (e.is(setSweep)) range = e.value;
+    if (!range) return null;
+    if (tr.docChanged && !tr.isUserEvent('input.adjust') && range === value?.range) return null;
+    const state = tr.state;
+    const target = sweptNumber(state, range.line);
+    if (!target) return null;
+    const doc = state.doc.toString();
+    const at = state.doc.line(range.line + 1).from;
+    const key = doc.slice(0, at + target.from) + '\u0000' + doc.slice(at + target.to);
+    const settings = state.facet(engineSettings);
+    if (value && value.range === range && value.key === key && value.settings === settings) {
+      return value.current === target.current ? value : { ...value, current: target.current };
+    }
+    const span = new D(range.to).minus(range.from);
+    const samples = Array.from({ length: SWEEP_SAMPLES }, (_, i) =>
+      new D(range.from)
+        .plus(span.times(i).div(SWEEP_SAMPLES - 1))
+        .toDecimalPlaces(6)
+        .toFixed(),
+    );
+    const series = sweep(doc, { line: range.line, ...target }, samples, settings);
+    return {
+      range,
+      name: target.name,
+      current: target.current,
+      key,
+      settings,
+      series: new Map(series.map((s) => [s.line, s])),
+    };
+  },
+});
+
+/** A line's sparkline while sweeping: its points and where the current value sits (0–1). */
+export interface Spark {
+  points: (number | undefined)[];
+  at?: number;
+  summary: string;
+}
+
+function sparkFor(state: EditorState, i: number): Spark | undefined {
+  const sweeping = state.field(sweepField, false);
+  const series = sweeping?.series.get(i);
+  if (!sweeping || !series) return undefined;
+  const { from, to } = sweeping.range;
+  const at = (sweeping.current - from) / (to - from);
+  const fmt = (n: number) => n.toLocaleString(state.facet(engineSettings).locale);
+  return {
+    points: series.points,
+    at: at >= 0 && at <= 1 ? at : undefined,
+    summary: `As ${sweeping.name} goes from ${fmt(from)} to ${fmt(to)}: ${series.first ?? '—'} → ${series.last ?? '—'}`,
+  };
+}
+
+const SVG = 'http://www.w3.org/2000/svg';
+
+/** A small line chart of `points`, with gaps where there's no answer and a dot at `at`. */
+function sparkline({ points, at }: Spark): SVGSVGElement {
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('class', 'cm-sparkline');
+  svg.setAttribute('viewBox', '0 0 100 20');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  const defined = points.filter((p): p is number => p !== undefined);
+  if (!defined.length) return svg;
+  const min = Math.min(...defined);
+  const max = Math.max(...defined);
+  const x = (i: number) => (i / (points.length - 1)) * 100;
+  const y = (v: number) => (max === min ? 10 : 18 - ((v - min) / (max - min)) * 16);
+  const add = (name: string, attrs: Record<string, string | number>) => {
+    const el = document.createElementNS(SVG, name);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+    el.setAttribute('vector-effect', 'non-scaling-stroke');
+    svg.append(el);
+  };
+  let run: string[] = [];
+  const flush = () => {
+    if (run.length > 1) add('polyline', { points: run.join(' '), class: 'cm-sparkline-line' });
+    run = [];
+  };
+  points.forEach((p, i) => (p === undefined ? flush() : run.push(`${x(i)},${y(p)}`)));
+  flush();
+  if (at !== undefined) {
+    // Where the slider is: the nearest sample's answer, interpolated.
+    const pos = at * (points.length - 1);
+    const a = points[Math.floor(pos)];
+    const b = points[Math.ceil(pos)];
+    if (a !== undefined && b !== undefined) {
+      const v = a + (b - a) * (pos - Math.floor(pos));
+      // A zero-length line with round caps draws a round dot even though the chart stretches.
+      add('line', { x1: x(pos), y1: y(v), x2: x(pos), y2: y(v), class: 'cm-sparkline-dot' });
+    }
+  }
+  return svg;
 }
 
 function evaluate(state: EditorState): LineResult[] {
@@ -105,26 +253,39 @@ class ResultWidget extends WidgetType {
     readonly info: string,
     /** How far the answer moved during a slider or scrub ("+$120.00"). */
     readonly delta?: string,
+    /** The answer across a sweep. */
+    readonly spark?: Spark,
   ) {
     super();
   }
 
   eq(other: ResultWidget): boolean {
-    return other.display === this.display && other.info === this.info && other.delta === this.delta;
+    return (
+      other.display === this.display &&
+      other.info === this.info &&
+      other.delta === this.delta &&
+      other.spark?.points === this.spark?.points &&
+      other.spark?.at === this.spark?.at
+    );
   }
 
   toDOM(view: EditorView): HTMLElement {
     const el = document.createElement('span');
     el.className = 'cm-result';
-    if (this.delta) {
-      const delta = document.createElement('span');
-      delta.className = 'cm-result-delta';
-      delta.textContent = this.delta;
+    if (this.delta || this.spark) {
+      // While adjusting or sweeping: [sparkline] [change] answer.
+      el.classList.add('cm-result-moved');
+      if (this.spark) el.append(sparkline(this.spark));
+      if (this.delta) {
+        const delta = document.createElement('span');
+        delta.className = 'cm-result-delta';
+        delta.textContent = this.delta;
+        el.append(delta);
+      }
       const answer = document.createElement('span');
       answer.className = 'cm-result-answer';
       answer.textContent = this.display;
-      el.classList.add('cm-result-moved');
-      el.append(delta, answer);
+      el.append(answer);
     } else el.textContent = this.display;
     explainOnHover(el, `${this.info}\nClick to copy`);
     // Screen readers get the result through the live region instead.
@@ -233,7 +394,8 @@ const decorationsField = StateField.define<DecorationSet>({
   create: (state) => buildDecorations(state),
   update: (decos, tr) =>
     tr.state.field(resultsField) !== tr.startState.field(resultsField) ||
-    tr.state.field(adjustingField) !== tr.startState.field(adjustingField)
+    tr.state.field(adjustingField) !== tr.startState.field(adjustingField) ||
+    tr.state.field(sweepField) !== tr.startState.field(sweepField)
       ? buildDecorations(tr.state)
       : decos,
   provide: (field) => EditorView.decorations.from(field),
@@ -258,7 +420,9 @@ function buildDecorations(state: EditorState): DecorationSet {
       if (h.to > h.from) ranges.push(mark(h.type).range(line.from + h.from, line.from + h.to));
     }
     if (result.display !== undefined) {
+      const spark = sparkFor(state, i);
       const info = [
+        spark?.summary,
         result.explain,
         result.uses?.length ? `Uses ${lineList(result.uses)}` : '',
         usedBy.get(i)?.length ? `Used by ${lineList(usedBy.get(i)!)}` : '',
@@ -267,7 +431,7 @@ function buildDecorations(state: EditorState): DecorationSet {
         .filter(Boolean)
         .join('\n');
       const widget = Decoration.widget({
-        widget: new ResultWidget(result.display, info, lineChange(state, i)),
+        widget: new ResultWidget(result.display, info, lineChange(state, i), spark),
         side: 1,
       });
       ranges.push(widget.range(line.to));
@@ -317,4 +481,11 @@ const liveRegion = ViewPlugin.fromClass(
   },
 );
 
-export const results = [resultsField, adjustingField, decorationsField, cursorField, liveRegion];
+export const results = [
+  resultsField,
+  adjustingField,
+  sweepField,
+  decorationsField,
+  cursorField,
+  liveRegion,
+];

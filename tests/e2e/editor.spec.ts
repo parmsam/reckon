@@ -188,3 +188,23 @@ test('⌥/Alt-drag changes numbers only when turned on', async ({ page, isMobile
   await page.keyboard.press('ControlOrMeta+z');
   await expect(page.locator('.cm-line').first()).toContainText('rent = $1,200');
 });
+
+test('sweeping a variable charts every answer that uses it', async ({ page }) => {
+  await page.goto('./');
+  await setNote(page, 'rent = $1,200\nfood = $400\nleft = $3,000 - rent - food\nfood × 2');
+  await page.locator('.cm-line', { hasText: 'rent = ' }).click();
+  await page.getByRole('button', { name: 'Adjust rent with a slider' }).click();
+  await page.getByLabel('Sweep').check();
+  // Only `left` uses rent; the range fields set the slider's range too.
+  await expect(page.locator('.cm-sparkline')).toHaveCount(1);
+  await expect(
+    page.locator('.cm-line', { hasText: 'left = ' }).locator('.cm-sparkline'),
+  ).toHaveCount(1);
+  await page.getByRole('spinbutton', { name: /^To/ }).fill('5000');
+  await page.getByRole('spinbutton', { name: /^To/ }).press('Enter');
+  await expect(page.getByRole('slider', { name: 'Adjust rent' })).toHaveAttribute('max', '5000');
+  await page.getByRole('slider', { name: 'Adjust rent' }).fill('2000');
+  await expect(page.locator('.cm-sparkline-dot')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.cm-sparkline')).toHaveCount(0);
+});
