@@ -10,6 +10,8 @@ import type { Value } from './values';
 export interface Totals {
   sum?: string;
   avg?: string;
+  /** The sum as a value, for comparing totals. */
+  sumValue?: Value;
   /** How many answers could be counted (numbers and amounts with units). */
   count: number;
 }
@@ -18,13 +20,20 @@ export function totals(values: readonly Value[], settings: Partial<Settings> = {
   const s: Settings = { ...defaultSettings, ...settings };
   const ctx = { ppi: s.ppi, emPx: s.emPx, rates: s.rates };
   const countable = values.filter((v) => v.kind === 'number' || v.kind === 'quantity');
-  const format = (name: string) => {
+  const value = (name: string) => {
     try {
-      return formatValue(aggregate(name, countable, ctx), s);
+      return aggregate(name, countable, ctx);
     } catch {
       return undefined;
     }
   };
   if (!countable.length) return { count: 0 };
-  return { sum: format('sum'), avg: format('avg'), count: countable.length };
+  const sumValue = value('sum');
+  const avg = value('avg');
+  return {
+    sum: sumValue && formatValue(sumValue, s),
+    avg: avg && formatValue(avg, s),
+    sumValue,
+    count: countable.length,
+  };
 }

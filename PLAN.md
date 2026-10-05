@@ -411,6 +411,9 @@ first; changing numbers by direct manipulation is opt-in and guarded.
   on by default, since nothing changes until it's used.
 - [x] Scrubbing: ⌥/Alt-drag a plain number sideways to change it. Off by default; desktop only; one drag is
   one undo step; never on dates, `1.5k` or other non-plain numbers.
+- [x] Ghost deltas: while a slider or scrub is active, every answer that moved shows its change beside it
+  (`+$120.00`, `−3 days`), and so does the total bar. Changes are measured from where the session started,
+  in the answer's current unit; answers of a different kind than before (or true/false) show none.
 
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)

@@ -185,7 +185,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       () => toast(`Copied ${value}`),
       () => toast('Could not copy'),
     );
-  const copyButton = (label: string, value: string) =>
+  /** `change` is how far the value moved during a slider or scrub ("+$120.00"). */
+  const copyButton = (label: string, value: string, change?: string) =>
     h(
       'button',
       {
@@ -196,6 +197,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
       h('span', { class: 'totalbar-name' }, `${label} `),
       h('strong', {}, value),
+      change ? h('span', { class: 'totalbar-delta' }, ` ${change}`) : '',
     );
 
   /** The section total (or the selection's sum, average and count) for where the cursor is. */
@@ -206,13 +208,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (summary.kind === 'section') {
       return totalBar.replaceChildren(
         summary.label ? h('span', { class: 'totalbar-label' }, summary.label) : '',
-        copyButton('Total', summary.total),
+        copyButton('Total', summary.total, summary.change),
       );
     }
     const n = summary.count;
     totalBar.replaceChildren(
       h('span', { class: 'totalbar-label' }, `${n} answer${n === 1 ? '' : 's'} selected`),
-      summary.sum ? copyButton('Sum', summary.sum) : '',
+      summary.sum ? copyButton('Sum', summary.sum, summary.change) : '',
       summary.avg && n > 1 ? copyButton('Average', summary.avg) : '',
     );
   }

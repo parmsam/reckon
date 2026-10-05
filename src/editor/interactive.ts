@@ -7,7 +7,7 @@ import {
   type DecorationSet,
 } from '@codemirror/view';
 import { D, type Decimal } from '../engine/values';
-import { engineSettings, resultsField } from './results';
+import { engineSettings, resultsField, setAdjusting } from './results';
 
 /**
  * Changing numbers by direct manipulation (Bret Victor's "immediate connection"): a slider for
@@ -76,10 +76,12 @@ function niceStep(span: number, count: number): number {
 
 /**
  * Replaces the number between `from` and `to` while dragging, outside the undo history, then
- * records the whole session as one change when it ends.
+ * records the whole session as one change when it ends. Until `finish`, answers show how far
+ * they moved from where they were when the session began.
  */
 function numberSession(view: EditorView, start: NumberAt) {
   let current = start.text;
+  view.dispatch({ effects: setAdjusting.of(view.state.field(resultsField)) });
   const replace = (text: string, addToHistory: boolean) => {
     view.dispatch({
       changes: { from: start.from, to: start.from + current.length, insert: text },
@@ -100,6 +102,10 @@ function numberSession(view: EditorView, start: NumberAt) {
       const final = current;
       replace(start.text, false);
       replace(final, true);
+    },
+    /** Stops showing how far answers moved. */
+    finish() {
+      view.dispatch({ effects: setAdjusting.of(null) });
     },
   };
 }
@@ -145,6 +151,7 @@ function openSlider(
   el.addEventListener('toggle', (e) => {
     if ((e as ToggleEvent).newState === 'closed') {
       session.end();
+      session.finish();
       el.remove();
       if (popover === el) popover = undefined;
     }
@@ -242,6 +249,7 @@ const scrubbing = ViewPlugin.define((view) => {
       window.removeEventListener('pointerup', up);
       document.documentElement.classList.remove('scrubbing');
       session.end();
+      session.finish();
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);

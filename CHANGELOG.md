@@ -7,6 +7,8 @@ bump the minor version, fixes bump the patch version.
 
 - **What's new:** after an update, a one-time note links to this changelog. It's also in Settings → About
   and the command palette.
+- **See how far answers move:** while you drag a slider or scrub a number, each answer it affects shows its
+  change beside it (`+$120.00`, `−3 days`), and so does the total bar.
 
 ## 1.1.0 — 2026-10-05
 

@@ -28,6 +28,7 @@ them off in Settings.
 - **What depends on what:** the line with the cursor marks the lines it uses (green) and the lines that use it (orange).
 - **Try other numbers:** on a line like `rent = $1,200`, tap **⇆** for a slider and watch every answer below change.
   With *Drag numbers to change them* on (Settings), hold <kbd>⌥/Alt</kbd> and drag any number. Undo puts it back.
+  While you adjust, each answer that moves shows by how much next to it (`+$120.00`, `−3 days`), and so does the total.
 - **Totals:** the bar under the note shows the total of the section you're in; select lines for their sum and average.
 
 ## Notes, sharing and backups

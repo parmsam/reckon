@@ -5,10 +5,17 @@ import { filterCommands, fuzzyScore, type Command } from '../src/app/palette';
 import { DEFAULT_PREFERENCES, sanitize } from '../src/app/preferences';
 import { toggleLineComment } from '../src/editor/commands';
 import { reckonCompletions } from '../src/editor/completion';
-import { engineSettings, resultsField } from '../src/editor/results';
+import {
+  adjustingField,
+  engineSettings,
+  lineChange,
+  resultsField,
+  setAdjusting,
+} from '../src/editor/results';
 import { summarize } from '../src/editor/summary';
 import { formatLike } from '../src/editor/interactive';
 import { D } from '../src/engine/values';
+import { change, evaluateDocument } from '../src/engine';
 import { vocabulary } from '../src/engine/vocabulary';
 
 describe('preferences', () => {
@@ -162,5 +169,61 @@ describe('interactive numbers', () => {
     expect(formatLike('4.50', new D(4.75))).toBe('4.75');
     expect(formatLike('3', new D(5))).toBe('5');
     expect(formatLike('1000', new D(1500))).toBe('1500');
+  });
+});
+
+describe('ghost deltas', () => {
+  const settings = { locale: 'en-US', now: Date.UTC(2026, 0, 15, 12), timeZone: 'UTC' };
+  const value = (line: string) => evaluateDocument(line, settings)[0]!.value;
+  const moved = (a: string, b: string) => change(value(a), value(b), settings);
+
+  it('says how far an answer moved, signed', () => {
+    expect(moved('$1,200', '$1,320')).toBe('+$120.00');
+    expect(moved('10', '7.5')).toBe('−2.5');
+    expect(moved('2 km', '2500 m')).toBe('+500 m');
+    expect(moved('20%', '25%')).toBe('+5%');
+    expect(moved('Jan 20', 'Jan 17')).toBe('−3 days');
+  });
+
+  it('stays quiet when nothing moved or the answers differ in kind', () => {
+    expect(moved('$5', '$5')).toBeUndefined();
+    expect(moved('5 km', '$5')).toBeUndefined();
+    expect(moved('5', '5%')).toBeUndefined();
+    expect(moved('1 > 0', '1 < 0')).toBeUndefined();
+    expect(change(undefined, value('5'), settings)).toBeUndefined();
+  });
+
+  const adjust = (doc: string, edit: { from: number; to: number; insert: string }) => {
+    let state = EditorState.create({
+      doc,
+      extensions: [engineSettings.of(settings), resultsField, adjustingField],
+    });
+    state = state.update({ effects: setAdjusting.of(state.field(resultsField)) }).state;
+    return state.update({ changes: edit, userEvent: 'input.adjust' }).state;
+  };
+
+  it('shows changes on every affected line and the total while adjusting', () => {
+    const doc = '# Home\nrent = $1,200\nutilities = $150\nrent × 12';
+    const state = adjust(doc, {
+      from: doc.indexOf('1,200'),
+      to: doc.indexOf('1,200') + 5,
+      insert: '1,320',
+    });
+    expect([0, 1, 2, 3].map((i) => lineChange(state, i))).toEqual([
+      undefined,
+      '+$120.00',
+      undefined,
+      '+$1,440.00',
+    ]);
+    expect(summarize(state)).toMatchObject({ total: '$1,470.00', change: '+$120.00' });
+  });
+
+  it('forgets the starting point after any other edit, or when the session ends', () => {
+    const doc = 'x = 5\nx * 2';
+    let state = adjust(doc, { from: 4, to: 5, insert: '6' });
+    expect(lineChange(state, 1)).toBe('+2');
+    expect(lineChange(state.update({ effects: setAdjusting.of(null) }).state, 1)).toBeUndefined();
+    state = state.update({ changes: { from: 0, insert: 'a' } }).state;
+    expect(state.field(adjustingField)).toBeNull();
   });
 });

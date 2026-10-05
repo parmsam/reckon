@@ -112,7 +112,7 @@ function dateBinary(op: BinaryOp, a: Value, b: Value, ctx: UnitContext): Value {
   throw new CalcError(`Can't apply ${op} to dates`);
 }
 
-function binary(op: BinaryOp, a: Value, b: Value, ctx: UnitContext): Value {
+export function binary(op: BinaryOp, a: Value, b: Value, ctx: UnitContext): Value {
   if (a.kind === 'datetime' || b.kind === 'datetime') return dateBinary(op, a, b, ctx);
   // 50 + 10% = 55, $50 - 10% = $45, 50 * 10% = 5, 50 / 10% = 500
   if (a.kind !== 'percent' && b.kind === 'percent') {

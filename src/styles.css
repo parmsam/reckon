@@ -426,6 +426,32 @@ button {
   background: var(--selection);
 }
 
+/* While a slider or scrub is active: how far each answer moved, before the answer. The change
+   gives way first when space is short. */
+.cm-result-moved {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cm-result-delta {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.cm-result-answer {
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .cm-result-copied {
   background: var(--accent);
   color: var(--bg);
@@ -1067,6 +1093,11 @@ kbd {
 
 .totalbar-value strong {
   color: var(--result);
+  font-family: var(--mono);
+}
+
+.totalbar-delta {
+  color: var(--muted);
   font-family: var(--mono);
 }
 

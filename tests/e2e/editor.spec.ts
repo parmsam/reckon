@@ -146,8 +146,15 @@ test('the slider changes a variable live, as one undo step', async ({ page }) =>
   const slider = page.getByRole('slider', { name: 'Adjust rent' });
   await slider.fill('1500');
   await expect(page.locator('.cm-line').first()).toContainText('rent = $1,500');
-  await expect(resultOnLine(page, 'rent × 12')).toHaveText('$18,000.00');
+  // While adjusting, each answer shows how far it moved, and so does the total.
+  await expect(resultOnLine(page, 'rent × 12').locator('.cm-result-delta')).toHaveText(
+    '+$3,600.00',
+  );
+  await expect(resultOnLine(page, 'rent × 12').locator('.cm-result-answer')).toHaveText(
+    '$18,000.00',
+  );
   await page.keyboard.press('Escape');
+  await expect(resultOnLine(page, 'rent × 12')).toHaveText('$18,000.00');
 
   await page.locator('.cm-line', { hasText: 'rent × 12' }).click();
   await page.keyboard.press('ControlOrMeta+z');

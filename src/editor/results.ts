@@ -1,4 +1,4 @@
-import { Facet, StateField, type EditorState, type Range } from '@codemirror/state';
+import { Facet, StateEffect, StateField, type EditorState, type Range } from '@codemirror/state';
 import {
   Decoration,
   EditorView,
@@ -7,7 +7,7 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from '@codemirror/view';
-import { evaluateDocument, type LineResult, type Settings } from '../engine';
+import { change, evaluateDocument, type LineResult, type Settings } from '../engine';
 
 export type EditorSettings = Partial<Settings> & {
   /** When the exchange rates were fetched, shown on currency results. */
@@ -31,6 +31,30 @@ export const resultsField = StateField.define<LineResult[]>({
       ? evaluate(tr.state)
       : results,
 });
+
+/** Starts (with the answers before) or ends (null) an adjusting session: a slider or a scrub. */
+export const setAdjusting = StateEffect.define<LineResult[] | null>();
+
+/**
+ * The answers from before the current slider or scrub started, so every line can show how far it
+ * moved. Null when nothing is being adjusted. Any other edit ends it.
+ */
+export const adjustingField = StateField.define<LineResult[] | null>({
+  create: () => null,
+  update: (before, tr) => {
+    for (const e of tr.effects) if (e.is(setAdjusting)) return e.value;
+    if (!before || !tr.docChanged) return before;
+    return tr.isUserEvent('input.adjust') ? before : null;
+  },
+});
+
+/** "+$120.00" for line `i` while adjusting, if its answer moved. */
+export function lineChange(state: EditorState, i: number): string | undefined {
+  const before = state.field(adjustingField, false);
+  const results = state.field(resultsField);
+  if (!before || before.length !== results.length) return undefined;
+  return change(before[i]?.value, results[i]?.value, state.facet(engineSettings));
+}
 
 function evaluate(state: EditorState): LineResult[] {
   return evaluateDocument(state.doc.toString(), state.facet(engineSettings));
@@ -79,18 +103,29 @@ class ResultWidget extends WidgetType {
   constructor(
     readonly display: string,
     readonly info: string,
+    /** How far the answer moved during a slider or scrub ("+$120.00"). */
+    readonly delta?: string,
   ) {
     super();
   }
 
   eq(other: ResultWidget): boolean {
-    return other.display === this.display && other.info === this.info;
+    return other.display === this.display && other.info === this.info && other.delta === this.delta;
   }
 
   toDOM(view: EditorView): HTMLElement {
     const el = document.createElement('span');
     el.className = 'cm-result';
-    el.textContent = this.display;
+    if (this.delta) {
+      const delta = document.createElement('span');
+      delta.className = 'cm-result-delta';
+      delta.textContent = this.delta;
+      const answer = document.createElement('span');
+      answer.className = 'cm-result-answer';
+      answer.textContent = this.display;
+      el.classList.add('cm-result-moved');
+      el.append(delta, answer);
+    } else el.textContent = this.display;
     explainOnHover(el, `${this.info}\nClick to copy`);
     // Screen readers get the result through the live region instead.
     el.setAttribute('aria-hidden', 'true');
@@ -197,7 +232,8 @@ const noResultLine = Decoration.line({ class: 'cm-no-result' });
 const decorationsField = StateField.define<DecorationSet>({
   create: (state) => buildDecorations(state),
   update: (decos, tr) =>
-    tr.state.field(resultsField) !== tr.startState.field(resultsField)
+    tr.state.field(resultsField) !== tr.startState.field(resultsField) ||
+    tr.state.field(adjustingField) !== tr.startState.field(adjustingField)
       ? buildDecorations(tr.state)
       : decos,
   provide: (field) => EditorView.decorations.from(field),
@@ -231,7 +267,7 @@ function buildDecorations(state: EditorState): DecorationSet {
         .filter(Boolean)
         .join('\n');
       const widget = Decoration.widget({
-        widget: new ResultWidget(result.display, info),
+        widget: new ResultWidget(result.display, info, lineChange(state, i)),
         side: 1,
       });
       ranges.push(widget.range(line.to));
@@ -281,4 +317,4 @@ const liveRegion = ViewPlugin.fromClass(
   },
 );
 
-export const results = [resultsField, decorationsField, cursorField, liveRegion];
+export const results = [resultsField, adjustingField, decorationsField, cursorField, liveRegion];
