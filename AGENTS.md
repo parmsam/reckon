@@ -133,3 +133,12 @@ Jan 15, 2026, 12:00 in UTC. Vitest loads `temporal-polyfill` in `tests/setup.ts`
 ## Git
 - Use small, focused commits with imperative messages (`engine: support "x% off y"`).
 - Don't commit `dist/`. CI builds and deploys to Pages on pushes to `main`.
+
+## Releasing
+1. Bump the version with `npm version X.Y.Z --no-git-tag-version` (new features bump the minor version,
+   fixes the patch version). The app, Settings → About and `engine.js` all read it from `package.json`.
+2. Add a section to `CHANGELOG.md`.
+3. Commit as `release: X.Y.Z`, tag `vX.Y.Z`, and push both. CI deploys the site, and open apps get the
+   "A new version of Reckon is available" prompt.
+4. `gh release create vX.Y.Z --title "Reckon X.Y.Z" --notes-file <notes> dist/engine.js`, with the notes taken
+   from the changelog section.
