@@ -5,6 +5,10 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- Bits and data rates: `Mbit`/`Mb`, `Gbit`/`Gb`…, and `bps`, `kbps`, `Mbps`, `Gbps`
+  (`48 GB / 200 Mbps in min`). Lowercase `kb`, `mb` and `gb` still mean bytes.
+- Choices of bare values: `tip = 15% | [18%] | 20%`. Click the current one to pick the next.
+
 - `median` and `stdev` (also `stddev`, `std`): for the lines above, like `avg`, or as functions
   (`median(5, 1, 3)`). `stdev` is the sample standard deviation, like spreadsheets' STDEV.
 - Templates in the docs: 14 ready-made notes (split a bill, runway, LTV and CAC, loan payment, unit price…)

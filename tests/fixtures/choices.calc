@@ -25,6 +25,15 @@ train tickets $40 => $40.00
 fly 2 × 3 => 6
 transport + 1 => (none)
 
+// Bare values, when one is bracketed
+tip = 15% | [18%] | 20% => 18%
+tip of $50 => $9.00
+size = 250 ml | [500 ml] | 1 L => 500 mL
+budget = $50 | [$80] => $80.00
+x = 5 | [3] => 3
+bitwise = 5 | 3 => 7
+names and values = car | [90] => (none)
+
 // Every option needs a value, or none; one current option
 mixed = car $120 | train => (none)
 two = [car] | [train] => (none)

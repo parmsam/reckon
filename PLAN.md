@@ -119,7 +119,7 @@ above it. A line with no recognizable expression produces no result.
 
 ### 3.6 Units
 - Conversion keywords: `in`, `to`, `as`, `into`, for example `5 km in miles`
-- Categories: length, area, volume, mass, temperature, time/duration, speed, data (`KB`/`KiB`/`MB`/`MiB`…), angle, frequency, energy, power, pressure
+- Categories: length, area, volume, mass, temperature, time/duration, speed, data (`KB`/`KiB`/`MB`/`MiB`…, and bits: `kbit`/`Mb`/`Gbit`…; capital B is bytes, lowercase b bits, except the long-standing `kb`/`mb`/`gb` which stay bytes), data rate (`bps`, `kbps`, `Mbps`, `Gbps`), angle, frequency, energy, power, pressure
 - CSS: `px`, `pt`, `em`, `rem`, via the `ppi` (96) and `emPx` (16) settings
 - Mixed arithmetic: `1 m + 20 cm` = `1.2 m`. Compound units: `60 km/h in m/s`, `$85/h × 12.5 h` = `$1,062.50`.
 - A plain number adopts the other side's unit: `5 km + 3` = `8 km`. Totals convert to the block's first unit.
@@ -177,6 +177,7 @@ above it. A line with no recognizable expression produces no result.
 | `if transport == fly then $300 else $80` | Option names work as values, but only next to `==` / `!=`, so later prose like `train tickets $40` stays text. Choices compare only by name. |
 | `fare = car $120 \| [train $80] \| fly $300` | Options with values: the variable is the current option's value (`$80.00`). Give every option a value, or none. |
 | `light = on \| off` | Option names are words (any words except `true`/`false`), and multi-word names are fine (`night bus`). A name ends at the first number, symbol, variable or function. |
+| `tip = 15% \| [18%] \| 20%` | Options can be bare values when one is bracketed: the variable is the current one (`18%`), and clicking it picks the next. Names and bare values don't mix. |
 | `x = 5 \| 3`, `a \| b` | Still bitwise or: a line is a choice only when it's an assignment and every option starts with a name that isn't a variable. |
 
 In the app, the current option is a clickable word: a click moves the brackets to the next option

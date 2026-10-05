@@ -247,8 +247,9 @@ const OPTION_NAME = /^[\p{L}_][\p{L}\p{N}_]*(?:\s+[\p{L}_][\p{L}\p{N}_]*)*/u;
 
 /**
  * `car | [train] | fly` or `car $120 | [train $80]`: a choice, when there are two or more
- * options and each starts with a name that isn't a variable or function. Anything else (`5 | 3`,
- * `a | b` with variables) is left to the expression parser, as bitwise or.
+ * options and each starts with a name that isn't a variable or function. Options can also be bare
+ * values (`15% | [18%] | 20%`) when one is bracketed. Anything else (`5 | 3`, `a | b` with
+ * variables) is left to the expression parser, as bitwise or.
  */
 function parseChoice(
   text: string,
@@ -278,6 +279,7 @@ function parseChoice(
     return vars.has(w) || user.functions?.has(w) || [...vars].some((v) => v.startsWith(`${w} `));
   };
   const options: (ChoiceOption & { value: string; valueFrom: number })[] = [];
+  let unnamed = 0;
   const bracketed: number[] = [];
   let brackets: [number, number] | undefined;
   for (const part of parts) {
@@ -302,7 +304,21 @@ function parseChoice(
       label = words.slice(0, k + 1).join('');
     }
     const name = normalizeName(label);
-    if (!name || name === 'true' || name === 'false') return undefined;
+    if (!name) {
+      // A bare value (`18%`): the option is its own label and value.
+      if (!body) return undefined;
+      unnamed++;
+      options.push({
+        from,
+        to: from + body.length,
+        label: body,
+        name: body.toLowerCase(),
+        value: body,
+        valueFrom: from,
+      });
+      continue;
+    }
+    if (name === 'true' || name === 'false') return undefined;
     const rest = body.slice(label.length);
     options.push({
       from,
@@ -314,8 +330,13 @@ function parseChoice(
     });
   }
 
+  // Bare values need a bracketed current option, so `5 | 3` stays bitwise or, and can't mix with names.
+  if (unnamed && (unnamed < options.length || bracketed.length !== 1)) return undefined;
+
   const ownHighlights: Highlight[] = [];
   for (const o of options) {
+    // A bare value is highlighted as the expression it is.
+    if (unnamed) continue;
     ownHighlights.push({ from: o.from, to: o.from + o.label.length, type: 'choice' });
   }
   for (const part of parts.slice(1)) {
