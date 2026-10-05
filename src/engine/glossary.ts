@@ -211,6 +211,10 @@ export function glossary(): GlossaryGroup[] {
         })),
         { terms: ['x'], meaning: 'Times, when it sits between two numbers', example: '3 x 4' },
         { terms: ['per'], meaning: 'Divides: km per hour', example: '100 km per 2 h' },
+        { terms: ['&'], meaning: 'Bitwise and (whole numbers)', example: '0xFF & 0x0F' },
+        { terms: ['|'], meaning: 'Bitwise or', example: '0xF0 | 0x0F' },
+        { terms: ['xor'], meaning: 'Bitwise exclusive or', example: '5 xor 3' },
+        { terms: ['<<', '>>'], meaning: 'Shift bits left or right', example: '1 << 10' },
       ],
     },
     {
@@ -236,6 +240,33 @@ export function glossary(): GlossaryGroup[] {
           terms: ['% of what is'],
           meaning: 'The whole, from a part and its percentage',
           example: '20% of what is 5',
+        },
+      ],
+    },
+    {
+      id: 'logic',
+      title: 'Comparisons and conditions',
+      intro:
+        'Comparisons answer true or false. Units, currencies and dates convert before comparing.',
+      entries: [
+        {
+          terms: ['<', '>', '<=', '>=', '≤', '≥'],
+          meaning: 'Less than, greater than, or equal',
+          example: '5 km > 3 miles',
+        },
+        {
+          terms: ['==', '!=', '≠'],
+          meaning: 'Equal, not equal (decimals are exact)',
+          example: '0.1 + 0.2 == 0.3',
+        },
+        { terms: ['and', '&&'], meaning: 'Both are true', example: '5 > 3 and 2 > 1' },
+        { terms: ['or', '||'], meaning: 'Either is true', example: '5 > 30 or 2 > 1' },
+        { terms: ['not'], meaning: 'The opposite', example: 'not 5 > 3' },
+        { terms: ['true', 'false'], meaning: 'True and false values', example: 'member = true' },
+        {
+          terms: ['if … then … else …'],
+          meaning: 'Picks a value by a condition; without else, false shows no answer',
+          example: 'price = $120\nif price > $100 then 10% off price else price',
         },
       ],
     },
@@ -439,6 +470,11 @@ export function glossary(): GlossaryGroup[] {
         {
           terms: ['now', 'today'],
           meaning: 'Ordinary words when a number follows them directly ("I now have 5")',
+        },
+        {
+          terms: ['and', 'or', 'not', 'if'],
+          meaning:
+            'Logic words only between or before values, and if only with a then; otherwise they are text ("salt and pepper")',
         },
         {
           terms: ['any name'],

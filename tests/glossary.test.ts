@@ -67,7 +67,7 @@ describe('glossary', () => {
       ...Object.keys(SUFFIXES),
       ...Object.keys(FRACTIONS),
       // Words resolve.ts and dates.ts handle directly.
-      ...'x per of off on is what ago later from until till since at noon midday midnight next last this line time now in min by'.split(
+      ...'x per of off on is what ago later from until till since at noon midday midnight next last this line time now in min by and or not xor if then else true false < > <= >= == != & | << >> && ||'.split(
         ' ',
       ),
     ];

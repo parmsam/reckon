@@ -50,6 +50,14 @@ prev × 2 => 120
 5 is what % of 20 => 25%
 20% of what is 5 => 25
 
+// ## Comparisons and conditions
+// Compare with < > <= >= == and !=, and combine with and, or and not. Units and currencies convert before comparing.
+5 km > 3 miles => true
+0.1 + 0.2 == 0.3 => true
+order = $120 => $120.00
+if order >= $100 then 10% off order else order => $108.00
+0xF0 | 0x0F => 255
+
 // ## Units
 // Convert with in, to or as. Units combine and cancel, and plain numbers take the other side's unit.
 5 km in miles => 3.1069 mi
