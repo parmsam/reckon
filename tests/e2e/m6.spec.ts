@@ -160,3 +160,36 @@ test('the GitHub link shows once: top bar on wide screens, notes list on phones'
   const inSidebar = await links.evaluate((el) => Boolean(el.closest('.sidebar')));
   expect(inSidebar).toBe(Boolean(isMobile));
 });
+
+test.describe('splash screen', () => {
+  test.use({ splash: true });
+
+  test('shows the brand while starting, then gets out of the way; can be turned off', async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto('./');
+    const splash = page.locator('#splash');
+    await expect(splash).toContainText('Reckon');
+    await expect(splash).toHaveCount(0, { timeout: 5000 });
+    await expect(page.locator('.cm-result').first()).toBeVisible();
+
+    await openSettings(page, isMobile);
+    await page.getByLabel('Show the splash screen when Reckon opens').uncheck();
+    await page.getByRole('button', { name: 'Done' }).click();
+    await page.reload();
+    await expect(page.locator('#splash')).toBeHidden();
+    await expect(page.locator('html')).toHaveClass(/no-splash/);
+  });
+
+  test('settings show the version and links', async ({ page, isMobile }) => {
+    await expect(page.locator('#splash')).toHaveCount(0, { timeout: 5000 });
+    await openSettings(page, isMobile);
+    const dialog = page.getByRole('dialog', { name: 'Settings' });
+    await expect(dialog).toContainText('Reckon 1.0.0');
+    await expect(dialog.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/parmsam/reckon',
+    );
+  });
+});

@@ -23,7 +23,7 @@ export { decodeLinkText, noteLink, SITE_URL } from './links';
 export { linkName, shareLink } from './app/share';
 export { decodeShare } from './app/share';
 
-export const VERSION = '1.0.0';
+export const VERSION = __APP_VERSION__;
 
 /** The exchange rates bundled with this build (units per USD), used when you don't pass `rates`. */
 export const bundledRates: { fetchedAt: number; rates: Readonly<Record<string, number>> } =

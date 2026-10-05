@@ -863,3 +863,108 @@ kbd {
 .keys-top .editor {
   padding-top: 3.25rem;
 }
+
+/* Brand: logo and name at the top of the notes list */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem 0.1rem;
+  padding-top: max(0.6rem, env(safe-area-inset-top));
+  color: var(--fg);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brand .logo {
+  width: 22px;
+  height: 22px;
+}
+
+.brand + .sidebar-head {
+  padding-top: 0.5rem;
+}
+
+/* About, in Settings */
+.about {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.about .logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+
+.about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.about-links a {
+  color: var(--accent);
+}
+
+/* Splash screen (plain HTML in index.html, so it shows before any script runs) */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.35rem;
+  background: var(--bg);
+  color: var(--fg);
+  transition: opacity 0.35s ease;
+}
+
+#splash .logo {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 0.5rem;
+  animation: splash-in 0.5s ease both;
+}
+
+.splash-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.splash-tagline {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+#splash.done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.no-splash #splash {
+  display: none;
+}
+
+@keyframes splash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #splash,
+  #splash .logo {
+    transition: none;
+    animation: none;
+  }
+}

@@ -1,6 +1,10 @@
 const icon = (paths: string) =>
   `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 
+/** The Reckon mark: the "=" logo. */
+export const LOGO =
+  '<svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="currentColor"/><rect x="120" y="186" width="272" height="44" rx="22" fill="var(--bg)"/><rect x="120" y="282" width="272" height="44" rx="22" fill="#f2a541"/></svg>';
+
 export const ICONS = {
   menu: icon('<path d="M4 6h16M4 12h16M4 18h16"/>'),
   plus: icon('<path d="M12 5v14M5 12h14"/>'),

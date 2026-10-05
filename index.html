@@ -5,15 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Reckon — a notepad that does the math." />
     <title>Reckon</title>
+    <meta name="theme-color" content="#f7f5f0" />
     <script>
       // Apply a chosen theme before first paint (the full preferences load from IndexedDB later).
       try {
         const theme = localStorage.getItem('reckon.theme');
         if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+        if (localStorage.getItem('reckon.splash') === 'off')
+          document.documentElement.classList.add('no-splash');
       } catch {}
     </script>
   </head>
   <body>
+    <div id="splash" aria-hidden="true">
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+        <rect width="512" height="512" rx="112" fill="currentColor" />
+        <rect x="120" y="186" width="272" height="44" rx="22" fill="var(--bg)" />
+        <rect x="120" y="282" width="272" height="44" rx="22" fill="#f2a541" />
+      </svg>
+      <div class="splash-name">Reckon</div>
+      <div class="splash-tagline">A notepad that does the math</div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -592,7 +592,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     closeDrawer();
     const route = parseRoute(location.hash);
     if (route.kind === 'share') return openShare(route.payload);
-    if (route.kind === 'text') return showShared(route.text, 'Note from a link · read-only');
+    if (route.kind === 'text')
+      return showShared(route.text, 'A note from a link, opened in Reckon · read-only');
     if (route.kind === 'badLink') {
       toast('That link is broken or too long');
       return navigate({ kind: 'home' }, { replace: true });
@@ -670,17 +671,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         statusEl.textContent = 'Not saved: storage unavailable';
         return;
       }
-      if (store.trashed().length === 0) {
-        // First run: the tutorial plus two examples, the tutorial newest so it opens.
-        const now = Date.now();
-        const notes = FIRST_RUN_NOTES.map((body, i) =>
-          newNote(body, now - (FIRST_RUN_NOTES.length - 1 - i)),
-        );
-        await store.putMany(notes);
-        target = notes[notes.length - 1]!;
-      } else {
-        target = await store.create('');
-      }
+      target = await store.create('');
     }
     navigate({ kind: 'note', id: target.id }, { replace: true });
   }
@@ -693,7 +684,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       toast('That share link is broken or incomplete');
       return navigate({ kind: 'home' }, { replace: true });
     }
-    return showShared(body, 'Shared note · read-only');
+    return showShared(body, 'A note shared with Reckon · read-only');
   }
 
   /** Shows a note from a link, read-only, with "Save a copy". */
@@ -934,6 +925,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (document.visibilityState === 'hidden') flush();
   });
   window.addEventListener('pagehide', flush);
+
+  // First visit (even through a share link): the tutorial plus two examples, the tutorial newest
+  // so it opens on its own.
+  if (!storageError && !store.active().length && !store.trashed().length) {
+    const now = Date.now();
+    await store.putMany(
+      FIRST_RUN_NOTES.map((body, i) => newNote(body, now - (FIRST_RUN_NOTES.length - 1 - i))),
+    );
+  }
 
   await handleRoute();
 }

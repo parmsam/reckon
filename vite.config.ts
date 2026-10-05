@@ -1,9 +1,13 @@
 import { defineConfig } from 'vitest/config';
+import { readFileSync } from 'node:fs';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
 
 export default defineConfig({
   // Served from https://parmsam.github.io/reckon/
   base: '/reckon/',
+  define: { __APP_VERSION__: JSON.stringify(version) },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',

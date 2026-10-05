@@ -155,7 +155,7 @@ test('exports a backup and imports it again', async ({ page, isMobile }) => {
 test('plain-text links open a read-only preview that can be saved', async ({ page }) => {
   const note = '# From an LLM\nhourly rate = $85/h\n37.5 h × hourly rate\n20% of 50';
   await page.goto(`./#/new?text=${encodeURIComponent(note)}`);
-  await expect(page.locator('.banner')).toContainText('Note from a link');
+  await expect(page.locator('.banner')).toContainText('A note from a link');
   await expect(page.locator('#note-title')).toHaveText('From an LLM');
   await expect(page.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
   await expect(page.locator('.cm-result')).toHaveText(['$85.00/h', '$3,187.50', '10']);
@@ -171,7 +171,7 @@ test('the docs page loads and its examples open in the app', async ({ page }) =>
   await page.goto('./docs/');
   await expect(page.getByRole('heading', { name: 'Getting started' })).toBeVisible();
   await page.locator('#percentages .try').first().click();
-  await expect(page.locator('.banner')).toContainText('Note from a link');
+  await expect(page.locator('.banner')).toContainText('A note from a link');
   await expect(page.locator('.cm-result').first()).toHaveText('10');
 });
 

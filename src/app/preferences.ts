@@ -17,6 +17,8 @@ export interface Preferences {
   emPx: number;
   /** Fetch exchange rates. When off, Reckon makes no network requests and uses saved rates. */
   fetchRates: boolean;
+  /** Show the splash screen while Reckon starts. */
+  showSplash: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -29,11 +31,14 @@ export const DEFAULT_PREFERENCES: Preferences = {
   ppi: 96,
   emPx: 16,
   fetchRates: true,
+  showSplash: true,
 };
 
 const KEY = 'preferences';
 /** Mirrored in localStorage so index.html can set the theme before anything loads. */
 const THEME_KEY = 'reckon.theme';
+/** Mirrored in localStorage so index.html can skip the splash before anything loads. */
+const SPLASH_KEY = 'reckon.splash';
 
 /** Keeps only known keys with valid values, so stored junk can't break the app. */
 export function sanitize(input: unknown): Preferences {
@@ -48,6 +53,7 @@ export function sanitize(input: unknown): Preferences {
   if (raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'system') p.theme = raw.theme;
   if (raw.angleUnit === 'deg' || raw.angleUnit === 'rad') p.angleUnit = raw.angleUnit;
   if (typeof raw.fetchRates === 'boolean') p.fetchRates = raw.fetchRates;
+  if (typeof raw.showSplash === 'boolean') p.showSplash = raw.showSplash;
   if (typeof raw.locale === 'string' && (raw.locale === '' || isLocale(raw.locale)))
     p.locale = raw.locale;
   int('fontSize', 12, 24);
@@ -77,6 +83,7 @@ export async function loadPreferences(): Promise<Preferences> {
 export async function savePreferences(p: Preferences): Promise<void> {
   try {
     localStorage.setItem(THEME_KEY, p.theme);
+    localStorage.setItem(SPLASH_KEY, p.showSplash ? 'on' : 'off');
   } catch {
     // Theme will still apply once IndexedDB loads.
   }
@@ -95,8 +102,26 @@ export function engineSettings(p: Preferences): Partial<Settings> {
   };
 }
 
-/** Applies the look: theme and font size. */
+const DARK = window.matchMedia('(prefers-color-scheme: dark)');
+let current: Preferences | undefined;
+DARK.addEventListener('change', () => current && syncThemeColor(current));
+
+/** The browser and installed-app title bar follow the theme. */
+function syncThemeColor(p: Preferences): void {
+  const dark = p.theme === 'dark' || (p.theme === 'system' && DARK.matches);
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.append(meta);
+  }
+  meta.content = dark ? '#1c1b22' : '#f7f5f0';
+}
+
+/** Applies the look: theme, font size and the browser's theme color. */
 export function applyAppearance(p: Preferences, root = document.documentElement): void {
+  current = p;
+  syncThemeColor(p);
   if (p.theme === 'system') delete root.dataset.theme;
   else root.dataset.theme = p.theme;
   // The default size is left to the stylesheet, which uses a smaller one on phones.

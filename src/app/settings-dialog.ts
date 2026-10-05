@@ -1,4 +1,5 @@
-import { h } from './dom';
+import { h, svg } from './dom';
+import { LOGO } from './icons';
 import { DEFAULT_PREFERENCES, type Preferences } from './preferences';
 
 const LOCALES = [
@@ -71,6 +72,10 @@ export class SettingsDialog {
       'fontSize',
       h('input', { id: 'pref-fontSize', type: 'range', min: 12, max: 24, step: 1 }),
     );
+    const showSplash = this.register(
+      'showSplash',
+      h('input', { id: 'pref-showSplash', type: 'checkbox' }),
+    );
     const fetchRates = this.register(
       'fetchRates',
       h('input', { id: 'pref-fetchRates', type: 'checkbox', 'aria-describedby': 'rates-hint' }),
@@ -96,6 +101,12 @@ export class SettingsDialog {
             ]),
           ),
           row('Font size', fontSize),
+          h(
+            'div',
+            { class: 'field checkbox' },
+            showSplash,
+            h('label', { for: 'pref-showSplash' }, 'Show the splash screen when Reckon opens'),
+          ),
         ),
         h(
           'fieldset',
@@ -141,7 +152,32 @@ export class SettingsDialog {
         h(
           'fieldset',
           {},
-          h('legend', {}, 'Help'),
+          h('legend', {}, 'Help and about'),
+          h(
+            'div',
+            { class: 'about' },
+            svg(LOGO),
+            h(
+              'div',
+              {},
+              h('strong', {}, 'Reckon'),
+              ` ${__APP_VERSION__}`,
+              h('br'),
+              h('span', { class: 'field-hint' }, 'A notepad that does the math.'),
+            ),
+          ),
+          h(
+            'p',
+            { class: 'about-links' },
+            ...(
+              [
+                ['Docs', `${import.meta.env.BASE_URL}docs/`],
+                ['Privacy', `${import.meta.env.BASE_URL}docs/#privacy`],
+                ['Source on GitHub', 'https://github.com/parmsam/reckon'],
+                ['MIT license', 'https://github.com/parmsam/reckon/blob/main/LICENSE'],
+              ] as const
+            ).map(([label, href]) => h('a', { href, target: '_blank', rel: 'noopener' }, label)),
+          ),
           h(
             'div',
             { class: 'field' },

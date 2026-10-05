@@ -1,6 +1,6 @@
 import type { Note } from '../storage/db';
 import { h, relativeTime, svg } from './dom';
-import { ICONS } from './icons';
+import { ICONS, LOGO } from './icons';
 import { filterNotes } from './search';
 import type { NotesStore } from './store';
 import { deriveTitle } from './title';
@@ -81,6 +81,18 @@ export class Sidebar {
     this.el = h(
       'aside',
       { class: 'sidebar', id: 'sidebar', 'aria-label': 'Notes' },
+      h(
+        'a',
+        {
+          class: 'brand',
+          href: `${import.meta.env.BASE_URL}docs/`,
+          target: '_blank',
+          rel: 'noopener',
+          title: 'About Reckon (opens the docs)',
+        },
+        svg(LOGO),
+        h('span', {}, 'Reckon'),
+      ),
       h(
         'div',
         { class: 'sidebar-head' },
