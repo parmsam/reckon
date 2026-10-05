@@ -346,24 +346,27 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
   precached twice, so Workbox silently skipped precaching and the app never actually worked offline.
 
 ### M7 — Docs and AI-friendly access
-- [ ] Docs site on GitHub Pages (`/reckon/docs/`): getting started, the full syntax reference, FAQ.
-  The reference is generated from the golden fixtures, so examples are always tested.
-- [ ] `llms.txt` at `/reckon/llms.txt` ([llmstxt.org](https://llmstxt.org) format), linking to the docs,
+- [x] Docs site on GitHub Pages (`/reckon/docs/`): getting started, the full syntax reference, FAQ.
+  The reference comes from `tests/fixtures/reference.calc`, a golden fixture, so every example is tested;
+  `scripts/build-docs.mjs` turns it into the page, llms-full.txt, the prompt and the skill. Every example
+  has an "Open in Reckon" link.
+- [x] `llms.txt` at `/reckon/llms.txt` ([llmstxt.org](https://llmstxt.org) format), linking to the docs,
   plus `llms-full.txt` with the whole syntax reference in one Markdown file
-- [ ] Plain-text note links: `#/new?text=<percent-encoded note>` opens the text as a read-only preview with
+- [x] Plain-text note links: `#/new?text=<percent-encoded note>` opens the text as a read-only preview with
   "Save a copy", exactly like a share link. Unlike share links (deflate-raw + base64url, which an LLM can't
   compute reliably), percent-encoding is something any LLM or script can produce. The text stays in the
   `#` fragment, so it never reaches a server. Reject or truncate absurdly long payloads.
-- [ ] LLM prompt note: a copy-paste prompt that teaches any LLM Reckon's syntax and tells it to answer with a
-  ready-to-click link (`https://parmsam.github.io/reckon/#/new?text=…`) plus the note as a code block, so
+- [x] LLM prompt note: a copy-paste prompt that teaches any LLM Reckon's syntax and tells it to answer with a
+  ready-to-click link: a compressed share link when it can run code (raw DEFLATE + base64url, four lines of
+  Python), otherwise a plain-text link (`https://parmsam.github.io/reckon/#/new?text=…`) plus the note as a code block, so
   people can ask an assistant "make me a trip budget in Reckon" and just click
-- [ ] Agent skill: a `SKILL.md` (in the repo under `skills/reckon/` and served at `/reckon/skill/`) that teaches
+- [x] Agent skill: a `SKILL.md` (in the repo under `skills/reckon/` and served at `/reckon/skill/`) that teaches
   coding agents to write Reckon notes, build plain-text links, and evaluate notes with the engine module below
-- [ ] Machine interface. Reckon is static (GitHub Pages), so there is no server API; instead:
+- [x] Machine interface. Reckon is static (GitHub Pages), so there is no server API; instead:
   - URL scheme: `#/new?text=` (above), plus the existing `#/share/<payload>` and `#/note/<id>`
   - Engine as an ES module on Pages (`/reckon/engine.js`, versioned) exporting `evaluateDocument`, so agents,
     notebooks and other pages can compute results headlessly (`import { evaluateDocument } from '…/engine.js'`)
-  - Later: an npm package for the engine and a CLI (`npx reckon "5 km in miles"`, or piping a note file)
+  - Later (not done): an npm package for the engine and a CLI (`npx reckon "5 km in miles"`, or piping a note file)
 
 ### Later
 - [ ] Conditionals and comparisons; bitwise ops

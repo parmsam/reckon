@@ -21,6 +21,8 @@ export default defineConfig({
       workbox: {
         // The plugin adds manifest.webmanifest itself; listing it twice breaks precaching.
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // Docs and machine-readable files aren't part of the app: don't answer them with index.html.
+        navigateFallbackDenylist: [/\/docs\//, /\/skill\//, /\.txt$/, /\.md$/, /\/engine\.js$/],
       },
     }),
   ],

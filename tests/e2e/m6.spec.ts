@@ -119,3 +119,31 @@ test('works offline after the first visit', async ({ page, context }) => {
   await expect(resultOnLine(page, '5 km in miles')).toHaveText('3.1069 mi');
   await context.setOffline(false);
 });
+
+test('the keyboard shortcuts dialog opens from the sidebar, the palette and ?', async ({
+  page,
+  isMobile,
+}) => {
+  const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+  if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
+  await page.getByRole('button', { name: 'Keyboard shortcuts' }).click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText('Command palette');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.keyboard.type('shortcuts');
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // `?` outside the editor opens it; inside the editor it's just a character.
+  await page.locator('#note-title').click();
+  await page.keyboard.press('?');
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await setNote(page, 'what?');
+  await expect(dialog).toBeHidden();
+  await expect(page.locator('.cm-line').first()).toHaveText('what?');
+});

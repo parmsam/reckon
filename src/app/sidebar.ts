@@ -16,6 +16,7 @@ export interface SidebarHandlers {
   importFiles(): void;
   exportAll(): void;
   openSettings(): void;
+  openShortcuts(): void;
 }
 
 /** Second meaningful line of a note, shown under its title. */
@@ -154,6 +155,7 @@ export class Sidebar {
             { class: 'foot-actions' },
             iconButton(ICONS.upload, 'Import notes', () => this.handlers.importFiles()),
             iconButton(ICONS.download, 'Export all notes', () => this.handlers.exportAll()),
+            iconButton(ICONS.keyboard, 'Keyboard shortcuts', () => this.handlers.openShortcuts()),
             iconButton(ICONS.settings, 'Settings', () => this.handlers.openSettings()),
           ),
     );

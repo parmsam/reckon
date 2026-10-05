@@ -14,7 +14,7 @@ Use Node 22+ and npm.
 ```sh
 npm install
 npm run dev          # Vite dev server
-npm run build        # typecheck + production build to dist/
+npm run build        # typecheck, app build, engine.js build, then docs (scripts/build-docs.mjs)
 npm run preview      # serve dist/ (needed to test the service worker)
 npm test             # Vitest (engine + storage)
 npm run test:e2e     # Playwright against a production build (Chromium desktop + mobile)
@@ -53,6 +53,9 @@ src/
     db.ts          schema types + getDB()
     migrations.ts  versioned upgrades (DB_VERSION comes from here)
     notes.ts       note CRUD; settings.ts key/value settings; autosave.ts debounced saver
+  api.ts         public API of dist/engine.js (evaluate, noteLink, shareLink…); built by vite.engine.config.ts
+  links.ts       note link format (#/new?text=) and SITE_URL
+  docs/          generate.ts: turns the syntax reference into docs, llms-full.txt, prompt and skill
   data/          rate fetching (open.er-api.com → Frankfurter fallback, CoinGecko), bundled snapshot
   app/           UI shell (vanilla TS + the `h()` helper in dom.ts)
     app.ts         controller: routing, opening notes, autosave, share, import/export, tab sync
@@ -71,6 +74,8 @@ tests/
   e2e/             Playwright specs (*.spec.ts)
   *.test.ts        Vitest: golden runner, highlights/perf, storage (fake-indexeddb)
 public/            icons, manifest assets
+docs-src/          docs page template and Markdown sources (guide, developers, prompt, llms.txt, skill)
+skills/reckon/     the agent skill; generated from docs-src/skill.md by the build (CI checks it's current)
 ```
 
 ## Rules
@@ -91,7 +96,10 @@ public/            icons, manifest assets
    URLs and hash routes (`#/note/<id>`) for navigation. Never assume the app lives at `/`.
 9. **Accessibility.** Interactive elements are keyboard reachable, have labels, and meet AA contrast (4.5:1) in both
    themes against `--bg`, `--panel` and `--results-bg`. Colors are `light-dark()` pairs in `styles.css`.
-10. **Keep PLAN.md current.** Tick milestone checkboxes as work lands, and record decisions that change the plan.
+10. **Document syntax in the reference.** New user-facing syntax gets an example in
+   `tests/fixtures/reference.calc` (tested, and the source of the docs, llms-full.txt and the prompt).
+   Keep the `{{placeholders}}` in docs-src/ templates in sync with `scripts/build-docs.mjs`.
+11. **Keep PLAN.md current.** Tick milestone checkboxes as work lands, and record decisions that change the plan.
 
 ## Recipes
 - **Add a unit**: add a `unit(id, DIM, factor, 'symbols', 'names')` line to `src/engine/units/registry.ts`.

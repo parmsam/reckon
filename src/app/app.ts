@@ -28,6 +28,7 @@ import { RatesManager } from './rates';
 import { parseRoute, routeHash, type Route } from './router';
 import { decodeShare, encodeShare } from './share';
 import { SettingsDialog } from './settings-dialog';
+import { createShortcutsDialog } from './shortcuts-dialog';
 import { Sidebar } from './sidebar';
 import { NotesStore } from './store';
 import { deriveTitle } from './title';
@@ -208,6 +209,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     importFiles: () => void importFiles(),
     exportAll: () => exportAll(),
     openSettings: () => openSettings(),
+    openShortcuts: () => openShortcuts(),
   });
 
   // ---- Settings and command palette ---------------------------------------------------------
@@ -265,6 +267,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
         label: 'Comment or uncomment lines',
         hint: `${MOD}/`,
         run: () => toggleLineComment(editor.view),
+      },
+      {
+        id: 'docs',
+        label: 'Help and docs',
+        keywords: 'syntax reference guide manual llm prompt',
+        run: () => window.open(`${import.meta.env.BASE_URL}docs/`, '_blank', 'noopener'),
+      },
+      {
+        id: 'shortcuts',
+        label: 'Keyboard shortcuts',
+        keywords: 'keys help hotkeys',
+        hint: '?',
+        run: () => openShortcuts(),
       },
       {
         id: 'settings',
@@ -331,10 +346,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return list;
   };
   const palette = new Palette(commands);
+  const shortcutsDialog = createShortcutsDialog(MOD);
+  function openShortcuts(): void {
+    closeDrawer();
+    shortcutsDialog.showModal();
+  }
 
   document.addEventListener(
     'keydown',
     (e) => {
+      // `?` shows the shortcuts, unless the user is typing somewhere.
+      const target = e.target as HTMLElement | null;
+      const typing = target?.closest('input, select, textarea, [contenteditable="true"]');
+      if (
+        e.key === '?' &&
+        !typing &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !document.querySelector('dialog[open]')
+      ) {
+        e.preventDefault();
+        openShortcuts();
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         if (palette.isOpen) palette.close();
@@ -376,6 +410,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     accessory,
     settingsDialog.el,
     palette.el,
+    shortcutsDialog,
   );
   root.replaceChildren(app);
 
@@ -432,6 +467,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     closeDrawer();
     const route = parseRoute(location.hash);
     if (route.kind === 'share') return openShare(route.payload);
+    if (route.kind === 'text') return showShared(route.text, 'Note from a link · read-only');
+    if (route.kind === 'badLink') {
+      toast('That link is broken or too long');
+      return navigate({ kind: 'home' }, { replace: true });
+    }
     if (route.kind === 'note' && store.get(route.id)) return openNote(route.id);
     return openHome();
   }
@@ -508,6 +548,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       toast('That share link is broken or incomplete');
       return navigate({ kind: 'home' }, { replace: true });
     }
+    return showShared(body, 'Shared note · read-only');
+  }
+
+  /** Shows a note from a link, read-only, with "Save a copy". */
+  async function showShared(body: string, label: string): Promise<void> {
     await leaveCurrent();
     mode = { kind: 'share', body };
     editor.setDoc(body, { readOnly: true });
@@ -517,7 +562,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     noteActions.hidden = true;
     sidebar.setCurrent(undefined);
     showBanner(
-      'Shared note · read-only',
+      label,
       storageError ? undefined : { label: 'Save a copy', run: () => void saveSharedCopy() },
     );
   }

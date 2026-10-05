@@ -751,3 +751,51 @@ button {
   color: var(--accent);
   font-weight: 600;
 }
+
+/* Keyboard shortcuts */
+.shortcuts form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.shortcuts h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.shortcuts-table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.shortcuts-table td {
+  padding: 0.4rem 0;
+  vertical-align: top;
+}
+
+.shortcuts-table td:first-child {
+  padding-right: 1rem;
+  white-space: nowrap;
+}
+
+.keys {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+kbd {
+  min-width: 1.6rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.dialog-actions.end {
+  justify-content: flex-end;
+}

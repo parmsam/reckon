@@ -1,0 +1,95 @@
+// The syntax reference. scripts/build-docs.mjs turns this file into the docs page, llms-full.txt,
+// the LLM prompt and the agent skill, and the golden tests check every answer, so the docs can't drift.
+// "// ## Title" starts a section; other "//" lines are its description.
+
+// ## Basics
+// Type a calculation on any line; its answer appears beside it. Decimals are exact.
+2 + 3 × 4 => 14
+(2 + 3) × 4 => 20
+2^10 => 1,024
+10 mod 3 => 1
+5! => 120
+0.1 + 0.2 => 0.3
+
+// ## Numbers
+// Thousands separators, shorthands, other bases and fractions all work.
+1,000,000 + 1_000 => 1,001,000
+1.5k + 2M => 2,001,500
+3bn / 1 million => 3,000
+1.5e3 => 1,500
+0xFF + 0b1010 => 265
+1½ => 1.5
+
+// ## Text and structure
+// Words around numbers are ignored, so notes read naturally. Text before a colon is a label. Lines starting with # are headings, and // starts a comment.
+3 apples + 2 apples => 5
+rent: 1,200 => 1,200
+5 plus 3 times 2 => 11
+10 divided by 4 => 2.5
+
+// ## Variables
+// Name a value with =. Names can have spaces.
+monthly rent = 1,200 => 1,200
+utilities = 150 => 150
+(monthly rent + utilities) × 12 => 16,200
+
+// ## Previous answers and totals
+// prev is the last answer. sum, avg, count, min and max cover the lines since the last heading or blank line. line3 is the answer on line 3.
+groceries: 80 => 80
+gas: 45 => 45
+dinner: 55 => 55
+sum => 180
+avg => 60
+prev × 2 => 120
+
+// ## Percentages
+20% of 50 => 10
+50 + 10% => 55
+10% off $80 => $72.00
+5 as % of 20 => 25%
+5 is what % of 20 => 25%
+20% of what is 5 => 25
+
+// ## Units
+// Convert with in, to or as. Units combine and cancel, and plain numbers take the other side's unit.
+5 km in miles => 3.1069 mi
+6 ft 2 in in cm => 187.96 cm
+72 °F in °C => 22.2222 °C
+2 cups in ml => 473.1765 mL
+1 GB / 4 MB => 250
+60 mph in km/h => 96.5606 km/h
+3 m × 4 m => 12 m²
+1 m + 20 cm => 1.2 m
+12pt in px => 16 px
+
+// ## Money
+// Currency symbols, codes and names, plus crypto. Rates refresh hourly and keep working offline; these examples use sample rates.
+$30 in EUR => €27.00
+€20 + $5 => €24.50
+hourly rate = $85/h => $85.00/h
+37.5 h × hourly rate => $3,187.50
+0.01 BTC in USD => $1,000.00
+
+// ## Dates and times
+// These examples assume it's Thursday, Jan 15, 2026, 12:00 in UTC.
+today + 2 weeks => Thu, Jan 29
+next friday at 3pm => Fri, Jan 16, 3:00 PM
+days until Dec 25 => 344 days
+Jan 31 + 1 month => Sat, Feb 28
+3pm + 90 min => 4:30 PM
+3 days ago => Mon, Jan 12
+
+// ## Time zones
+// Use places (every major city), abbreviations like PST, or offsets like UTC+5:30.
+time in Tokyo => 9:00 PM GMT+9
+3pm PST in London => 11:00 PM GMT
+9:00 EST to CET => 3:00 PM GMT+1
+
+// ## Functions and formats
+sqrt(16) + cbrt(27) => 7
+round(3.14159, 2) => 3.14
+sin(30) => 0.5
+log(1000) => 3
+2pi => 6.2831853072
+255 in hex => 0xFF
+1500 in sci => 1.5e3

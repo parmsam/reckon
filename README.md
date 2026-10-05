@@ -28,6 +28,8 @@ Type text and numbers naturally, and see the answers line by line.</p>
   </picture>
 </p>
 
+**[Docs](https://parmsam.github.io/reckon/docs/)** · **[Syntax](https://parmsam.github.io/reckon/docs/#syntax)** · **[For LLMs](https://parmsam.github.io/reckon/llms.txt)**
+
 Reckon is a free, open-source take on notepad calculators like [Numi](https://numi.app) and
 [Soulver](https://soulver.app). It runs in any browser, installs as an app, works offline, and keeps your notes on your
 own device.
@@ -52,8 +54,10 @@ own device.
 - **Settings**: theme, font size, number format, decimal places, angle unit, and a switch that turns off all network requests
 - **Light and dark themes**, a phone layout, and screen reader support
 
-**Coming next** (see the [roadmap](PLAN.md#7-milestones))
-- **Docs for people and AI**: a docs site, `llms.txt`, a copy-paste prompt for LLMs, and an agent skill
+**For developers and AI** (see the [docs](https://parmsam.github.io/reckon/docs/#links-that-open-a-note))
+- **Links that open a note**: `…/reckon/#/new?text=<percent-encoded note>`, easy for any LLM or script to write
+- **[engine.js](https://parmsam.github.io/reckon/engine.js)**: the calculation engine as one ES module, `evaluate(note)` in Node, Deno or a browser
+- **[llms.txt](https://parmsam.github.io/reckon/llms.txt)**, **[a prompt](https://parmsam.github.io/reckon/prompt.txt)** that makes any chat assistant answer with a clickable Reckon link, and an **[agent skill](skills/reckon/SKILL.md)**
 
 ## Syntax at a glance
 
@@ -85,6 +89,7 @@ A line Reckon can't make sense of shows no answer, never a wrong one.
 | <kbd>⌘/Ctrl</kbd> <kbd>/</kbd> | Comment or uncomment lines |
 | <kbd>⌘/Ctrl</kbd> <kbd>F</kbd> | Find and replace |
 | <kbd>Tab</kbd> | Accept an autocomplete suggestion (<kbd>Ctrl</kbd> <kbd>Space</kbd> to ask for one) |
+| <kbd>?</kbd> | Show all shortcuts (also the keyboard button in the notes list) |
 
 ## Your data
 - Notes are stored in your browser (IndexedDB). There are no accounts, no servers and no analytics.
@@ -103,6 +108,7 @@ npm test             # unit and golden tests (Vitest)
 npm run test:e2e     # browser tests (Playwright, desktop and mobile)
 npm run lint && npm run typecheck
 npm run screenshots  # regenerate the README screenshots
+node scripts/smoke-engine.mjs  # check dist/engine.js after a build
 ```
 
 Every push to `main` runs CI and deploys to GitHub Pages.

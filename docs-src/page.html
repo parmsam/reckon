@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reckon docs</title>
+    <meta
+      name="description"
+      content="How to use Reckon, the notepad calculator: syntax reference, links, engine module and AI tools."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#f7f5f0, #1c1b22);
+        --fg: light-dark(#1c1b22, #f4f1ea);
+        --muted: light-dark(#5f5c69, #a19dab);
+        --accent: light-dark(#995900, #f2a541);
+        --panel: light-dark(#ffffff, #25242c);
+        --border: light-dark(#e3dfd6, #36343f);
+        --code: light-dark(#efebe2, #222129);
+        --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      a {
+        color: var(--accent);
+      }
+      header {
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: 0.75rem 1rem;
+      }
+      .bar strong {
+        flex: 1;
+        font-size: 1.1rem;
+      }
+      .bar a.open {
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--bg);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 13rem minmax(0, 1fr);
+        gap: 2rem;
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 4rem;
+      }
+      nav {
+        position: sticky;
+        top: 1rem;
+        align-self: start;
+        display: grid;
+        gap: 0.15rem;
+        font-size: 0.9rem;
+      }
+      nav a {
+        color: var(--fg);
+        text-decoration: none;
+        padding: 0.15rem 0;
+      }
+      nav a:hover {
+        color: var(--accent);
+      }
+      nav .sub {
+        display: grid;
+        gap: 0.1rem;
+        padding-left: 0.75rem;
+        font-size: 0.85rem;
+      }
+      nav .sub a {
+        color: var(--muted);
+      }
+      main h2 {
+        margin-top: 2.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border);
+      }
+      main h2:first-child {
+        margin-top: 0;
+        border-top: 0;
+      }
+      main h3 {
+        margin-bottom: 0.25rem;
+      }
+      code,
+      kbd,
+      pre {
+        font-family: var(--mono);
+        font-size: 0.88em;
+      }
+      code {
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+        background: var(--code);
+      }
+      kbd {
+        padding: 0.05rem 0.35rem;
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+      }
+      pre {
+        padding: 0.85rem 1rem;
+        overflow-x: auto;
+        border-radius: 8px;
+        background: var(--code);
+      }
+      pre code {
+        padding: 0;
+        background: none;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.92rem;
+      }
+      th,
+      td {
+        padding: 0.4rem 0.6rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+      .note {
+        margin: 0.75rem 0 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+      .note table {
+        font-family: var(--mono);
+        font-size: 0.9rem;
+      }
+      .note td {
+        border: 0;
+        padding: 0.2rem 0.9rem;
+      }
+      .note tr:first-child td {
+        padding-top: 0.6rem;
+      }
+      .note tr:last-child td {
+        padding-bottom: 0.6rem;
+      }
+      .note td:last-child {
+        text-align: right;
+        color: var(--accent);
+        font-weight: 600;
+        white-space: nowrap;
+        background: var(--code);
+      }
+      .note .try {
+        display: block;
+        padding: 0.35rem 0.9rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.82rem;
+        text-align: right;
+      }
+      .prompt {
+        position: relative;
+      }
+      .prompt pre {
+        max-height: 24rem;
+        white-space: pre-wrap;
+      }
+      .copy {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.3rem 0.7rem;
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: var(--bg);
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      @media (max-width: 760px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        nav {
+          position: static;
+          grid-auto-flow: row;
+        }
+        nav .sub {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <svg viewBox="0 0 512 512" width="26" height="26" aria-hidden="true">
+          <rect width="512" height="512" rx="112" fill="currentColor" />
+          <rect x="120" y="186" width="272" height="44" rx="22" fill="var(--bg)" />
+          <rect x="120" y="282" width="272" height="44" rx="22" fill="#f2a541" />
+        </svg>
+        <strong>Reckon docs</strong>
+        <a class="open" href="../">Open Reckon</a>
+      </div>
+    </header>
+    <div class="layout">
+      <nav aria-label="Contents">
+        <a href="#getting-started">Getting started</a>
+        <a href="#notes-sharing-and-backups">Notes and sharing</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#questions">Questions</a>
+        <a href="#syntax">Syntax</a>
+        <div class="sub">{{syntaxNav}}</div>
+        <a href="#links-that-open-a-note">Links</a>
+        <a href="#the-engine-module">Engine module</a>
+        <a href="#for-llms-and-agents">LLMs and agents</a>
+        <a href="#prompt">The prompt</a>
+      </nav>
+      <main>
+        {{guide}}
+        <h2 id="syntax">Syntax</h2>
+        <p>
+          Every example below is checked by Reckon's tests. Answers use sample exchange rates, and
+          dates assume it's Thursday, Jan 15, 2026, 12:00 in UTC. <em>Open in Reckon</em> opens the
+          example as a note you can edit and save.
+        </p>
+        {{reference}} {{developers}}
+        <h2 id="prompt">The prompt</h2>
+        <p>
+          Paste this into ChatGPT, Claude or another assistant, then ask for the note you want ("a
+          weekly grocery budget", "convert this recipe to grams"). It answers with a link that opens
+          the note in Reckon. Also at <a href="../prompt.txt">prompt.txt</a>.
+        </p>
+        <div class="prompt">
+          <button class="copy" type="button">Copy</button>
+          <pre id="prompt-text">{{prompt}}</pre>
+        </div>
+      </main>
+    </div>
+    <script>
+      document.querySelector('.copy').addEventListener('click', async (e) => {
+        await navigator.clipboard.writeText(document.getElementById('prompt-text').textContent);
+        e.target.textContent = 'Copied';
+        setTimeout(() => (e.target.textContent = 'Copy'), 1500);
+      });
+    </script>
+  </body>
+</html>

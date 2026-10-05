@@ -33,6 +33,15 @@ describe('share links', () => {
     expect(await decodeShare(payload)).toBe(body);
   });
 
+  it('decodes links made with Python zlib (what an LLM with a code tool would run)', async () => {
+    // zlib.compressobj(9, zlib.DEFLATED, -15) + base64.urlsafe_b64encode(...).rstrip(b"=")
+    const payload =
+      'U1YIKcosUPgwf_lmrrSczPSMkmIrBRUTIwOFw9MVjLgy8ktScxRsFYwV8sByIFEVQ2NTrrT8_BQrBSNTVYX8NAWwKq7i0lwuAA';
+    expect(await decodeShare(payload)).toBe(
+      '# Trip 🧳\nflights: $420 × 2\nhotel = 3 nights × $135\nfood: 25% of hotel\nsum\n',
+    );
+  });
+
   it('rejects corrupt payloads', async () => {
     await expect(decodeShare('not-a-real-payload')).rejects.toThrow();
   });
