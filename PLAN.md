@@ -273,7 +273,8 @@ interface Note {
 - Autocomplete suggests variables above the cursor (with their values), functions, units, currencies and date
   words, matching from word starts. Tab accepts; Enter always makes a new line.
 - On touch screens, a row of math keys (`+ − × ÷ % ( ) ^ = $ in`) sits above the on-screen keyboard.
-- An empty first-run note doubles as an interactive tutorial (sample lines the user can edit).
+- First run creates three notes: a five-step tutorial (opened first), a monthly budget and a weekend trip.
+  tests/welcome.test.ts checks every calculation line in them has an answer.
 - Accessibility: results are readable by screen readers (`aria-live` on the focused line's result), keyboard reachable, and meet WCAG AA contrast.
 
 ---

@@ -44,6 +44,8 @@ own device.
 - **Currencies and crypto**: `$30 in EUR`, `€20 + $5`, `0.01 BTC in USD`, with rates cached for offline use
 - **Units that cancel**: `hourly rate = $85/h`, then `12.5 h × hourly rate` is `$1,062.50`
 - **Dates and time zones**: `today + 2 weeks`, `days until Dec 25`, `next friday at 3pm`, `3pm PST in London`, `time in Tokyo`
+- **Conditions and comparisons**: `if total > $100 then 10% off total else total`, `5 km > 3 miles`, `and`/`or`/`not`, bitwise `& | xor << >>`
+- **Your own functions and units**: `tip(bill, rate) = bill × rate`, `1 sprint = 2 weeks`, even a metric `1 cup = 250 ml`
 - **Precise decimals**: `0.1 + 0.2` is `0.3`, not `0.30000000000000004`
 - **Many notes** with search, pinning, trash and undo
 - **Share links**: the note is compressed into the URL itself, so no server ever sees it

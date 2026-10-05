@@ -19,11 +19,18 @@ async function setNote(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
-test('first run shows the welcome note with results', async ({ page }) => {
+test('first run opens the tutorial, with two example notes', async ({ page, isMobile }) => {
   await page.goto('./');
   await expect(page.locator('#note-title')).toHaveText('Welcome to Reckon');
-  await expect(resultOnLine(page, 'flights: $420 × 2')).toHaveText('$840.00');
-  await expect(resultAt(page, 9)).toHaveText('$1,346.25');
+  await expect(resultOnLine(page, '20% of 50')).toHaveText('10');
+  // "# 3. Add things up": coffee + lunch + dinner.
+  await expect(resultAt(page, 21)).toHaveText('$44.50');
+  if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
+  await expect(page.locator('.note-item')).toHaveText([
+    /Welcome to Reckon/,
+    /Monthly budget/,
+    /Weekend in Lisbon/,
+  ]);
 });
 
 test('typing updates results and highlighting live', async ({ page }) => {

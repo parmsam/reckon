@@ -36,7 +36,7 @@ test('creates notes and switches between them', async ({ page, isMobile }) => {
   await newNote(page, isMobile, '# Groceries\nmilk = 2.5');
   await expect(page).toHaveURL(/#\/note\/[0-9A-Z]{26}$/);
   await openSidebar(page, isMobile);
-  await expect(items(page)).toHaveCount(2);
+  await expect(items(page)).toHaveCount(4);
   await expect(items(page).first()).toContainText('Groceries');
 
   await item(page, 'Welcome to Reckon').locator('.note-open').click();
@@ -49,7 +49,7 @@ test('searches, pins and trashes notes', async ({ page, isMobile }) => {
   await newNote(page, isMobile, '# Taxes\nincome = 50k');
   await openSidebar(page, isMobile);
 
-  await page.getByRole('searchbox', { name: 'Search notes' }).fill('income');
+  await page.getByRole('searchbox', { name: 'Search notes' }).fill('taxes');
   await expect(items(page)).toHaveCount(1);
   await page.getByRole('searchbox', { name: 'Search notes' }).fill('');
 
@@ -82,11 +82,11 @@ test('discards untouched empty notes', async ({ page, isMobile }) => {
   await page.getByRole('button', { name: 'New note' }).click();
   await expect(page.locator('#note-title')).toHaveText('Untitled');
   await openSidebar(page, isMobile);
-  await expect(items(page)).toHaveCount(2);
+  await expect(items(page)).toHaveCount(4);
   await item(page, 'Welcome to Reckon').locator('.note-open').click();
   await expect(page.locator('#note-title')).toHaveText('Welcome to Reckon');
   await openSidebar(page, isMobile);
-  await expect(items(page)).toHaveCount(1);
+  await expect(items(page)).toHaveCount(3);
 });
 
 test('share links open read-only and can be saved', async ({ page, context, browserName }) => {
@@ -101,7 +101,7 @@ test('share links open read-only and can be saved', async ({ page, context, brow
   await shared.goto(url);
   await expect(shared.locator('.banner')).toContainText('read-only');
   await expect(shared.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
-  await expect(shared.locator('.cm-result').first()).toHaveText('$840.00');
+  await expect(shared.locator('.cm-result').first()).toHaveText('4');
   await shared.locator('.banner').getByRole('button', { name: 'Save a copy' }).click();
   await expect(shared.locator('#toast')).toHaveText('Saved to your notes');
   await expect(shared).toHaveURL(/#\/note\//);

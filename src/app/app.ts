@@ -33,7 +33,8 @@ import { createShortcutsDialog } from './shortcuts-dialog';
 import { Sidebar } from './sidebar';
 import { NotesStore } from './store';
 import { deriveTitle } from './title';
-import { WELCOME_NOTE } from './welcome';
+import { FIRST_RUN_NOTES, WELCOME_NOTE } from './welcome';
+import { newNote } from '../storage/notes';
 
 const CURRENT_NOTE = 'currentNoteId';
 const SIDEBAR_PREF = 'reckon.sidebarCollapsed';
@@ -594,8 +595,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
         statusEl.textContent = 'Not saved: storage unavailable';
         return;
       }
-      const firstRun = store.trashed().length === 0;
-      target = await store.create(firstRun ? WELCOME_NOTE : '');
+      if (store.trashed().length === 0) {
+        // First run: the tutorial plus two examples, the tutorial newest so it opens.
+        const now = Date.now();
+        const notes = FIRST_RUN_NOTES.map((body, i) =>
+          newNote(body, now - (FIRST_RUN_NOTES.length - 1 - i)),
+        );
+        await store.putMany(notes);
+        target = notes[notes.length - 1]!;
+      } else {
+        target = await store.create('');
+      }
     }
     navigate({ kind: 'note', id: target.id }, { replace: true });
   }
