@@ -2,12 +2,14 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search';
 import { Annotation, Compartment, EditorSelection, EditorState } from '@codemirror/state';
 import {
+  crosshairCursor,
   drawSelection,
   EditorView,
   highlightActiveLine,
   keymap,
   lineNumbers,
   placeholder,
+  rectangularSelection,
 } from '@codemirror/view';
 import { toggleLineComment } from './commands';
 import { completion } from './completion';
@@ -81,6 +83,11 @@ export function createEditor({
       extensions: [
         history(),
         drawSelection(),
+        // Several cursors: ⌘/Ctrl-click, ⌘/Ctrl-D (next match), ⌥/Alt-drag for a box. Alt-drag on a
+        // number scrubs it instead, when that setting is on (interactive.ts handles it first).
+        EditorState.allowMultipleSelections.of(true),
+        rectangularSelection(),
+        crosshairCursor(),
         highlightActiveLine(),
         highlightSelectionMatches(),
         search({ top: true }),

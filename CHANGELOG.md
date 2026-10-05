@@ -5,6 +5,8 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- Several cursors: ⌘/Ctrl-click adds one, ⌘/Ctrl-D selects the next match too, and ⌥/Alt-drag selects a box.
+
 - Cooking conversions: name an ingredient and cups convert to grams and back (`2 cups flour in g` → 240 g,
   `250 g butter in cups`). Flour, sugars, butter, cocoa, oats, milk, water, honey and oils are built in;
   add others with a weight per cup (`almond flour = 96 g/cup`).

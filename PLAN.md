@@ -452,9 +452,9 @@ first; changing numbers by direct manipulation is opt-in and guarded.
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)
 - [ ] Subtotals and grand totals; tag-based sums (Soulver)
-- [ ] Multi-cursor editing: `EditorState.allowMultipleSelections` (⌘/Ctrl-click adds a cursor),
-  `rectangularSelection` + `crosshairCursor` (⌥/Alt-drag), and select-next-occurrence (⌘/Ctrl D). Alt-drag
-  already scrubs numbers when that setting is on, so the two need to share the gesture (scrub only on a number).
+- [x] Multi-cursor editing: `EditorState.allowMultipleSelections` (⌘/Ctrl-click adds a cursor),
+  `rectangularSelection` + `crosshairCursor` (⌥/Alt-drag for a box), and select-next-occurrence (⌘/Ctrl D).
+  Alt-drag that starts on a number scrubs it when that setting is on; anywhere else it selects a box.
 - [ ] Answer references (Soulver): double-click (or tap, on iOS) an answer to reference it in a calculation
   below. References are live and update automatically when earlier lines change. Stored in the text as a
   stable reference that survives inserting and deleting lines above it (not a plain `line3`), shown as a chip.

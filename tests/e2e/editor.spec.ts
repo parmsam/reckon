@@ -189,6 +189,42 @@ test('⌥/Alt-drag changes numbers only when turned on', async ({ page, isMobile
   await expect(page.locator('.cm-line').first()).toContainText('rent = $1,200');
 });
 
+test('several cursors: next match, ⌘/Ctrl-click and ⌥/Alt-drag', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'desktop only');
+  await page.goto('./');
+  await setNote(page, 'apples = 3\npears = 4\napples + pears\n10\n20');
+  const line = (n: number) => page.locator('.cm-line').nth(n - 1);
+
+  // Select "apples", add the next match, and rename both.
+  await line(1).click();
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 6; i++) await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('ControlOrMeta+d');
+  await page.keyboard.type('figs');
+  await expect(resultOnLine(page, 'figs + pears')).toHaveText('7');
+
+  // A second cursor by ⌘/Ctrl-click.
+  await page.keyboard.press('Escape');
+  await line(4).click({ position: { x: 2, y: 5 } });
+  await line(5).click({ position: { x: 2, y: 5 }, modifiers: ['ControlOrMeta'] });
+  await page.keyboard.type('1');
+  await expect(resultAt(page, 4)).toHaveText('110');
+  await expect(resultAt(page, 5)).toHaveText('120');
+
+  // A box across two lines with ⌥/Alt-drag, starting on text.
+  await page.keyboard.press('Escape');
+  const [a, b] = [(await line(1).boundingBox())!, (await line(2).boundingBox())!];
+  await page.keyboard.down('Alt');
+  await page.mouse.move(a.x + 1, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + 1, b.y + b.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await page.keyboard.up('Alt');
+  await page.keyboard.type('my ');
+  await expect(line(1)).toContainText('my figs = 3');
+  await expect(line(2)).toContainText('my pears = 4');
+});
+
 test('sweeping a variable charts every answer that uses it', async ({ page }) => {
   await page.goto('./');
   await setNote(page, 'rent = $1,200\nfood = $400\nleft = $3,000 - rent - food\nfood × 2');
