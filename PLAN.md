@@ -169,6 +169,18 @@ above it. A line with no recognizable expression produces no result.
 ### 3.11 Conditionals (later)
 `if x > 10 then 5 else 0`
 
+### 3.12 Choices
+| Input | Meaning |
+|---|---|
+| `transport = car \| [train] \| fly` | A choice. The bracketed option is the current one (with no brackets, the first). The variable is that option's name, shown as the answer (`train`). |
+| `if transport == fly then $300 else $80` | Option names work as values, but only next to `==` / `!=`, so later prose like `train tickets $40` stays text. Choices compare only by name. |
+| `fare = car $120 \| [train $80] \| fly $300` | Options with values: the variable is the current option's value (`$80.00`). Give every option a value, or none. |
+| `light = on \| off` | Option names are words (any words except `true`/`false`), and multi-word names are fine (`night bus`). A name ends at the first number, symbol, variable or function. |
+| `x = 5 \| 3`, `a \| b` | Still bitwise or: a line is a choice only when it's an assignment and every option starts with a name that isn't a variable. |
+
+In the app, the current option is a clickable word: a click moves the brackets to the next option
+(Shift-click to the previous one), as one undo step. In read-only shared notes it works too, without saving.
+
 ---
 
 ## 4. Architecture
@@ -423,6 +435,9 @@ first; changing numbers by direct manipulation is opt-in and guarded.
   across the range, with a dot at the current value. The engine's pure `sweep()` re-evaluates the note 33 times
   with the number replaced, stopping at the last dependent line; moving the slider reuses the series. Gaps where
   a line has no answer; true/false plot as a step. On phones the slider docks to the bottom of the screen.
+- [x] Choice toggles (Tangle): `transport = car | [train] | fly` (§3.12). The current option is a clickable word
+  that moves the brackets to the next option (Shift-click: previous; Mod-Shift-Space on the line; a palette
+  command), one undo step per click. In read-only shared notes it's a real button, so it takes keyboard focus.
 
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)

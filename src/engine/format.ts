@@ -71,6 +71,7 @@ export function formatValue(v: Value, s: Settings): string {
   if (v.kind === 'quantity') return formatQuantity(v.value, v.unit, s);
   if (v.kind === 'datetime') return formatDateTime(v, s);
   if (v.kind === 'bool') return v.value ? 'true' : 'false';
+  if (v.kind === 'choice') return v.label;
   const d = v.value;
   switch (v.format) {
     case 'hex':

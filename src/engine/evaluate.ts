@@ -52,6 +52,7 @@ function amount(v: Value): Amount {
   if (v.kind === 'percent') throw new CalcError('Expected a number, not a percentage');
   if (v.kind === 'datetime') throw new CalcError('Expected a number, not a date');
   if (v.kind === 'bool') throw new CalcError('Expected a number, not true or false');
+  if (v.kind === 'choice') throw new CalcError(`Expected a number, not the option "${v.label}"`);
   return { value: v.value, unit: v.kind === 'quantity' ? v.unit : [] };
 }
 
@@ -261,7 +262,8 @@ function call(name: string, args: Value[], env: Env): Value {
 
 export function evaluate(node: Node, env: Env): Value {
   const result = evaluateNode(node, env);
-  if (result.kind !== 'datetime' && result.kind !== 'bool') finite(result.value);
+  if (result.kind !== 'datetime' && result.kind !== 'bool' && result.kind !== 'choice')
+    finite(result.value);
   return result;
 }
 
@@ -270,7 +272,7 @@ function expectBool(v: Value): boolean {
   return v.value;
 }
 
-/** Compares two values: numbers and quantities (converting units), percentages, dates, booleans. */
+/** Compares values: numbers and quantities (converting units), percentages, dates, booleans, options. */
 function compare(
   op: '<' | '>' | '<=' | '>=' | '==' | '!=',
   a: Value,
@@ -280,6 +282,12 @@ function compare(
   let order: number;
   if (a.kind === 'datetime' && b.kind === 'datetime') {
     order = Temporal.ZonedDateTime.compare(a.value, b.value);
+  } else if (a.kind === 'choice' || b.kind === 'choice') {
+    // Options compare by name only: transport == train.
+    if (a.kind !== 'choice' || b.kind !== 'choice' || (op !== '==' && op !== '!=')) {
+      throw new CalcError("Can't compare those");
+    }
+    order = a.name === b.name ? 0 : 1;
   } else if (a.kind === 'bool' || b.kind === 'bool') {
     if (a.kind !== 'bool' || b.kind !== 'bool' || (op !== '==' && op !== '!=')) {
       throw new CalcError("Can't compare those");
@@ -360,7 +368,8 @@ function evaluateNode(node: Node, env: Env): Value {
       return aggregate(node.name, env.block, ctx);
     case 'neg': {
       const v = ev(node.arg);
-      if (v.kind === 'datetime' || v.kind === 'bool') throw new CalcError("Can't negate that");
+      if (v.kind === 'datetime' || v.kind === 'bool' || v.kind === 'choice')
+        throw new CalcError("Can't negate that");
       if (v.kind === 'percent') return pct(v.value.neg());
       return v.kind === 'quantity' ? qty(v.value.neg(), v.unit) : num(v.value.neg());
     }
@@ -431,6 +440,8 @@ function evaluateNode(node: Node, env: Env): Value {
       return resolveDate(node.spec, env.settings);
     case 'bool':
       return bool(node.value);
+    case 'symbol':
+      return { kind: 'choice', name: node.name, label: node.label };
     case 'compare':
       return bool(compare(node.op, ev(node.left), ev(node.right), ctx));
     case 'logic': {

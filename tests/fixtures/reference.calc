@@ -67,6 +67,12 @@ order = $120 => $120.00
 if order >= $100 then 10% off order else order => $108.00
 0xF0 | 0x0F => 255
 
+// ## Choices
+// Options separated by |, with the current one in brackets. In the app, click it to pick the next one. Options can carry values.
+transport = car | [train] | fly => train
+if transport == train then $80 else $300 => $80.00
+fare = car $120 | [train $80] | fly $300 => $80.00
+
 // ## Units
 // Convert with in, to or as. Units combine and cancel, and plain numbers take the other side's unit.
 5 km in miles => 3.1069 mi

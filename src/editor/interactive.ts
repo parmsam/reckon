@@ -6,6 +6,7 @@ import {
   WidgetType,
   type DecorationSet,
 } from '@codemirror/view';
+import type { Choice } from '../engine';
 import { D, type Decimal } from '../engine/values';
 import { engineSettings, resultsField, setAdjusting, setSweep, sweepField } from './results';
 
@@ -329,4 +330,119 @@ const scrubbing = ViewPlugin.define((view) => {
   };
 });
 
-export const interactiveNumbers = [sliderField, scrubbing];
+// ---- Choices ------------------------------------------------------------------------------
+
+/** Moves the brackets on a choice line to the next option (or the previous one, `step` -1). */
+function cycleChoice(view: EditorView, lineNumber: number, step: 1 | -1): boolean {
+  const choice = view.state.field(resultsField)[lineNumber - 1]?.choice;
+  if (!choice || !adjustable(view.state)) return false;
+  const { from } = view.state.doc.line(lineNumber);
+  const n = choice.options.length;
+  const next = choice.options[(choice.current + step + n) % n]!;
+  const changes: { from: number; to?: number; insert: string }[] = [
+    { from: from + next.from, insert: '[' },
+    { from: from + next.to, insert: ']' },
+  ];
+  if (choice.brackets) {
+    const [open, close] = choice.brackets;
+    changes.push({ from: from + open, to: from + open + 1, insert: '' });
+    changes.push({ from: from + close, to: from + close + 1, insert: '' });
+  }
+  view.dispatch({ changes, userEvent: 'input.choice' });
+  return true;
+}
+
+/** Picks the next option on the cursor's line. Bound to Mod-Shift-Space. */
+export function nextChoice(view: EditorView): boolean {
+  return cycleChoice(view, view.state.doc.lineAt(view.state.selection.main.head).number, 1);
+}
+
+const choiceLabel = (choice: Choice) =>
+  `${choice.options[choice.current]!.label}: click for the next option (${choice.options
+    .map((o) => o.label)
+    .join(', ')}); Shift-click for the previous one`;
+
+/** The current option of every choice line, as a clickable word. */
+const choiceField = StateField.define<DecorationSet>({
+  create: (state) => choiceDecorations(state),
+  update: (decos, tr) =>
+    tr.state.field(resultsField) !== tr.startState.field(resultsField) ||
+    tr.state.readOnly !== tr.startState.readOnly
+      ? choiceDecorations(tr.state)
+      : decos,
+  provide: (field) => EditorView.decorations.from(field),
+});
+
+/**
+ * In a read-only note (no caret, nothing to edit) the current option is a real button, so it
+ * takes focus and works with Enter and Space.
+ */
+class ChoiceButton extends WidgetType {
+  constructor(
+    readonly text: string,
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: ChoiceButton): boolean {
+    return other.text === this.text && other.label === this.label;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'cm-choice-current';
+    el.textContent = this.text;
+    el.title = this.label;
+    el.setAttribute('aria-label', this.label);
+    el.addEventListener('click', (e) => {
+      const line = view.state.doc.lineAt(view.posAtDOM(el)).number;
+      const refocus = document.activeElement === el;
+      cycleChoice(view, line, e.shiftKey ? -1 : 1);
+      // The button is redrawn with the new option: keep focus on it.
+      if (refocus) {
+        const again = [...view.contentDOM.querySelectorAll<HTMLElement>('.cm-choice-current')];
+        again.find((b) => view.state.doc.lineAt(view.posAtDOM(b)).number === line)?.focus();
+      }
+    });
+    return el;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
+function choiceDecorations(state: EditorState): DecorationSet {
+  if (!adjustable(state)) return Decoration.none;
+  const marks: Range<Decoration>[] = [];
+  state.field(resultsField).forEach((result, i) => {
+    const choice = result.choice;
+    if (!choice) return;
+    const option = choice.options[choice.current]!;
+    const from = state.doc.line(i + 1).from + option.from;
+    const to = from + option.label.length;
+    const label = choiceLabel(choice);
+    const deco = state.readOnly
+      ? Decoration.replace({ widget: new ChoiceButton(option.label, label) })
+      : Decoration.mark({ class: 'cm-choice-current', attributes: { title: label } });
+    marks.push(deco.range(from, to));
+  });
+  return Decoration.set(marks, true);
+}
+
+const choiceTarget = (e: Event) =>
+  (e.target as HTMLElement | null)?.closest?.('.cm-choice-current') as HTMLElement | null;
+
+const choiceClicks = EditorView.domEventHandlers({
+  mousedown(e, view) {
+    const target = choiceTarget(e);
+    if (!target || target.tagName === 'BUTTON' || e.button !== 0 || e.altKey) return false;
+    e.preventDefault();
+    const line = view.state.doc.lineAt(view.posAtDOM(target)).number;
+    return cycleChoice(view, line, e.shiftKey ? -1 : 1);
+  },
+});
+
+export const interactiveNumbers = [sliderField, scrubbing, choiceField, choiceClicks];

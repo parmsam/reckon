@@ -8,6 +8,7 @@ export function createShortcutsDialog(mod: string): HTMLDialogElement {
     [`${mod} K`, 'Command palette: every action, and jump to any note'],
     [`${mod} ⇧ C`, 'Copy the answer on the current line'],
     [`${mod} /`, 'Comment or uncomment lines'],
+    [`${mod} ⇧ Space`, 'Pick the next option of a choice (car | [train] | fly)'],
     [`${mod} F`, 'Find and replace'],
     [`${mod} Z`, 'Undo (and ⇧ to redo)'],
     ['Tab', 'Accept an autocomplete suggestion'],

@@ -42,6 +42,8 @@ export type Node =
   /** `3 days ago` (sign -1), `in 3 days` / `3 days later` (sign 1) */
   | { k: 'fromNow'; arg: Node; sign: 1 | -1 }
   | { k: 'bool'; value: boolean }
+  /** An option of a choice, by name (`train`) */
+  | { k: 'symbol'; name: string; label: string }
   | { k: 'compare'; op: '<' | '>' | '<=' | '>=' | '==' | '!='; left: Node; right: Node }
   | { k: 'logic'; op: 'and' | 'or'; left: Node; right: Node }
   | { k: 'not'; arg: Node }

@@ -4,7 +4,7 @@ import { evaluate } from './evaluate';
 import { explain } from './explain';
 import { formatValue } from './format';
 import type { Node } from './ast';
-import { parseLineCached, ScopeIndex, type Highlight, type Scope } from './line';
+import { parseLineCached, ScopeIndex, type Choice, type Highlight, type Scope } from './line';
 import { NO_DIM } from './units/dims';
 import { dimOf, exprFactor } from './units/quantity';
 import type { UnitDef } from './units';
@@ -40,6 +40,8 @@ export interface LineResult {
   explain?: string;
   /** 0-based lines whose answers or definitions this line uses. */
   uses?: number[];
+  /** On a choice line (`transport = car | [train] | fly`): its options and the current one. */
+  choice?: Choice;
 }
 
 /**
@@ -56,7 +58,8 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
   const functionNames = new Set<string>();
   const userUnits = new Map<string, UnitDef>();
   const userFactors = new Map<string, (ctx: UnitContext) => Decimal>();
-  const scope: Scope = { vars: varNames, functions: functionNames, units: userUnits };
+  const symbols = new Set<string>();
+  const scope: Scope = { vars: varNames, functions: functionNames, units: userUnits, symbols };
   const results: LineResult[] = [];
   let block: Value[] = [];
   let prev: Value | undefined;
@@ -209,6 +212,14 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         setVar(variable, value);
         definedAt.set(`v:${variable}`, lineIndex);
       }
+      // Options without values become names later lines can compare with: transport == train.
+      if (line.choice && !line.choice.valued) {
+        for (const option of line.choice.options) {
+          symbols.add(option.name);
+          index.set('s', option.name);
+          definedAt.set(`s:${option.name}`, lineIndex);
+        }
+      }
       if (!usesAggregate(line.ast!)) {
         block.push(value);
         blockLines.push(lineIndex);
@@ -224,6 +235,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         aggregate: usesAggregate(line.ast!) || undefined,
         explain: explanation,
         ...(uses.length && { uses }),
+        ...(line.choice && { choice: line.choice }),
       });
     } catch (e) {
       if (variable) setVar(variable, undefined);
@@ -255,6 +267,9 @@ function linesUsed(
     switch (node.k) {
       case 'var':
         add(scope.definedAt.get(`v:${node.name}`));
+        break;
+      case 'symbol':
+        add(scope.definedAt.get(`s:${node.name}`));
         break;
       case 'prev':
         add(scope.prevLine);

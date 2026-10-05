@@ -65,6 +65,8 @@ export type RToken = Span &
     /** "days until", "time since": `unit` is the unit to answer in, if given. */
     | { t: 'until'; unit?: UnitDef; since: boolean }
     | { t: 'bool'; value: boolean }
+    /** A choice option's name, next to `==` or `!=`. */
+    | { t: 'sym'; name: string }
   );
 
 export const OP_WORDS: Record<string, Op> = {
@@ -140,7 +142,9 @@ const isOp = (t: Token | undefined, op: string) => t?.type === 'op' && t.op === 
 function endsOperand(t: RToken | undefined): boolean {
   if (!t) return false;
   if (t.t === 'op') return t.op === ')' || t.op === '%' || t.op === '!';
-  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit', 'date', 'bool'].includes(t.t);
+  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit', 'date', 'bool', 'sym'].includes(
+    t.t,
+  );
 }
 
 /** Units and functions defined in the note, which take priority over built-in ones. */
@@ -149,6 +153,30 @@ export interface UserDefinitions {
   units?: ReadonlyMap<string, UnitDef>;
   /** Lowercase function names. */
   functions?: ReadonlySet<string>;
+  /** Names of choice options (`train`, `night bus`), values only next to `==` and `!=`. */
+  symbols?: ReadonlySet<string>;
+}
+
+const isEquality = (t: { type: string; op?: string } | RToken | undefined) =>
+  (t && 'op' in t && (t.op === '==' || t.op === '!=')) ?? false;
+
+/** The longest choice option name starting at src[i], if one sits next to `==` or `!=`. */
+function symbolAt(
+  src: Token[],
+  i: number,
+  before: RToken | undefined,
+  symbols: ReadonlySet<string> | undefined,
+): { name: string; length: number } | undefined {
+  if (!symbols?.size) return undefined;
+  for (let length = src.length - i; length >= 1; length--) {
+    const words = src.slice(i, i + length);
+    if (!words.every((t) => t.type === 'word')) continue;
+    const name = words.map((t) => t.text.toLowerCase()).join(' ');
+    if (symbols.has(name) && (isEquality(before) || isEquality(src[i + length]))) {
+      return { name, length };
+    }
+  }
+  return undefined;
 }
 
 /** Longest unit name starting at src[i]: "fl oz", "square feet", "km". Units defined in the note win. */
@@ -191,6 +219,17 @@ export function resolve(
   let i = 0;
   while (i < src.length) {
     const tok = src[i]!;
+
+    // Choice options, compared by name: `transport == train`. Variables still win.
+    const symbol =
+      tok.type === 'word' && !vars.has(tok.text.toLowerCase())
+        ? symbolAt(src, i, last(), user.symbols)
+        : undefined;
+    if (symbol) {
+      out.push({ t: 'sym', name: symbol.name, ...span(tok, src[i + symbol.length - 1]) });
+      i += symbol.length;
+      continue;
+    }
 
     // Dates and times: "Dec 25", "next friday at 3pm", "2026-07-04", "noon PST".
     const date =

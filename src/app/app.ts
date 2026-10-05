@@ -4,6 +4,7 @@ import { openSearchPanel } from '@codemirror/search';
 import { COPIED_EVENT, createEditor } from '../editor';
 import { toggleLineComment } from '../editor/commands';
 import { copyCurrentResult } from '../editor/results';
+import { nextChoice } from '../editor/interactive';
 import { summarize } from '../editor/summary';
 import { createAutosave } from '../storage/autosave';
 import { getSetting, setSetting } from '../storage/settings';
@@ -396,6 +397,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         label: 'Copy the answer on this line',
         hint: `${MOD}⇧C`,
         run: () => copyCurrentResult(editor.view),
+      },
+      {
+        id: 'next-choice',
+        label: 'Pick the next option of the choice on this line',
+        keywords: 'choice option toggle cycle',
+        hint: `${MOD}⇧Space`,
+        run: () => nextChoice(editor.view),
       },
       {
         id: 'comment',

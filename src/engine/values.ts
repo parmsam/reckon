@@ -22,7 +22,9 @@ export type Value =
   /** A moment in time. `zoned` is set when the user named a time zone, so it's displayed. */
   | { kind: 'datetime'; value: Temporal.ZonedDateTime; show: DateShow; zoned?: boolean }
   /** The result of a comparison or condition. */
-  | { kind: 'bool'; value: boolean };
+  | { kind: 'bool'; value: boolean }
+  /** An option of a choice (`car | [train] | fly`): `name` is normalized, `label` as written. */
+  | { kind: 'choice'; name: string; label: string };
 
 export function num(value: Decimal, format?: NumberFormat): Value {
   return format ? { kind: 'number', value, format } : { kind: 'number', value };

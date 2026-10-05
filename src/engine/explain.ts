@@ -96,6 +96,8 @@ function print(node: Node, ctx: ExplainContext): string {
       return `${p(node.arg)} ${node.sign < 0 ? 'ago' : 'from now'}`;
     case 'bool':
       return String(node.value);
+    case 'symbol':
+      return node.label;
     case 'compare':
       return `${p(node.left)} ${node.op === '==' ? '=' : node.op === '!=' ? '≠' : node.op} ${p(node.right)}`;
     case 'logic':

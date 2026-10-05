@@ -189,6 +189,21 @@ test('shared notes are explorable: sliders work, nothing is saved', async ({ pag
   await expect(page.locator('.cm-line').nth(1)).toContainText('rent = $1,200');
 });
 
+test('choices work in shared notes, from the mouse or keyboard', async ({ page }) => {
+  const note = 'fare = car $120 | [train $80] | fly $300\nfare × 2';
+  await page.goto(`./#/new?text=${encodeURIComponent(note)}`);
+  await expect(page.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
+  const option = page.getByRole('button', { name: /^train: click for the next option/ });
+  await option.click();
+  await expect(page.locator('.cm-result').nth(1)).toHaveText('$600.00');
+  const fly = page.getByRole('button', { name: /^fly: click/ });
+  await fly.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.cm-result').nth(1)).toHaveText('$240.00');
+  await expect(page.getByRole('button', { name: /^car: click/ })).toBeFocused();
+  await expect(items(page)).toHaveCount(3);
+});
+
 test('the docs page loads and its examples open in the app', async ({ page }) => {
   await page.goto('./docs/');
   await expect(page.getByRole('heading', { name: 'Getting started' })).toBeVisible();

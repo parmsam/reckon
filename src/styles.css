@@ -489,6 +489,32 @@ button {
 .cm-tok-keyword {
   color: var(--tok-keyword);
 }
+.cm-tok-choice {
+  color: var(--tok-keyword);
+}
+
+/* The current option of a choice: click (or Mod-Shift-Space) for the next one. */
+.cm-choice-current {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tok-keyword);
+  font: inherit;
+  border-radius: 3px;
+  font-weight: 600;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.cm-choice-current:hover,
+.cm-choice-current:focus-visible {
+  background: var(--selection);
+}
+
+.cm-choice-current:focus-visible {
+  outline: 2px solid var(--accent);
+}
 .cm-tok-function,
 .cm-tok-constant {
   color: var(--tok-function);

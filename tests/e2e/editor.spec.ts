@@ -208,3 +208,30 @@ test('sweeping a variable charts every answer that uses it', async ({ page }) =>
   await page.keyboard.press('Escape');
   await expect(page.locator('.cm-sparkline')).toHaveCount(0);
 });
+
+test('choices: clicking the current option picks the next one', async ({ page }) => {
+  await page.goto('./');
+  await setNote(
+    page,
+    'transport = car | [train] | fly\ntrip = if transport == fly then $300 else $80',
+  );
+  const first = page.locator('.cm-line').first();
+  const option = page.locator('.cm-choice-current');
+  await expect(option).toHaveText('train');
+  await expect(resultOnLine(page, 'trip = ')).toHaveText('$80.00');
+
+  await option.click();
+  await expect(first).toHaveText(/^transport = car \| train \| \[fly\]/);
+  await expect(resultOnLine(page, 'trip = ')).toHaveText('$300.00');
+  await option.click();
+  await expect(first).toHaveText(/^transport = \[car\] \| train \| fly/);
+  await option.click({ modifiers: ['Shift'] });
+  await expect(first).toHaveText(/^transport = car \| train \| \[fly\]/);
+
+  // Each click is one undo step; the keyboard works too.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(first).toHaveText(/^transport = \[car\] \| train \| fly/);
+  await first.click();
+  await page.keyboard.press('ControlOrMeta+Shift+Space');
+  await expect(first).toHaveText(/^transport = car \| \[train\] \| fly/);
+});

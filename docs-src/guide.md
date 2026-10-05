@@ -32,6 +32,9 @@ them off in Settings.
 - **See the whole range:** tick **Sweep** in the slider and set its range (From – To). Every answer that uses the
   variable gets a small chart of how it changes across that range, with a dot where the slider is. Hover an
   answer for its values at both ends.
+- **Try other options:** write a choice like `transport = car | [train] | fly` and use `transport == fly` in later
+  lines, or give options values (`fare = car $120 | [train $80]`). Click the current option to pick the next one
+  (Shift-click for the previous one, or <kbd>⌘/Ctrl</kbd> <kbd>⇧</kbd> <kbd>Space</kbd> on its line).
 - **Totals:** the bar under the note shows the total of the section you're in; select lines for their sum and average.
 
 ## Notes, sharing and backups
@@ -41,7 +44,8 @@ them off in Settings.
   back any time with *Add the tutorial and example notes* (in Settings, or the <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> menu).
 - **Share link** (the ↗ button): copies a link with the whole note compressed into it, labelled with the
   note's name (`…/reckon/#/share/monthly-budget/…`). Whoever opens it sees a read-only copy and can save their
-  own. They can still try other numbers: each `name = number` line has a **⇆** slider, and every answer follows.
+  own. They can still try other numbers and options: each `name = number` line has a **⇆** slider, each choice
+  can be clicked, and every answer follows.
   Nothing they change is saved, and *Save a copy* keeps the note as you shared it. The address bar always shows just the app's address, so copying it shares Reckon, never your note.
 - **Backups**: *Export all notes* (in the notes list) saves a JSON file; *Import notes* restores it, or
   turns `.txt` and `.md` files into notes.

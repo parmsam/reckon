@@ -268,6 +268,17 @@ export function glossary(): GlossaryGroup[] {
           meaning: 'Picks a value by a condition; without else, false shows no answer',
           example: 'price = $120\nif price > $100 then 10% off price else price',
         },
+        {
+          terms: ['… | [… ] | …'],
+          meaning:
+            'A choice: the bracketed option is current (or the first). In the app, click it to pick the next one',
+          example: 'transport = car | [train] | fly\nif transport == train then $80 else $300',
+        },
+        {
+          terms: ['… $… | [… $…]'],
+          meaning: 'A choice whose options have values: the variable is the current one',
+          example: 'fare = car $120 | [train $80] | fly $300',
+        },
       ],
     },
     {

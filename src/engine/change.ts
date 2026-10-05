@@ -12,11 +12,14 @@ export function change(
   after: Value | undefined,
   settings: Partial<Settings> = {},
 ): string | undefined {
-  if (!before || !after || before.kind !== after.kind || after.kind === 'bool') return undefined;
+  if (!before || !after || before.kind !== after.kind) return undefined;
+  if (after.kind === 'bool' || after.kind === 'choice') return undefined;
   const s: Settings = { ...defaultSettings, ...settings };
   try {
     const diff = binary('-', after, before, { ppi: s.ppi, emPx: s.emPx, rates: s.rates });
-    if (diff.kind === 'bool' || diff.kind === 'datetime' || diff.value.isZero()) return undefined;
+    if (diff.kind === 'bool' || diff.kind === 'choice' || diff.kind === 'datetime')
+      return undefined;
+    if (diff.value.isZero()) return undefined;
     const text = formatValue({ ...diff, value: diff.value.abs() } as Value, s);
     // Too small to show at this precision: no change worth pointing at.
     if (/^[^1-9]*$/.test(text)) return undefined;

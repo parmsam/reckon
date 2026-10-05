@@ -40,6 +40,8 @@ function magnitude(v: Value | undefined, ref: Value | undefined, s: Settings): n
   switch (v.kind) {
     case 'bool':
       return v.value ? 1 : 0;
+    case 'choice':
+      return undefined;
     case 'datetime':
       return v.value.epochMilliseconds;
     case 'quantity': {

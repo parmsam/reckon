@@ -1,0 +1,37 @@
+// Choices: the bracketed option is current
+transport = car | [train] | fly => train
+if transport == train then $80 else $300 => $80.00
+transport != fly => true
+transport == car => false
+fly == transport => false
+
+// No brackets: the first option
+light = on | off => on
+light == on => true
+if light == off then 0 else 60 => 60
+
+// Multi-word option names, any case
+route = [Night bus] | first train => Night bus
+route == night bus => true
+
+// Options with values: the variable is the current option's value
+fare = car $120 | [train $80] | fly $300 => $80.00
+fare × 2 => $160.00
+nights = 3
+hotel = hostel $30 × nights | [hotel $95 × nights] => $285.00
+
+// Option names are values only next to == and !=, so prose stays text
+train tickets $40 => $40.00
+fly 2 × 3 => 6
+transport + 1 => (none)
+
+// Every option needs a value, or none; one current option
+mixed = car $120 | train => (none)
+two = [car] | [train] => (none)
+
+// Bitwise or still works
+5 | 3 => 7
+bits = 5 | 3 => 7
+a = 4
+b = 1
+c = a | b => 5

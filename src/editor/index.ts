@@ -11,7 +11,7 @@ import {
 } from '@codemirror/view';
 import { toggleLineComment } from './commands';
 import { completion } from './completion';
-import { explorable, interactiveNumbers } from './interactive';
+import { explorable, interactiveNumbers, nextChoice } from './interactive';
 import type { LineResult } from '../engine';
 import {
   copyCurrentResult,
@@ -95,6 +95,7 @@ export function createEditor({
         keymap.of([
           { key: 'Mod-Shift-c', run: copyCurrentResult, preventDefault: true },
           { key: 'Mod-/', run: toggleLineComment, preventDefault: true },
+          { key: 'Mod-Shift-Space', run: nextChoice, preventDefault: true },
           ...defaultKeymap,
           ...historyKeymap,
           ...searchKeymap,

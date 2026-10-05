@@ -1,7 +1,7 @@
 import type { Node } from './ast';
 import { lex } from './lexer';
 import { parse } from './parser';
-import { RESERVED, resolve, type RToken } from './resolve';
+import { RESERVED, resolve, type RToken, type UserDefinitions } from './resolve';
 import type { UnitDef } from './units';
 import { pluralOf } from './units/user';
 
@@ -17,7 +17,9 @@ export type HighlightType =
   | 'reference'
   | 'label'
   | 'comment'
-  | 'heading';
+  | 'heading'
+  /** A choice option's name, on the choice line and where it's compared. */
+  | 'choice';
 
 /** A highlighted range, in UTF-16 offsets from the start of the line. */
 export interface Highlight {
@@ -32,9 +34,30 @@ export interface Scope {
   functions: ReadonlySet<string>;
   /** Lowercase unit name (and plural) → unit. */
   units: ReadonlyMap<string, UnitDef>;
+  /** Choice option names (`train`), values only next to `==` and `!=`. */
+  symbols?: ReadonlySet<string>;
 }
 
 export const EMPTY_SCOPE: Scope = { vars: new Set(), functions: new Set(), units: new Map() };
+
+/** One option of a choice line. Offsets are from the start of the line, inside any brackets. */
+export interface ChoiceOption {
+  from: number;
+  to: number;
+  /** The name as written ("Night bus") and normalized ("night bus"). */
+  label: string;
+  name: string;
+}
+
+/** `transport = car | [train] | fly`: its options, which one is current, and where its brackets are. */
+export interface Choice {
+  options: ChoiceOption[];
+  current: number;
+  /** Offsets of `[` and `]` around the current option, when it's bracketed. */
+  brackets?: [number, number];
+  /** True when the options have values (`car $120 | train $80`). */
+  valued: boolean;
+}
 
 /** A definition on this line: `f(x) = …` or `1 sprint = …`. */
 export type Definition =
@@ -51,6 +74,7 @@ export interface ParsedLine {
   ignored?: string[];
   error?: string;
   highlights: Highlight[];
+  choice?: Choice;
 }
 
 const HEADING = /^\s*#{1,6}(?:\s|$)/;
@@ -92,6 +116,8 @@ function tokenHighlight(t: RToken): HighlightType {
       return 'date';
     case 'until':
       return 'keyword';
+    case 'sym':
+      return 'choice';
     default:
       return 'reference';
   }
@@ -168,30 +194,170 @@ export function parseLine(raw: string, scope: Scope): ParsedLine {
     return { ...line, ...(define && { define }), highlights };
   };
 
+  const user = { functions, units: scope.units, symbols: scope.symbols };
+  const choice = variable ? parseChoice(text, offset, vars, user, highlights) : undefined;
+  if (choice) {
+    if ('error' in choice) return finish({ kind: 'error', variable, error: choice.error });
+    return finish({ kind: 'expr', variable, ast: choice.ast, choice: choice.choice });
+  }
+
+  const parsed = parseExpression(text, offset, vars, user);
+  highlights.push(...parsed.highlights);
+  if (parsed.error) return finish({ kind: 'error', variable, error: parsed.error });
+  if (!parsed.ast) return finish({ kind: 'text', variable });
+  const { ast, ignored } = parsed;
+  return finish({ kind: 'expr', variable, ast, ...(ignored.length && { ignored }) });
+}
+
+interface ParsedExpression {
+  ast?: Node;
+  error?: string;
+  ignored: string[];
+  highlights: Highlight[];
+}
+
+/** Lexes, resolves and parses `text`, which starts `offset` characters into the line. */
+function parseExpression(
+  text: string,
+  offset: number,
+  vars: ReadonlySet<string>,
+  user: UserDefinitions,
+): ParsedExpression {
   let tokens: RToken[];
   let lexed: ReturnType<typeof lex>;
   try {
     lexed = lex(text, offset);
-    tokens = resolve(lexed, vars, { functions, units: scope.units });
+    tokens = resolve(lexed, vars, user);
   } catch (e) {
-    return finish({ kind: 'error', variable, error: (e as Error).message });
+    return { error: (e as Error).message, ignored: [], highlights: [] };
   }
-  for (const t of tokens) highlights.push({ from: t.from, to: t.to, type: tokenHighlight(t) });
-  if (tokens.length === 0) return finish({ kind: 'text', variable });
-
+  const highlights = tokens.map((t) => ({ from: t.from, to: t.to, type: tokenHighlight(t) }));
+  if (tokens.length === 0) return { ignored: [], highlights };
   const ignored = lexed
     .filter((t) => t.type === 'word' && !tokens.some((r) => r.from <= t.from && t.to <= r.to))
     .map((t) => t.text);
   try {
-    return finish({
-      kind: 'expr',
-      variable,
-      ast: parse(tokens),
-      ...(ignored.length && { ignored }),
-    });
+    return { ast: parse(tokens), ignored, highlights };
   } catch (e) {
-    return finish({ kind: 'error', variable, error: (e as Error).message });
+    return { error: (e as Error).message, ignored, highlights };
   }
+}
+
+const OPTION_NAME = /^[\p{L}_][\p{L}\p{N}_]*(?:\s+[\p{L}_][\p{L}\p{N}_]*)*/u;
+
+/**
+ * `car | [train] | fly` or `car $120 | [train $80]`: a choice, when there are two or more
+ * options and each starts with a name that isn't a variable or function. Anything else (`5 | 3`,
+ * `a | b` with variables) is left to the expression parser, as bitwise or.
+ */
+function parseChoice(
+  text: string,
+  offset: number,
+  vars: ReadonlySet<string>,
+  user: UserDefinitions,
+  highlights: Highlight[],
+): { choice: Choice; ast: Node } | { error: string } | undefined {
+  if (!text.includes('|') || text.includes('||')) return undefined;
+  // Split on `|` outside parentheses.
+  const parts: { from: number; text: string }[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i <= text.length; i++) {
+    const c = text[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth = Math.max(0, depth - 1);
+    else if (i === text.length || (c === '|' && depth === 0)) {
+      parts.push({ from: start, text: text.slice(start, i) });
+      start = i + 1;
+    }
+  }
+  if (parts.length < 2) return undefined;
+
+  const taken = (word: string) => {
+    const w = word.toLowerCase();
+    return vars.has(w) || user.functions?.has(w) || [...vars].some((v) => v.startsWith(`${w} `));
+  };
+  const options: (ChoiceOption & { value: string; valueFrom: number })[] = [];
+  const bracketed: number[] = [];
+  let brackets: [number, number] | undefined;
+  for (const part of parts) {
+    const lead = part.text.length - part.text.trimStart().length;
+    let body = part.text.trim();
+    let from = offset + part.from + lead;
+    if (body.startsWith('[') && body.endsWith(']')) {
+      bracketed.push(options.length);
+      brackets = [from, from + body.length - 1];
+      body = body.slice(1, -1);
+      from += 1;
+      const inner = body.length - body.trimStart().length;
+      body = body.trim();
+      from += inner;
+    }
+    if (body.includes('[') || body.includes(']')) return undefined;
+    // The name: leading words, up to the first variable or function.
+    const words = OPTION_NAME.exec(body)?.[0].split(/(\s+)/) ?? [];
+    let label = '';
+    for (let k = 0; k < words.length; k += 2) {
+      if (taken(words[k]!)) break;
+      label = words.slice(0, k + 1).join('');
+    }
+    const name = normalizeName(label);
+    if (!name || name === 'true' || name === 'false') return undefined;
+    const rest = body.slice(label.length);
+    options.push({
+      from,
+      to: from + body.length,
+      label,
+      name,
+      value: rest,
+      valueFrom: from + label.length,
+    });
+  }
+
+  const ownHighlights: Highlight[] = [];
+  for (const o of options) {
+    ownHighlights.push({ from: o.from, to: o.from + o.label.length, type: 'choice' });
+  }
+  for (const part of parts.slice(1)) {
+    const bar = offset + part.from - 1;
+    ownHighlights.push({ from: bar, to: bar + 1, type: 'operator' });
+  }
+  if (brackets) {
+    ownHighlights.push({ from: brackets[0], to: brackets[0] + 1, type: 'operator' });
+    ownHighlights.push({ from: brackets[1], to: brackets[1] + 1, type: 'operator' });
+  }
+
+  const valued = options.filter((o) => o.value.trim()).length;
+  const fail = (error: string) => {
+    highlights.push(...ownHighlights);
+    return { error };
+  };
+  if (bracketed.length > 1) return fail('Only one option can be the current one');
+  if (valued && valued < options.length) return fail('Give every option a value, or none');
+  if (new Set(options.map((o) => o.name)).size < options.length) {
+    return fail('Each option needs its own name');
+  }
+
+  const current = bracketed[0] ?? 0;
+  let ast: Node | undefined;
+  for (const [k, o] of options.entries()) {
+    if (!valued) continue;
+    const parsed = parseExpression(o.value, o.valueFrom, vars, user);
+    ownHighlights.push(...parsed.highlights);
+    if (parsed.error || !parsed.ast) return fail(parsed.error ?? `"${o.label}" has no value`);
+    if (k === current) ast = parsed.ast;
+  }
+  highlights.push(...ownHighlights);
+  const chosen = options[current]!;
+  return {
+    choice: {
+      options: options.map(({ from, to, label, name }) => ({ from, to, label, name })),
+      current,
+      ...(brackets && { brackets }),
+      valued: valued > 0,
+    },
+    ast: ast ?? { k: 'symbol', name: chosen.name, label: chosen.label },
+  };
 }
 
 const MAX_CACHE = 5000;
@@ -225,12 +391,12 @@ const WORDS = /[\p{L}_][\p{L}\p{N}_]*/gu;
  * key can name exactly the definitions it could mention.
  */
 export class ScopeIndex {
-  /** id ("v:rent", "f:area", "u:sprint") → its part of the cache key. */
+  /** id ("v:rent", "f:area", "u:sprint", "s:train") → its part of the cache key. */
   private entries = new Map<string, string>();
   private byFirstWord = new Map<string, Set<string>>();
 
   /** Records a definition. `detail` goes into the key, so changing it re-parses dependent lines. */
-  set(kind: 'v' | 'f' | 'u', name: string, detail = ''): void {
+  set(kind: 'v' | 'f' | 'u' | 's', name: string, detail = ''): void {
     const id = `${kind}:${name}`;
     this.entries.set(id, `${id}=${detail}`);
     const first = name.split(' ')[0]!;
@@ -239,7 +405,7 @@ export class ScopeIndex {
     ids.add(id);
   }
 
-  delete(kind: 'v' | 'f' | 'u', name: string): void {
+  delete(kind: 'v' | 'f' | 'u' | 's', name: string): void {
     const id = `${kind}:${name}`;
     if (!this.entries.delete(id)) return;
     this.byFirstWord.get(name.split(' ')[0]!)?.delete(id);

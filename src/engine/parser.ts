@@ -117,6 +117,8 @@ export function parse(tokens: RToken[]): Node {
         return { k: 'date', spec: t.spec };
       case 'bool':
         return { k: 'bool', value: t.value };
+      case 'sym':
+        return { k: 'symbol', name: t.name, label: t.name };
       case 'until':
         return { k: 'until', arg: expr(PREFIX_BP), unit: t.unit, since: t.since };
       case 'kw':

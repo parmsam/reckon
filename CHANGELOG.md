@@ -15,6 +15,9 @@ bump the minor version, fixes bump the patch version.
 - **Sweep a variable:** tick *Sweep* in a slider and give it a range; every answer that uses the variable shows a
   small chart of how it changes across that range, with a dot where the slider is.
 - On phones, the slider sits at the bottom of the screen so the answers stay visible.
+- **Choices:** `transport = car | [train] | fly` makes a what-if you can click through: the current option is a
+  clickable word, and later lines can test it (`if transport == fly then $300 else $80`). Options can carry
+  values: `fare = car $120 | [train $80] | fly $300`. Works in shared notes too.
 
 ## 1.1.0 — 2026-10-05
 
