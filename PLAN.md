@@ -266,17 +266,27 @@ interface Note {
 - Two panes on desktop: text on the left, results on the right, with a thin divider. A collapsible sidebar holds the note list.
 - Phones get a single column, with each result right-aligned on the same row.
 - Light, dark, and system themes, plus an adjustable font size.
-- A command palette (`Mod-K`) for new note, search, export, share, and settings.
-- Shortcuts: `Mod-K` palette, `Mod-/` toggle comment, `Mod-Shift-C` copy result. (`Mod-N` can't be used: browsers reserve it for a new window.)
+- A command palette (`Mod-K`, or the ⌘ button in the top bar) with every action plus jumping to notes by title.
+  Matching is by whole words first, then loosely for typos.
+- Shortcuts: `Mod-K` palette, `Mod-/` toggle comment, `Mod-Shift-C` copy result, `Mod-F` find and replace,
+  `Ctrl-Space` autocomplete. (`Mod-N` can't be used: browsers reserve it for a new window.)
+- Autocomplete suggests variables above the cursor (with their values), functions, units, currencies and date
+  words, matching from word starts. Tab accepts; Enter always makes a new line.
+- On touch screens, a row of math keys (`+ − × ÷ % ( ) ^ = $ in`) sits above the on-screen keyboard.
 - An empty first-run note doubles as an interactive tutorial (sample lines the user can edit).
 - Accessibility: results are readable by screen readers (`aria-live` on the focused line's result), keyboard reachable, and meet WCAG AA contrast.
 
 ---
 
 ## 6. Settings
-Locale; decimal and thousands separators; precision (max decimals); rounding mode;
-angle unit (deg or rad); default currency; ppi and em size for CSS units; theme; font size;
-rate source on or off (privacy: allow turning off all network calls).
+Built in M6 (stored in IndexedDB as one `preferences` record, validated on load):
+theme (system, light, dark); font size; number and date format (locale, which sets the decimal and
+thousands separators); decimal places, plain and with units; angle unit (deg or rad); ppi and em size for
+CSS units; fetching exchange rates on or off (off means no network requests at all; saved rates keep working).
+
+- Input always uses `.` for decimals and `,` for thousands; the locale only changes how answers look.
+- Deferred: rounding mode (always round-half-up for now) and a default currency for `$` (it changes how notes
+  parse, so it needs its own design).
 
 ---
 
@@ -327,11 +337,13 @@ rate source on or off (privacy: allow turning off all network calls).
 - [x] Time zones via an IANA city/abbreviation table
 
 ### M6 — Polish and v1.0
-- [ ] Settings panel (§6)
-- [ ] Autocomplete; command palette; keyboard shortcuts; mobile accessory row
-- [ ] First-run tutorial note
-- [ ] Lighthouse: PWA installable, Performance ≥ 95, Accessibility ≥ 95
-- [ ] Playwright offline test (reload works with the network off). Typing, results, persistence and copy are covered since M2.
+- [x] Settings panel (§6)
+- [x] Autocomplete; command palette; keyboard shortcuts; mobile accessory row
+- [x] First-run tutorial note
+- [x] Lighthouse: Performance 98, Accessibility 100, Best Practices 100, SEO 100 (mobile). Installable with no
+  errors (Lighthouse 12 dropped its PWA audit, so this is checked through Chrome DevTools).
+- [x] Playwright offline test (reload works with the network off). It caught a bug from M0: the manifest was
+  precached twice, so Workbox silently skipped precaching and the app never actually worked offline.
 
 ### M7 — Docs and AI-friendly access
 - [ ] Docs site on GitHub Pages (`/reckon/docs/`): getting started, the full syntax reference, FAQ.

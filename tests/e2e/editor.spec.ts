@@ -72,8 +72,8 @@ test.describe('dates', () => {
     await page.clock.setFixedTime(new Date('2026-01-15T17:00:00Z'));
     await page.goto('./');
     await setNote(page, 'today\nnow in Tokyo\ndays until Jan 31');
-    await expect(resultOnLine(page, 'today')).toHaveText('Thu, Jan 15, 2026');
-    await expect(resultOnLine(page, 'Tokyo')).toHaveText('Fri, Jan 16, 2026, 2:00 AM GMT+9');
+    await expect(resultOnLine(page, 'today')).toHaveText('Thu, Jan 15');
+    await expect(resultOnLine(page, 'Tokyo')).toHaveText('Fri, Jan 16, 2:00 AM GMT+9');
     await expect(resultOnLine(page, 'until')).toHaveText('16 days');
     await expect(page.locator('.cm-tok-date', { hasText: 'Jan 31' })).toBeVisible();
   });
@@ -85,6 +85,6 @@ test.describe('dates', () => {
     await page.clock.setFixedTime(new Date('2026-01-15T17:00:00Z'));
     await page.goto('./');
     await setNote(page, 'tomorrow');
-    await expect(resultOnLine(page, 'tomorrow')).toHaveText('Fri, Jan 16, 2026');
+    await expect(resultOnLine(page, 'tomorrow')).toHaveText('Fri, Jan 16');
   });
 });

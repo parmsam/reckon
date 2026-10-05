@@ -8,6 +8,8 @@ import {
   keymap,
   placeholder,
 } from '@codemirror/view';
+import { toggleLineComment } from './commands';
+import { completion } from './completion';
 import { copyCurrentResult, engineSettings, results, type EditorSettings } from './results';
 import { reckonTheme } from './theme';
 
@@ -28,6 +30,8 @@ export interface Editor {
   /** Replaces the text after a change from another tab, keeping the cursor nearby. */
   applyExternal(doc: string): void;
   getDoc(): string;
+  /** Replaces the selection with `text` (used by the phone keyboard row). */
+  insert(text: string): void;
   /** Merges new engine settings (locale, rates…) and recomputes results. */
   setSettings(settings: EditorSettings): void;
 }
@@ -63,12 +67,14 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
         placeholder('Type some math… try 20% of 50'),
         keymap.of([
           { key: 'Mod-Shift-c', run: copyCurrentResult, preventDefault: true },
+          { key: 'Mod-/', run: toggleLineComment, preventDefault: true },
           ...defaultKeymap,
           ...historyKeymap,
           ...searchKeymap,
         ]),
         settingsCompartment.of(engineSettings.of(currentSettings)),
         results,
+        completion,
         reckonTheme,
         readOnly.of(readOnlyExtensions(ro)),
         EditorView.updateListener.of((update) => {
@@ -98,6 +104,12 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
       });
     },
     getDoc: () => view.state.doc.toString(),
+    insert(text) {
+      view.dispatch(view.state.replaceSelection(text), {
+        userEvent: 'input.type',
+        scrollIntoView: true,
+      });
+    },
     setSettings(next) {
       currentSettings = { ...currentSettings, ...next };
       view.dispatch({

@@ -1,5 +1,8 @@
 import { MENTIONS_CRYPTO } from '../data/rates';
+import { openSearchPanel } from '@codemirror/search';
 import { COPIED_EVENT, createEditor } from '../editor';
+import { toggleLineComment } from '../editor/commands';
+import { copyCurrentResult } from '../editor/results';
 import { createAutosave } from '../storage/autosave';
 import { getSetting, setSetting } from '../storage/settings';
 import {
@@ -10,11 +13,21 @@ import {
   noteFromText,
   parseBackup,
 } from './backup';
+import { createAccessoryRow } from './accessory';
 import { download, h, pickFiles, svg } from './dom';
 import { ICONS } from './icons';
+import { Palette, type Command } from './palette';
+import {
+  applyAppearance,
+  engineSettings,
+  loadPreferences,
+  savePreferences,
+  type Preferences,
+} from './preferences';
 import { RatesManager } from './rates';
 import { parseRoute, routeHash, type Route } from './router';
 import { decodeShare, encodeShare } from './share';
+import { SettingsDialog } from './settings-dialog';
 import { Sidebar } from './sidebar';
 import { NotesStore } from './store';
 import { deriveTitle } from './title';
@@ -141,11 +154,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
+  let prefs: Preferences = await loadPreferences();
+  applyAppearance(prefs);
+
   const editor = createEditor({
     parent: editorEl,
     doc: '',
     settings: {
-      locale: navigator.language,
+      ...engineSettings(prefs),
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       now: Date.now(),
     },
@@ -175,6 +191,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const checkCrypto = (body: string) => {
     if (MENTIONS_CRYPTO.test(body)) rates.needCrypto();
   };
+  rates.enabled = prefs.fetchRates;
   void rates.init().then(() => rates.refresh());
   window.addEventListener('online', () => void rates.refresh());
   setInterval(() => void rates.refresh(), 15 * 60 * 1000);
@@ -190,7 +207,158 @@ export async function startApp(root: HTMLElement): Promise<void> {
     emptyTrash: () => void emptyTrash(),
     importFiles: () => void importFiles(),
     exportAll: () => exportAll(),
+    openSettings: () => openSettings(),
   });
+
+  // ---- Settings and command palette ---------------------------------------------------------
+  const settingsDialog = new SettingsDialog((next) => {
+    prefs = next;
+    applyAppearance(prefs);
+    editor.setSettings(engineSettings(prefs));
+    rates.enabled = prefs.fetchRates;
+    if (prefs.fetchRates) void rates.refresh();
+    void savePreferences(prefs).catch(() => {});
+  });
+
+  function openSettings(): void {
+    closeDrawer();
+    settingsDialog.open(prefs, rates.snapshot?.fetchedAt);
+  }
+
+  const isDark = () =>
+    prefs.theme === 'dark' ||
+    (prefs.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+
+  const commands = (): Command[] => {
+    const id = currentId();
+    const note = id ? store.get(id) : undefined;
+    const run = (fn: () => unknown) => () => {
+      void fn();
+    };
+    const list: Command[] = [
+      { id: 'new', label: 'New note', run: run(createAndOpen) },
+      {
+        id: 'search',
+        label: 'Search notes',
+        keywords: 'find filter',
+        run: () => {
+          if (MOBILE.matches) app.classList.add('drawer-open');
+          else app.classList.remove('sidebar-collapsed');
+          sidebar.focusSearch();
+        },
+      },
+      {
+        id: 'find',
+        label: 'Find and replace in this note',
+        hint: `${MOD}F`,
+        run: () => openSearchPanel(editor.view),
+      },
+      {
+        id: 'copy',
+        label: 'Copy the answer on this line',
+        hint: `${MOD}⇧C`,
+        run: () => copyCurrentResult(editor.view),
+      },
+      {
+        id: 'comment',
+        label: 'Comment or uncomment lines',
+        hint: `${MOD}/`,
+        run: () => toggleLineComment(editor.view),
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        keywords: 'preferences options theme font precision privacy',
+        run: openSettings,
+      },
+      {
+        id: 'theme',
+        label: isDark() ? 'Switch to light theme' : 'Switch to dark theme',
+        keywords: 'appearance mode',
+        run: () => settingsDialog.apply({ ...prefs, theme: isDark() ? 'light' : 'dark' }),
+      },
+      { id: 'sidebar', label: 'Show or hide the notes list', run: toggleSidebar },
+      {
+        id: 'trash-view',
+        label: 'Show trash',
+        keywords: 'deleted',
+        run: () => {
+          sidebar.setView('trash');
+          if (MOBILE.matches) app.classList.add('drawer-open');
+          else app.classList.remove('sidebar-collapsed');
+        },
+      },
+      { id: 'export', label: 'Export all notes', keywords: 'backup json download', run: exportAll },
+      {
+        id: 'import',
+        label: 'Import notes',
+        keywords: 'restore backup upload',
+        run: run(importFiles),
+      },
+    ];
+    if (note && note.deletedAt === undefined) {
+      list.push(
+        { id: 'share', label: 'Copy share link', keywords: 'url send', run: run(share) },
+        {
+          id: 'download',
+          label: 'Download this note',
+          keywords: 'save text file',
+          run: downloadNote,
+        },
+        {
+          id: 'pin',
+          label: note.pinned ? 'Unpin this note' : 'Pin this note',
+          run: run(() => store.setPinned(note.id, !note.pinned)),
+        },
+        {
+          id: 'trash',
+          label: 'Move this note to trash',
+          keywords: 'delete remove',
+          run: run(() => trashNote(note.id)),
+        },
+      );
+    }
+    for (const n of store.active()) {
+      if (n.id === id) continue;
+      list.push({
+        id: `note-${n.id}`,
+        label: deriveTitle(n.body),
+        hint: 'Note',
+        run: () => navigate({ kind: 'note', id: n.id }),
+      });
+    }
+    return list;
+  };
+  const palette = new Palette(commands);
+
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (palette.isOpen) palette.close();
+        else palette.open();
+      }
+    },
+    { capture: true },
+  );
+  palette.el.addEventListener('close', () => {
+    if (!settingsDialog.el.open) editor.view.focus();
+  });
+
+  const commandButton = h(
+    'button',
+    {
+      type: 'button',
+      class: 'icon-btn',
+      'aria-label': `Commands (${MOD}K)`,
+      title: `Commands (${MOD}K)`,
+      onclick: () => palette.open(),
+    },
+    svg(ICONS.command),
+  );
+  const accessory = createAccessoryRow(editor.view.dom, (text) => editor.insert(text));
 
   const app = h(
     'div',
@@ -200,11 +368,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     h(
       'div',
       { class: 'main' },
-      h('header', { class: 'topbar' }, menuButton, titleEl, statusEl, noteActions),
+      h('header', { class: 'topbar' }, menuButton, titleEl, statusEl, noteActions, commandButton),
       banner,
       editorEl,
     ),
     toastEl,
+    accessory,
+    settingsDialog.el,
+    palette.el,
   );
   root.replaceChildren(app);
 

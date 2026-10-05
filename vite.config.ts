@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
+      // Register the service worker without blocking the first paint.
+      injectRegister: 'script-defer',
       pwaAssets: { config: true },
       manifest: {
         name: 'Reckon',
@@ -17,7 +19,8 @@ export default defineConfig({
         display: 'standalone',
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        // The plugin adds manifest.webmanifest itself; listing it twice breaks precaching.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
       },
     }),
   ],

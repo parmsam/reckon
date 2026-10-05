@@ -48,6 +48,7 @@ src/
     index.ts       createEditor(): extensions and keymap
     results.ts     results StateField, aligned result widgets, highlight marks, copy, live region
     theme.ts       editor chrome, driven by CSS variables in styles.css
+    completion.ts  autocomplete (Tab accepts, never Enter); commands.ts toggle comment
   storage/       IndexedDB (idb)
     db.ts          schema types + getDB()
     migrations.ts  versioned upgrades (DB_VERSION comes from here)
@@ -61,6 +62,9 @@ src/
     share.ts       share-link encoding (deflate-raw + base64url)
     backup.ts      JSON backup format, import merge rules
     search.ts      sorting and search; title.ts derived titles; welcome.ts first-run note
+    preferences.ts settings: defaults, validation, storage, applying theme and engine settings
+    settings-dialog.ts, palette.ts (command palette + matching), accessory.ts (phone math keys)
+    rates.ts       RatesManager: cached rates, hourly refresh, crypto on demand, off switch
   main.ts
 tests/
   fixtures/*.calc  golden files: `input => expected`
@@ -85,7 +89,8 @@ public/            icons, manifest assets
    `src/storage/migrations.ts`, plus a test that upgrades from the previous version.
 8. **Paths must work under GitHub Pages.** The app is served from `/reckon/`. Use `import.meta.env.BASE_URL` for asset
    URLs and hash routes (`#/note/<id>`) for navigation. Never assume the app lives at `/`.
-9. **Accessibility.** Interactive elements are keyboard reachable, have labels, and meet AA contrast in both themes.
+9. **Accessibility.** Interactive elements are keyboard reachable, have labels, and meet AA contrast (4.5:1) in both
+   themes against `--bg`, `--panel` and `--results-bg`. Colors are `light-dark()` pairs in `styles.css`.
 10. **Keep PLAN.md current.** Tick milestone checkboxes as work lands, and record decisions that change the plan.
 
 ## Recipes

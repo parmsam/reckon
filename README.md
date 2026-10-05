@@ -47,10 +47,12 @@ own device.
 - **Share links**: the note is compressed into the URL itself, so no server ever sees it
 - **Backup and restore** as JSON, plus import of `.txt` and `.md` files
 - **Syncs between open tabs** and works offline once loaded
+- **Command palette** (<kbd>⌘/Ctrl</kbd> <kbd>K</kbd>), **autocomplete** for variables, units and functions, and a
+  row of math keys above the phone keyboard
+- **Settings**: theme, font size, number format, decimal places, angle unit, and a switch that turns off all network requests
 - **Light and dark themes**, a phone layout, and screen reader support
 
 **Coming next** (see the [roadmap](PLAN.md#7-milestones))
-- **Settings, autocomplete and a command palette**
 - **Docs for people and AI**: a docs site, `llms.txt`, a copy-paste prompt for LLMs, and an agent skill
 
 ## Syntax at a glance
@@ -74,10 +76,20 @@ own device.
 
 A line Reckon can't make sense of shows no answer, never a wrong one.
 
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> | Command palette: every action, plus jump to any note |
+| <kbd>⌘/Ctrl</kbd> <kbd>⇧</kbd> <kbd>C</kbd> | Copy the answer on the current line |
+| <kbd>⌘/Ctrl</kbd> <kbd>/</kbd> | Comment or uncomment lines |
+| <kbd>⌘/Ctrl</kbd> <kbd>F</kbd> | Find and replace |
+| <kbd>Tab</kbd> | Accept an autocomplete suggestion (<kbd>Ctrl</kbd> <kbd>Space</kbd> to ask for one) |
+
 ## Your data
 - Notes are stored in your browser (IndexedDB). There are no accounts, no servers and no analytics.
 - The only network requests fetch exchange rates (open.er-api.com, falling back to Frankfurter; CoinGecko only if a
-  note mentions crypto). They never include your notes.
+  note mentions crypto). They never include your notes, and you can turn them off in Settings.
 - Clearing site data deletes your notes, so use **Export all notes** (sidebar footer) for a backup.
 - A share link holds the whole note in the part of the URL after `#`, which browsers never send to a server.
 

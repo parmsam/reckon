@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Reckon — a notepad that does the math." />
     <title>Reckon</title>
+    <script>
+      // Apply a chosen theme before first paint (the full preferences load from IndexedDB later).
+      try {
+        const theme = localStorage.getItem('reckon.theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

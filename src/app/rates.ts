@@ -14,6 +14,8 @@ export class RatesManager {
   private cryptoFetchedAt = 0;
   private wantCrypto = false;
   private refreshing?: Promise<void>;
+  /** When false, no network requests are made; saved rates keep working. */
+  enabled = true;
 
   constructor(
     private onChange: (snapshot: RatesSnapshot) => void,
@@ -53,6 +55,7 @@ export class RatesManager {
   }
 
   private async doRefresh(force: boolean): Promise<void> {
+    if (!this.enabled) return;
     if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
     const now = Date.now();
     const fiatStale = force || !this.current || now - this.current.fetchedAt > MAX_AGE;

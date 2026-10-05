@@ -95,4 +95,16 @@ describe('RatesManager', () => {
     await failing.refresh(true);
     expect(failing.snapshot).toBe(before);
   });
+
+  it('makes no requests when rate fetching is turned off', async () => {
+    const fetchFn = fakeFetch({ ...ER_API, ...COINGECKO });
+    const manager = new RatesManager(() => {}, fetchFn);
+    manager.enabled = false;
+    await manager.init();
+    await manager.refresh(true);
+    manager.needCrypto();
+    await new Promise((r) => setTimeout(r, 10));
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(Object.keys(manager.snapshot!.rates).length).toBeGreaterThan(100);
+  });
 });

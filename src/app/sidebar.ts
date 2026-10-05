@@ -15,6 +15,7 @@ export interface SidebarHandlers {
   emptyTrash(): void;
   importFiles(): void;
   exportAll(): void;
+  openSettings(): void;
 }
 
 /** Second meaningful line of a note, shown under its title. */
@@ -103,7 +104,7 @@ export class Sidebar {
     this.search.select();
   }
 
-  private setView(view: 'notes' | 'trash'): void {
+  setView(view: 'notes' | 'trash'): void {
     this.view = view;
     this.render();
   }
@@ -153,6 +154,7 @@ export class Sidebar {
             { class: 'foot-actions' },
             iconButton(ICONS.upload, 'Import notes', () => this.handlers.importFiles()),
             iconButton(ICONS.download, 'Export all notes', () => this.handlers.exportAll()),
+            iconButton(ICONS.settings, 'Settings', () => this.handlers.openSettings()),
           ),
     );
   }

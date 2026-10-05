@@ -136,8 +136,12 @@ export function inZone(d: DateValue, zone: string): DateValue {
 /** "Thu, Jan 15, 2026", "3:00 PM", "Fri 7:00 AM GMT+9". */
 export function formatDateTime(d: DateValue, s: Settings): string {
   const options: Intl.DateTimeFormatOptions = {};
-  if (d.show !== 'time')
-    Object.assign(options, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+  if (d.show !== 'time') {
+    Object.assign(options, { weekday: 'short', month: 'short', day: 'numeric' });
+    // The year only shows when it isn't this year.
+    if (s.now === undefined || clock(s, d.value.timeZoneId).year !== d.value.year)
+      options.year = 'numeric';
+  }
   if (d.show !== 'date') {
     Object.assign(options, { hour: 'numeric', minute: '2-digit' });
     if (d.zoned || d.value.timeZoneId !== s.timeZone) options.timeZoneName = 'short';

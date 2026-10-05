@@ -1,21 +1,21 @@
 // The clock is fixed at Thursday, Jan 15, 2026, 12:00 in UTC
-today => Thu, Jan 15, 2026
-tomorrow => Fri, Jan 16, 2026
-yesterday => Wed, Jan 14, 2026
-now => Thu, Jan 15, 2026, 12:00 PM
-friday => Fri, Jan 16, 2026
-thursday => Thu, Jan 15, 2026
-next friday => Fri, Jan 16, 2026
-next thursday => Thu, Jan 22, 2026
-last monday => Mon, Jan 12, 2026
-next week => Thu, Jan 22, 2026
-next month => Sun, Feb 15, 2026
-Dec 25 => Fri, Dec 25, 2026
+today => Thu, Jan 15
+tomorrow => Fri, Jan 16
+yesterday => Wed, Jan 14
+now => Thu, Jan 15, 12:00 PM
+friday => Fri, Jan 16
+thursday => Thu, Jan 15
+next friday => Fri, Jan 16
+next thursday => Thu, Jan 22
+last monday => Mon, Jan 12
+next week => Thu, Jan 22
+next month => Sun, Feb 15
+Dec 25 => Fri, Dec 25
 December 25th, 2027 => Sat, Dec 25, 2027
-25 Dec => Fri, Dec 25, 2026
-3rd of March => Tue, Mar 3, 2026
-2026-07-04 => Sat, Jul 4, 2026
-2026-07-04T09:30 => Sat, Jul 4, 2026, 9:30 AM
+25 Dec => Fri, Dec 25
+3rd of March => Tue, Mar 3
+2026-07-04 => Sat, Jul 4
+2026-07-04T09:30 => Sat, Jul 4, 9:30 AM
 Feb 30 => (none)
 
 // Times
@@ -25,17 +25,17 @@ Feb 30 => (none)
 15:45 => 3:45 PM
 noon => 12:00 PM
 midnight => 12:00 AM
-tomorrow at 9am => Fri, Jan 16, 2026, 9:00 AM
-3pm tomorrow => Fri, Jan 16, 2026, 3:00 PM
-Dec 25 3pm => Fri, Dec 25, 2026, 3:00 PM
-next friday at noon => Fri, Jan 16, 2026, 12:00 PM
+tomorrow at 9am => Fri, Jan 16, 9:00 AM
+3pm tomorrow => Fri, Jan 16, 3:00 PM
+Dec 25 3pm => Fri, Dec 25, 3:00 PM
+next friday at noon => Fri, Jan 16, 12:00 PM
 
 // Arithmetic
-today + 2 weeks => Thu, Jan 29, 2026
-today + 1 month => Sun, Feb 15, 2026
-Jan 31 + 1 month => Sat, Feb 28, 2026
-today - 3 days => Mon, Jan 12, 2026
-now + 3 h => Thu, Jan 15, 2026, 3:00 PM
+today + 2 weeks => Thu, Jan 29
+today + 1 month => Sun, Feb 15
+Jan 31 + 1 month => Sat, Feb 28
+today - 3 days => Mon, Jan 12
+now + 3 h => Thu, Jan 15, 3:00 PM
 3pm + 2 h => 5:00 PM
 3pm - 30 min => 2:30 PM
 3pm + 90 min => 4:30 PM
@@ -52,17 +52,17 @@ days since Jan 1 => 14 days
 days until Jan 1 => 351 days
 time until 5pm => 5 h
 hours since 9am => 3 h
-3 days ago => Mon, Jan 12, 2026
+3 days ago => Mon, Jan 12
 2 h ago => 10:00 AM
 20 h ago => Wed 4:00 PM
-2 weeks from today => Thu, Jan 29, 2026
-3 days from now => Sun, Jan 18, 2026, 12:00 PM
-in 3 days => Sun, Jan 18, 2026
+2 weeks from today => Thu, Jan 29
+3 days from now => Sun, Jan 18, 12:00 PM
+in 3 days => Sun, Jan 18
 in 45 min => 12:45 PM
-3 days later => Sun, Jan 18, 2026
+3 days later => Sun, Jan 18
 
 // Time zones
-now in Tokyo => Thu, Jan 15, 2026, 9:00 PM GMT+9
+now in Tokyo => Thu, Jan 15, 9:00 PM GMT+9
 time in Tokyo => 9:00 PM GMT+9
 time in New York => 7:00 AM EST
 3pm PST => 3:00 PM PST
@@ -71,13 +71,13 @@ time in New York => 7:00 AM EST
 noon UTC in New York => 7:00 AM EST
 10pm in Tokyo => Fri, 7:00 AM GMT+9
 3pm in UTC+5:30 => 8:30 PM GMT+5:30
-now in Narnia => Thu, Jan 15, 2026, 12:00 PM
+now in Narnia => Thu, Jan 15, 12:00 PM
 
 // Dates in ordinary text
 I now have 5 => 5
 today I ran 5 km => 5 km
 meeting at 3pm => 3:00 PM
 lunch at noon for 4 => 4
-may 5 => Tue, May 5, 2026
+may 5 => Tue, May 5
 the 3 of us => 3
 16:9 => (none)

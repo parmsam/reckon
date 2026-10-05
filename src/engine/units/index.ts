@@ -8,6 +8,9 @@ export type { UnitContext, UnitDef, UnitExpr, UnitTerm } from './types';
 
 const ALL: UnitSpec[] = [...PHYSICAL_UNITS, ...CURRENCY_UNITS];
 
+/** Every unit with its names and symbols, for autocomplete. */
+export const UNIT_SPECS: readonly UnitSpec[] = ALL;
+
 const bySymbol = new Map<string, UnitDef>();
 const byName = new Map<string, UnitDef>();
 /** Lowercased multi-letter symbols that are unambiguous, so "KM" and "Kg" still work. */
