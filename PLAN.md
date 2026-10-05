@@ -350,11 +350,20 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
   The reference is generated from the golden fixtures, so examples are always tested.
 - [ ] `llms.txt` at `/reckon/llms.txt` ([llmstxt.org](https://llmstxt.org) format), linking to the docs,
   plus `llms-full.txt` with the whole syntax reference in one Markdown file
-- [ ] LLM prompt note: a copy-paste prompt that teaches any LLM Reckon's syntax, so people can ask an
-  assistant to draft a note ("make me a trip budget in Reckon syntax") and paste it in
+- [ ] Plain-text note links: `#/new?text=<percent-encoded note>` opens the text as a read-only preview with
+  "Save a copy", exactly like a share link. Unlike share links (deflate-raw + base64url, which an LLM can't
+  compute reliably), percent-encoding is something any LLM or script can produce. The text stays in the
+  `#` fragment, so it never reaches a server. Reject or truncate absurdly long payloads.
+- [ ] LLM prompt note: a copy-paste prompt that teaches any LLM Reckon's syntax and tells it to answer with a
+  ready-to-click link (`https://parmsam.github.io/reckon/#/new?text=…`) plus the note as a code block, so
+  people can ask an assistant "make me a trip budget in Reckon" and just click
 - [ ] Agent skill: a `SKILL.md` (in the repo under `skills/reckon/` and served at `/reckon/skill/`) that teaches
-  coding agents to write Reckon notes and build share links (`#/share/<deflate-raw, base64url>`), with a
-  small script that encodes a note into a link
+  coding agents to write Reckon notes, build plain-text links, and evaluate notes with the engine module below
+- [ ] Machine interface. Reckon is static (GitHub Pages), so there is no server API; instead:
+  - URL scheme: `#/new?text=` (above), plus the existing `#/share/<payload>` and `#/note/<id>`
+  - Engine as an ES module on Pages (`/reckon/engine.js`, versioned) exporting `evaluateDocument`, so agents,
+    notebooks and other pages can compute results headlessly (`import { evaluateDocument } from '…/engine.js'`)
+  - Later: an npm package for the engine and a CLI (`npx reckon "5 km in miles"`, or piping a note file)
 
 ### Later
 - [ ] Conditionals and comparisons; bitwise ops
