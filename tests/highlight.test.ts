@@ -70,6 +70,14 @@ describe('parse cache', () => {
     expect(parseCacheStats.misses - before).toBe(1);
   });
 
+  it('follows changes to a unit definition, including its kind', () => {
+    const answer = (doc: string) => evaluateDocument(doc).at(-1)!.display;
+    expect(answer('1 sprint = 2 weeks\n1 sprint in days')).toBe('14 days');
+    expect(answer('1 sprint = 3 weeks\n1 sprint in days')).toBe('21 days');
+    expect(answer('1 sprint = 3 kg\n1 sprint in days')).toBe(undefined);
+    expect(answer('1 sprint = 3 kg\n1 sprint in g')).toBe('3,000 g');
+  });
+
   it('re-parses a line when a variable it mentions becomes defined', () => {
     expect(evaluateDocument('trip cost + 1').at(-1)!.display).toBe(undefined);
     expect(evaluateDocument('trip cost = 2\ntrip cost + 1').at(-1)!.display).toBe('3');

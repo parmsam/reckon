@@ -24,7 +24,8 @@ export function dimOf(expr: UnitExpr): Dim {
   return expr.reduce<Dim>((d, t) => addDims(d, t.unit.dim, t.power), NO_DIM);
 }
 
-function exprFactor(expr: UnitExpr, ctx: UnitContext): Decimal {
+/** Multiplier from a unit expression to base units (m, kg, s, USD…). */
+export function exprFactor(expr: UnitExpr, ctx: UnitContext): Decimal {
   return expr.reduce((f, t) => f.times(factorOf(t.unit, ctx).pow(t.power)), new D(1));
 }
 

@@ -33,6 +33,15 @@ monthly rent = 1,200 => 1,200
 utilities = 150 => 150
 (monthly rent + utilities) × 12 => 16,200
 
+// ## Your own functions and units
+// Define a function with name(x) = …, or a unit with 1 name = …. They apply to the lines below.
+tip(bill, rate) = bill × rate => (none)
+tip($80, 18%) => $14.40
+1 sprint = 2 weeks => 2 weeks
+3 sprints in days => 42 days
+1 dozen = 12 => 12
+3 dozen => 36
+
 // ## Previous answers and totals
 // prev is the last answer. sum, avg, count, min and max cover the lines since the last heading or blank line. line3 is the answer on line 3.
 groceries: 80 => 80

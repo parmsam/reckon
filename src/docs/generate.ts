@@ -39,8 +39,9 @@ export function parseReference(text: string): Section[] {
       block = undefined;
       continue;
     }
-    const example = { input: line.slice(0, at), result: line.slice(at + 4).trim() };
-    if (example.result === '(none)') continue;
+    // Lines without an answer (definitions) stay in the example, with an empty result.
+    const result = line.slice(at + 4).trim();
+    const example = { input: line.slice(0, at), result: result === '(none)' ? '' : result };
     if (!block) {
       block = [];
       current.blocks.push(block);
@@ -63,7 +64,9 @@ const escapeHtml = (s: string) =>
 export function exampleText(block: Example[]): string {
   const width = Math.max(...block.map((e) => [...e.input].length));
   return block
-    .map((e) => `${e.input}${' '.repeat(width - [...e.input].length)}  → ${e.result}`)
+    .map((e) =>
+      e.result ? `${e.input}${' '.repeat(width - [...e.input].length)}  → ${e.result}` : e.input,
+    )
     .join('\n');
 }
 

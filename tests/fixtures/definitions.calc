@@ -1,0 +1,42 @@
+// Functions
+f(x) = x^2 + 1 => (none)
+f(3) => 10
+f(2) + f(3) => 15
+area(w, h) = w × h => (none)
+area(3 m, 4 m) => 12 m²
+area(2, 5) in hex => 0xA
+tip(bill, rate) = bill × rate => (none)
+tip($80, 18%) => $14.40
+fact2(n) = if n <= 1 then 1 else n × fact2(n - 1) => (none)
+fact2(6) => 720
+loop(n) = loop(n + 1) => (none)
+loop(1) => (none)
+f(1, 2) => (none)
+broken(x) = x + => (none)
+broken(1) => (none)
+f(x) = x × 10 => (none)
+f(3) => 30
+
+// Units
+1 sprint = 2 weeks => 2 weeks
+3 sprints in days => 42 days
+1 sprint + 3 days in days => 17 days
+1 dozen = 12 => 12
+3 dozen => 36
+36 in dozen => 3 dozens
+1 cup = 250 ml => 250 mL
+2 cups in ml => 500 mL
+1 standup = 15 min => 15 min
+team = 6 => 6
+5 standups × team in h => 7.5 h
+1 coffee = $4.50 => $4.50
+coffees per week = 10 => 10
+coffees per week × 1 coffee × 52 => 520 coffees
+(coffees per week × 1 coffee × 52) in USD => $2,340.00
+1 hot = 30 °C => (none)
+1 thing = today => (none)
+1 wiggle = => (none)
+
+// Prose that looks like a definition
+1 apple = 1 => 1
+2 apples => 2

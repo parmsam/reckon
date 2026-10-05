@@ -143,8 +143,22 @@ function endsOperand(t: RToken | undefined): boolean {
   return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit', 'date', 'bool'].includes(t.t);
 }
 
-/** Longest unit name starting at src[i]: "fl oz", "square feet", "km". */
-function unitAt(src: Token[], i: number): { unit: UnitDef; length: number } | undefined {
+/** Units and functions defined in the note, which take priority over built-in ones. */
+export interface UserDefinitions {
+  /** Lowercase unit name (and plural) → unit. */
+  units?: ReadonlyMap<string, UnitDef>;
+  /** Lowercase function names. */
+  functions?: ReadonlySet<string>;
+}
+
+/** Longest unit name starting at src[i]: "fl oz", "square feet", "km". Units defined in the note win. */
+function unitAt(
+  src: Token[],
+  i: number,
+  user?: ReadonlyMap<string, UnitDef>,
+): { unit: UnitDef; length: number } | undefined {
+  const own = src[i]?.type === 'word' ? user?.get(src[i]!.text.toLowerCase()) : undefined;
+  if (own) return { unit: own, length: 1 };
   for (let length = Math.min(MAX_UNIT_WORDS, src.length - i); length >= 1; length--) {
     const words = src.slice(i, i + length);
     if (!words.every((t) => t.type === 'word')) continue;
@@ -162,7 +176,11 @@ function startsOperand(t: Token | undefined): boolean {
   return t?.type === 'number' || t?.type === 'word' || isOp(t, '(');
 }
 
-export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
+export function resolve(
+  src: Token[],
+  vars: ReadonlySet<string>,
+  user: UserDefinitions = {},
+): RToken[] {
   const out: RToken[] = [];
   const maxVarWords = Math.max(0, ...[...vars].map((v) => v.split(' ').length));
   const last = () => out[out.length - 1];
@@ -242,6 +260,13 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       continue;
     }
 
+    // Functions defined in the note: area(w, h) = w × h.
+    if (user.functions?.has(w)) {
+      out.push({ t: 'fn', name: w, ...span(tok) });
+      i += 1;
+      continue;
+    }
+
     const opWord = OP_WORDS[w];
     if (opWord) {
       const by = lower(src[i + 1]) === 'by' && (w === 'multiplied' || w === 'divided');
@@ -284,7 +309,7 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       i += 2;
       continue;
     }
-    const unitBefore = unitAt(src, i);
+    const unitBefore = unitAt(src, i, user.units);
     if (unitBefore && sameDim(unitBefore.unit.dim, TIME) && untilAt(i + unitBefore.length)) {
       const word = src[i + unitBefore.length]!;
       out.push({
@@ -409,7 +434,7 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
         continue;
       }
       // "now in Tokyo", "3pm PST to London"
-      const zone = endsOperand(last()) && !unitAt(src, j) ? zoneAt(src, j) : undefined;
+      const zone = endsOperand(last()) && !unitAt(src, j, user.units) ? zoneAt(src, j) : undefined;
       if (zone) {
         out.push({ t: 'kw', kw: 'conv', ...span(tok) });
         out.push({ t: 'zone', zone: zone.zone, ...span(src[j]!, src[j + zone.length - 1]) });
@@ -424,7 +449,7 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       }
       // "5 km in miles": the unit tokens that follow are the target. In "6 ft 2 in in cm" the
       // first `in` is inches.
-      if (unitAt(src, j) && !(w === 'in' && lower(src[i + 1]) === 'in')) {
+      if (unitAt(src, j, user.units) && !(w === 'in' && lower(src[i + 1]) === 'in')) {
         out.push({ t: 'kw', kw: 'conv', ...span(tok) });
         i = j;
         continue;
@@ -441,7 +466,7 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       continue;
     }
 
-    const unit = unitAt(src, i);
+    const unit = unitAt(src, i, user.units);
     if (unit) {
       const after = src[i + unit.length];
       // A unit word right before a number is text ("s 5"), except currencies: $5, EUR 20.
@@ -483,9 +508,12 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
     }
 
     // Unknown word: descriptive text, unless it sits where an operand belongs. `z + 1` with no
-    // variable `z` must not silently evaluate to 1.
+    // variable `z` must not silently evaluate to 1, and `g(1)` with no function g is an error.
     const prev = last();
     const following = src[i + 1];
+    if (isOp(following, '(') && following!.from === tok.to) {
+      throw new CalcError(`Unknown function "${tok.text}"`);
+    }
     const operandBefore = !prev || (prev.t === 'op' && !endsOperand(prev));
     const operandAfter = following?.type === 'op' && BINARY_OPS.has(following.op!);
     if (operandBefore && (operandAfter || (prev && !following))) {

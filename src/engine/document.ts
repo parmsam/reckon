@@ -2,11 +2,23 @@ import { usesAggregate } from './ast';
 import { defaultSettings, type Settings } from './context';
 import { evaluate } from './evaluate';
 import { formatValue } from './format';
-import { parseLineCached, VariableNames, type Highlight } from './line';
+import type { Node } from './ast';
+import { parseLineCached, ScopeIndex, type Highlight, type Scope } from './line';
+import { NO_DIM } from './units/dims';
+import { dimOf, exprFactor } from './units/quantity';
+import type { UnitDef } from './units';
+import { userUnitDef } from './units/user';
+import { CalcError, type Decimal } from './values';
 import type { UnitContext } from './units';
 import type { Value } from './values';
 
-export type LineKind = 'blank' | 'comment' | 'heading' | 'text' | 'value' | 'error';
+export type LineKind = 'blank' | 'comment' | 'heading' | 'text' | 'value' | 'error' | 'definition';
+
+/** A function defined in the note: `area(w, h) = w × h`. */
+export interface UserFunction {
+  params: string[];
+  body: Node;
+}
 
 export interface LineResult {
   kind: LineKind;
@@ -31,7 +43,13 @@ export interface LineResult {
 export function evaluateDocument(source: string, settings: Partial<Settings> = {}): LineResult[] {
   const s: Settings = { ...defaultSettings, ...settings };
   const vars = new Map<string, Value>();
-  const names = new VariableNames();
+  const index = new ScopeIndex();
+  const varNames = new Set<string>();
+  const functions = new Map<string, UserFunction>();
+  const functionNames = new Set<string>();
+  const userUnits = new Map<string, UnitDef>();
+  const userFactors = new Map<string, (ctx: UnitContext) => Decimal>();
+  const scope: Scope = { vars: varNames, functions: functionNames, units: userUnits };
   const results: LineResult[] = [];
   let block: Value[] = [];
   let prev: Value | undefined;
@@ -41,21 +59,78 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
     emPx: s.emPx,
     rates: s.rates,
     onRate: () => (usedRates = true),
+    userFactors,
   };
 
   const setVar = (name: string, value: Value | undefined) => {
     if (value) {
       vars.set(name, value);
-      names.add(name);
+      varNames.add(name);
+      index.set('v', name);
     } else {
       vars.delete(name);
-      names.delete(name);
+      varNames.delete(name);
+      index.delete('v', name);
     }
   };
 
+  const forgetUnit = (name: string, plural: string) => {
+    for (const word of [name, plural]) {
+      userUnits.delete(word);
+      index.delete('u', word);
+    }
+    userFactors.delete(name);
+  };
+
+  /** `1 sprint = 2 weeks`: the unit is worth `value`. */
+  const defineUnit = (name: string, plural: string, value: Value) => {
+    let dimension = NO_DIM;
+    let factor: (ctx: UnitContext) => Decimal;
+    if (value.kind === 'number') {
+      factor = () => value.value;
+    } else if (value.kind === 'quantity') {
+      if (value.unit.some((t) => t.unit.offset))
+        throw new CalcError("Units can't be defined from °C or °F");
+      dimension = dimOf(value.unit);
+      factor = (ctx) => value.value.times(exprFactor(value.unit, ctx));
+    } else {
+      throw new CalcError('A unit must be a number or an amount with units');
+    }
+    const def = userUnitDef(name, dimension);
+    for (const word of [name, plural]) {
+      userUnits.set(word, def);
+      index.set('u', word, dimension.join(','));
+    }
+    userFactors.set(name, factor);
+  };
+
   for (const raw of source.split('\n')) {
-    const line = parseLineCached(raw, names.all, names.relevantKey(raw));
-    const { highlights, variable } = line;
+    const line = parseLineCached(raw, scope, index.relevantKey(raw));
+    const { highlights, variable, define } = line;
+
+    if (define?.kind === 'function') {
+      if (line.kind === 'expr') {
+        functions.set(define.name, { params: define.params, body: line.ast! });
+        functionNames.add(define.name);
+        index.set('f', define.name);
+        results.push({ kind: 'definition', highlights });
+      } else {
+        functions.delete(define.name);
+        functionNames.delete(define.name);
+        index.delete('f', define.name);
+        results.push({
+          kind: 'error',
+          error: line.error ?? 'The function has no body',
+          highlights,
+        });
+      }
+      continue;
+    }
+    if (define?.kind === 'unit' && line.kind !== 'expr') {
+      forgetUnit(define.name, define.plural);
+      results.push({ kind: 'error', error: line.error ?? 'The unit has no value', highlights });
+      continue;
+    }
 
     switch (line.kind) {
       case 'blank':
@@ -85,7 +160,13 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
         block,
         settings: s,
         units,
+        functions,
       });
+      if (define?.kind === 'unit') {
+        defineUnit(define.name, define.plural, value);
+        results.push({ kind: 'value', value, display: formatValue(value, s), highlights });
+        continue;
+      }
       prev = value;
       if (variable) setVar(variable, value);
       if (!usesAggregate(line.ast!)) block.push(value);
@@ -100,6 +181,7 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
       });
     } catch (e) {
       if (variable) setVar(variable, undefined);
+      if (define?.kind === 'unit') forgetUnit(define.name, define.plural);
       const error = e instanceof Error ? e.message : String(e);
       results.push({ kind: 'error', error, variable, highlights });
     }

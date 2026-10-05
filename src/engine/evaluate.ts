@@ -30,7 +30,13 @@ export interface Env {
   block: readonly Value[];
   settings: Settings;
   units: UnitContext;
+  /** Functions defined in the note. */
+  functions?: ReadonlyMap<string, { params: string[]; body: Node }>;
+  /** Call depth, to stop runaway recursion. */
+  depth?: number;
 }
+
+const MAX_DEPTH = 200;
 
 const ONE = new D(1);
 const HUNDRED = new D(100);
@@ -364,8 +370,21 @@ function evaluateNode(node: Node, env: Env): Value {
       return pct(expectNumber(ev(node.arg)));
     case 'fact':
       return num(factorial(expectNumber(ev(node.arg))));
-    case 'call':
-      return call(node.name, node.args.map(ev), env);
+    case 'call': {
+      const args = node.args.map(ev);
+      const own = env.functions?.get(node.name);
+      if (!own) return call(node.name, args, env);
+      if (args.length !== own.params.length) {
+        throw new CalcError(
+          `${node.name} takes ${own.params.length} argument${own.params.length === 1 ? '' : 's'}`,
+        );
+      }
+      const depth = (env.depth ?? 0) + 1;
+      if (depth > MAX_DEPTH) throw new CalcError(`${node.name} calls itself too deeply`);
+      const vars = new Map(env.vars);
+      own.params.forEach((p, i) => vars.set(p, args[i]!));
+      return evaluateNode(own.body, { ...env, vars, depth });
+    }
     case 'pctOf': {
       const base = amount(ev(node.base));
       return make({ value: base.value.times(expectPercent(ev(node.pct))), unit: base.unit }, ctx);
@@ -454,8 +473,10 @@ function evaluateNode(node: Node, env: Env): Value {
     }
     case 'convertUnit': {
       const a = amount(ev(node.arg));
-      // A plain number takes the target unit: "5 in cm" is 5 cm.
-      const value = a.unit.length ? convert(a.value, a.unit, node.unit, ctx) : a.value;
+      // A plain number takes the target unit ("5 in cm" is 5 cm), except for counting units:
+      // "36 in dozen" is 3 dozen.
+      const value =
+        a.unit.length || isUnitless(node.unit) ? convert(a.value, a.unit, node.unit, ctx) : a.value;
       return qty(value, node.unit);
     }
   }

@@ -271,6 +271,24 @@ export function glossary(): GlossaryGroup[] {
       ],
     },
     {
+      id: 'definitions',
+      title: 'Your own functions and units',
+      intro: 'Definitions apply to the lines below them.',
+      entries: [
+        {
+          terms: ['name(x) = …', 'name(x, y) = …'],
+          meaning: 'Defines a function; it can use variables above it and call itself',
+          example: 'area(w, h) = w × h\narea(3 m, 4 m)',
+        },
+        {
+          terms: ['1 name = …'],
+          meaning:
+            'Defines a unit (the plural works too). It can replace a built-in one, like a metric cup',
+          example: '1 sprint = 2 weeks\n3 sprints in days',
+        },
+      ],
+    },
+    {
       id: 'totals',
       title: 'Totals and references',
       entries: [

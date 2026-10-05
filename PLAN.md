@@ -372,9 +372,10 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
   - Later (not done): an npm package for the engine and a CLI (`npx reckon "5 km in miles"`, or piping a note file)
 
 ### Later
-- [ ] Conditionals and comparisons; bitwise ops
+- [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)
 - [ ] Subtotals and grand totals; tag-based sums (Soulver)
-- [ ] Custom functions and units defined in a note (`f(x) = x^2 + 1`, `1 sprint = 2 weeks`)
+- [x] Custom functions and units defined in a note (`f(x) = x^2 + 1`, recursion, `1 sprint = 2 weeks`, `1 dozen = 12`,
+  overriding built-ins like `1 cup = 250 ml`). Unit factors are looked up live, so they follow variables and rates.
 - [ ] Plugin API (sandboxed JS, Numi-style) for user-defined units and functions
 - [ ] Optional sync: File System Access API folder, or a GitHub Gist with a user token
 - [ ] Workspace tabs (Calcator/Ganaka)

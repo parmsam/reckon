@@ -11,6 +11,8 @@ export interface UnitContext {
   rates?: Readonly<Record<string, number>>;
   /** Called when a conversion used an exchange rate. */
   onRate?: () => void;
+  /** Factors of units defined in the note ("1 sprint = 2 weeks"), by name. */
+  userFactors?: ReadonlyMap<string, (ctx: UnitContext) => Decimal>;
 }
 
 export interface UnitDef {

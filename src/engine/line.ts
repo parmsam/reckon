@@ -2,6 +2,8 @@ import type { Node } from './ast';
 import { lex } from './lexer';
 import { parse } from './parser';
 import { RESERVED, resolve, type RToken } from './resolve';
+import type { UnitDef } from './units';
+import { pluralOf } from './units/user';
 
 export type HighlightType =
   | 'number'
@@ -24,10 +26,26 @@ export interface Highlight {
   type: HighlightType;
 }
 
+/** What's defined above a line: it decides how the line's words parse. */
+export interface Scope {
+  vars: ReadonlySet<string>;
+  functions: ReadonlySet<string>;
+  /** Lowercase unit name (and plural) → unit. */
+  units: ReadonlyMap<string, UnitDef>;
+}
+
+export const EMPTY_SCOPE: Scope = { vars: new Set(), functions: new Set(), units: new Map() };
+
+/** A definition on this line: `f(x) = …` or `1 sprint = …`. */
+export type Definition =
+  | { kind: 'function'; name: string; params: string[] }
+  | { kind: 'unit'; name: string; plural: string };
+
 /** Everything about a line that doesn't depend on values computed above it. */
 export interface ParsedLine {
   kind: 'blank' | 'comment' | 'heading' | 'text' | 'expr' | 'error';
   variable?: string;
+  define?: Definition;
   ast?: Node;
   error?: string;
   highlights: Highlight[];
@@ -39,6 +57,12 @@ const COMMENT = /^\s*\/\//;
 const LABEL = /^([^:]*\p{L}[^:]*?):(?!\d)/u;
 /** `monthly rent = 1200`. Every word of a name starts with a letter, so `line 2` stays a reference. */
 const ASSIGNMENT = /^(\s*)([\p{L}_][\p{L}\p{N}_]*(?:\s+[\p{L}_][\p{L}\p{N}_]*)*)\s*=(?!=)(.*)$/u;
+
+/** `area(w, h) = w × h` */
+const FUNCTION_DEF =
+  /^(\s*)([\p{L}_][\p{L}\p{N}_]*)(\s*\(\s*)([\p{L}_][\p{L}\p{N}_]*(?:\s*,\s*[\p{L}_][\p{L}\p{N}_]*)*)\s*\)\s*=(?!=)(.*)$/u;
+/** `1 sprint = 2 weeks` */
+const UNIT_DEF = /^(\s*1\s+)([\p{L}_][\p{L}\p{N}_]*)\s*=(?!=)(.*)$/u;
 
 export const normalizeName = (name: string) => name.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -71,8 +95,8 @@ function tokenHighlight(t: RToken): HighlightType {
   }
 }
 
-/** Parses one line. `vars` is the set of variable names defined above it. */
-export function parseLine(raw: string, vars: ReadonlySet<string>): ParsedLine {
+/** Parses one line, given what's defined above it. */
+export function parseLine(raw: string, scope: Scope): ParsedLine {
   if (raw.trim() === '') return { kind: 'blank', highlights: [] };
   if (COMMENT.test(raw)) {
     return { kind: 'comment', highlights: [{ from: 0, to: raw.length, type: 'comment' }] };
@@ -93,8 +117,41 @@ export function parseLine(raw: string, vars: ReadonlySet<string>): ParsedLine {
     text = text.slice(offset);
   }
 
+  let vars = scope.vars;
+  let functions = scope.functions;
+  let define: Definition | undefined;
+  const fnDef = FUNCTION_DEF.exec(text);
+  const unitDef = fnDef ? null : UNIT_DEF.exec(text);
+  if (fnDef && !RESERVED.has(fnDef[2]!.toLowerCase())) {
+    const name = fnDef[2]!.toLowerCase();
+    const params = fnDef[4]!.split(',').map((p) => p.trim().toLowerCase());
+    const nameFrom = offset + fnDef[1]!.length;
+    highlights.push({ from: nameFrom, to: nameFrom + fnDef[2]!.length, type: 'function' });
+    let at = nameFrom + fnDef[2]!.length + fnDef[3]!.length;
+    for (const param of fnDef[4]!.split(',')) {
+      const start = at + (param.length - param.trimStart().length);
+      highlights.push({ from: start, to: start + param.trim().length, type: 'variable' });
+      at += param.length + 1;
+    }
+    define = { kind: 'function', name, params };
+    // The body sees its parameters as variables, and its own name, so it can recurse.
+    vars = new Set([...scope.vars, ...params]);
+    functions = new Set([...scope.functions, name]);
+    const body = fnDef[5]!;
+    offset += text.length - body.length;
+    text = body;
+  } else if (unitDef && !RESERVED.has(unitDef[2]!.toLowerCase())) {
+    const name = unitDef[2]!.toLowerCase();
+    const nameFrom = offset + unitDef[1]!.length;
+    highlights.push({ from: nameFrom, to: nameFrom + unitDef[2]!.length, type: 'unit' });
+    define = { kind: 'unit', name, plural: pluralOf(name) };
+    const body = unitDef[3]!;
+    offset += text.length - body.length;
+    text = body;
+  }
+
   let variable: string | undefined;
-  const assignment = ASSIGNMENT.exec(text);
+  const assignment = define ? null : ASSIGNMENT.exec(text);
   if (assignment && !RESERVED.has(normalizeName(assignment[2]!))) {
     variable = normalizeName(assignment[2]!);
     const nameFrom = offset + assignment[1]!.length;
@@ -106,12 +163,12 @@ export function parseLine(raw: string, vars: ReadonlySet<string>): ParsedLine {
 
   const finish = (line: Omit<ParsedLine, 'highlights'>): ParsedLine => {
     if (commentAt !== -1) highlights.push({ from: commentAt, to: raw.length, type: 'comment' });
-    return { ...line, highlights };
+    return { ...line, ...(define && { define }), highlights };
   };
 
   let tokens: RToken[];
   try {
-    tokens = resolve(lex(text, offset), vars);
+    tokens = resolve(lex(text, offset), vars, { functions, units: scope.units });
   } catch (e) {
     return finish({ kind: 'error', variable, error: (e as Error).message });
   }
@@ -137,17 +194,13 @@ export const parseCacheStats = { misses: 0 };
  * Editing one line then re-parses just that line, plus lines that mention a variable whose
  * definition changed.
  */
-export function parseLineCached(
-  raw: string,
-  vars: ReadonlySet<string>,
-  scopeKey: string,
-): ParsedLine {
+export function parseLineCached(raw: string, scope: Scope, scopeKey: string): ParsedLine {
   const key = `${scopeKey}\u0000${raw}`;
   let parsed = cache.get(key);
   if (!parsed) {
     parseCacheStats.misses++;
     if (cache.size >= MAX_CACHE) cache.clear();
-    parsed = parseLine(raw, vars);
+    parsed = parseLine(raw, scope);
     cache.set(key, parsed);
   }
   return parsed;
@@ -155,31 +208,37 @@ export function parseLineCached(
 
 const WORDS = /[\p{L}_][\p{L}\p{N}_]*/gu;
 
-/** Indexes variable names by their first word, to find the ones a line could mention. */
-export class VariableNames {
-  readonly all = new Set<string>();
+/**
+ * Indexes what's defined in a note (variables, functions, units) by first word, so a line's cache
+ * key can name exactly the definitions it could mention.
+ */
+export class ScopeIndex {
+  /** id ("v:rent", "f:area", "u:sprint") → its part of the cache key. */
+  private entries = new Map<string, string>();
   private byFirstWord = new Map<string, Set<string>>();
 
-  add(name: string): void {
-    if (this.all.has(name)) return;
-    this.all.add(name);
+  /** Records a definition. `detail` goes into the key, so changing it re-parses dependent lines. */
+  set(kind: 'v' | 'f' | 'u', name: string, detail = ''): void {
+    const id = `${kind}:${name}`;
+    this.entries.set(id, `${id}=${detail}`);
     const first = name.split(' ')[0]!;
-    let names = this.byFirstWord.get(first);
-    if (!names) this.byFirstWord.set(first, (names = new Set()));
-    names.add(name);
+    let ids = this.byFirstWord.get(first);
+    if (!ids) this.byFirstWord.set(first, (ids = new Set()));
+    ids.add(id);
   }
 
-  delete(name: string): void {
-    if (!this.all.delete(name)) return;
-    this.byFirstWord.get(name.split(' ')[0]!)?.delete(name);
+  delete(kind: 'v' | 'f' | 'u', name: string): void {
+    const id = `${kind}:${name}`;
+    if (!this.entries.delete(id)) return;
+    this.byFirstWord.get(name.split(' ')[0]!)?.delete(id);
   }
 
-  /** Cache key covering the variables that could affect how `raw` parses. */
+  /** Cache key covering the definitions that could affect how `raw` parses. */
   relevantKey(raw: string): string {
-    if (this.all.size === 0) return '';
+    if (this.entries.size === 0) return '';
     const relevant = new Set<string>();
     for (const word of raw.toLowerCase().match(WORDS) ?? []) {
-      for (const name of this.byFirstWord.get(word) ?? []) relevant.add(name);
+      for (const id of this.byFirstWord.get(word) ?? []) relevant.add(this.entries.get(id)!);
     }
     return [...relevant].sort().join('\u0001');
   }

@@ -15,6 +15,8 @@ browser, so you hand them over as a link.
 - `# Heading` starts a section; `//` starts a comment.
 - `name = value` defines a variable (names can have spaces); reuse it on later lines.
 - `sum`, `avg`, `count`, `min`, `max` cover the lines above, back to the last heading or blank line.
+- Define functions (`tip(bill, rate) = bill × rate`) and units (`1 sprint = 2 weeks`) for reuse.
+- Conditions: `if total > $100 then 10% off total else total`; comparisons give true/false.
 - Convert with `in`: `5 km in miles`, `$30 in EUR`, `3pm PST in London`.
 - Numbers use a dot for decimals: `1,234.5`.
 

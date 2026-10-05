@@ -10,6 +10,8 @@ How to write a Reckon note:
 - "sum", "avg", "count", "min", "max" cover the lines above, back to the last heading or blank line.
   Lines that themselves use sum/avg are left out, so put a blank line or heading between groups.
 - "prev" is the previous answer.
+- Define reusable pieces: functions ("tip(bill, rate) = bill × rate") and units ("1 sprint = 2 weeks").
+- Compare and branch: "if total > $100 then 10% off total else total".
 - Units, currencies and dates work as written below. Convert with "in": "5 km in miles".
 - Type numbers with a dot for decimals and commas for thousands: 1,234.5.
 
