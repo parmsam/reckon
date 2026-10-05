@@ -116,6 +116,7 @@ node scripts/smoke-engine.mjs  # check dist/engine.js after a build
 
 Every push to `main` runs CI and deploys to GitHub Pages.
 
+- [CHANGELOG.md](CHANGELOG.md) lists what changed in each version.
 - [PLAN.md](PLAN.md) has the product spec, full syntax reference and roadmap.
 - [AGENTS.md](AGENTS.md) covers project structure, conventions and how-to recipes (adding a unit, a function, or new syntax).
 

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 
@@ -190,7 +191,8 @@ test.describe('splash screen', () => {
     await expect(page.locator('#splash')).toHaveCount(0, { timeout: 5000 });
     await openSettings(page, isMobile);
     const dialog = page.getByRole('dialog', { name: 'Settings' });
-    await expect(dialog).toContainText('Reckon 1.0.0');
+    const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
+    await expect(dialog).toContainText(`Reckon ${version}`);
     await expect(dialog.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
       'href',
       'https://github.com/parmsam/reckon',
