@@ -279,6 +279,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         run: () => window.open(`${import.meta.env.BASE_URL}docs/`, '_blank', 'noopener'),
       },
       {
+        id: 'github',
+        label: 'Source code on GitHub',
+        keywords: 'repository issues bug report contribute',
+        run: () => window.open('https://github.com/parmsam/reckon', '_blank', 'noopener'),
+      },
+      {
         id: 'shortcuts',
         label: 'Keyboard shortcuts',
         keywords: 'keys help hotkeys',
@@ -432,6 +438,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     svg(ICONS.docs),
   );
+  const githubLink = h(
+    'a',
+    {
+      class: 'icon-btn wide-only',
+      href: 'https://github.com/parmsam/reckon',
+      target: '_blank',
+      rel: 'noopener',
+      'aria-label': 'Reckon on GitHub (opens in a new tab)',
+      title: 'Source on GitHub',
+    },
+    svg(ICONS.github),
+  );
   const shortcutsButton = h(
     'button',
     {
@@ -461,6 +479,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         statusEl,
         noteActions,
         docsLink,
+        githubLink,
         shortcutsButton,
         commandButton,
       ),

@@ -75,6 +75,11 @@
         position: sticky;
         top: 1rem;
         align-self: start;
+        /* The contents list is long: let it scroll on its own. */
+        max-height: calc(100vh - 2rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 0.5rem;
         display: grid;
         gap: 0.15rem;
         font-size: 0.9rem;

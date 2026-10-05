@@ -140,7 +140,7 @@ October 2026. "See site" means we didn't confirm the detail.
 | [Ganaka](https://github.com/spdeepak/Ganaka) | macOS 14+ | ✅ | Free | `$1`/`$last` line refs, `min`/`max`/`count`, Unicode `× ÷ −`, tabbed workspaces |
 | [Figr](https://www.figr.app) | See site | See site | See site | The minimal notepad-calculator framing |
 
-Thanks to all of them for the inspiration. PLAN.md §2 has a longer breakdown, including what Reckon avoids.
+Thanks to all of them for the inspiration. The [project plan](PLAN.md#2-what-we-learned-from-the-references) has a longer breakdown, including what Reckon avoids.
 
 ## License
 Reckon is released under the [MIT License](LICENSE). © 2026 Sam Parmar.
