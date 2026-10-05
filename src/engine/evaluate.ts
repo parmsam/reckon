@@ -18,7 +18,7 @@ import {
   multiplyUnits,
   powerUnits,
 } from './units/quantity';
-import { CalcError, D, finite, num, pct, qty, type Decimal, type Value } from './values';
+import { bool, CalcError, D, finite, num, pct, qty, type Decimal, type Value } from './values';
 
 export interface Env {
   vars: ReadonlyMap<string, Value>;
@@ -45,6 +45,7 @@ interface Amount {
 function amount(v: Value): Amount {
   if (v.kind === 'percent') throw new CalcError('Expected a number, not a percentage');
   if (v.kind === 'datetime') throw new CalcError('Expected a number, not a date');
+  if (v.kind === 'bool') throw new CalcError('Expected a number, not true or false');
   return { value: v.value, unit: v.kind === 'quantity' ? v.unit : [] };
 }
 
@@ -254,8 +255,68 @@ function call(name: string, args: Value[], env: Env): Value {
 
 export function evaluate(node: Node, env: Env): Value {
   const result = evaluateNode(node, env);
-  if (result.kind !== 'datetime') finite(result.value);
+  if (result.kind !== 'datetime' && result.kind !== 'bool') finite(result.value);
   return result;
+}
+
+function expectBool(v: Value): boolean {
+  if (v.kind !== 'bool') throw new CalcError('Expected true or false');
+  return v.value;
+}
+
+/** Compares two values: numbers and quantities (converting units), percentages, dates, booleans. */
+function compare(
+  op: '<' | '>' | '<=' | '>=' | '==' | '!=',
+  a: Value,
+  b: Value,
+  ctx: UnitContext,
+): boolean {
+  let order: number;
+  if (a.kind === 'datetime' && b.kind === 'datetime') {
+    order = Temporal.ZonedDateTime.compare(a.value, b.value);
+  } else if (a.kind === 'bool' || b.kind === 'bool') {
+    if (a.kind !== 'bool' || b.kind !== 'bool' || (op !== '==' && op !== '!=')) {
+      throw new CalcError("Can't compare those");
+    }
+    order = a.value === b.value ? 0 : 1;
+  } else if (a.kind === 'percent' && b.kind === 'percent') {
+    order = a.value.cmp(b.value);
+  } else {
+    const [x, y] = align(amount(a), amount(b), ctx);
+    order = x.value.cmp(y.value);
+  }
+  switch (op) {
+    case '<':
+      return order < 0;
+    case '>':
+      return order > 0;
+    case '<=':
+      return order <= 0;
+    case '>=':
+      return order >= 0;
+    case '==':
+      return order === 0;
+    case '!=':
+      return order !== 0;
+  }
+}
+
+const MAX_SHIFT = 4096n;
+
+function bigInteger(v: Value): bigint {
+  const d = expectNumber(v);
+  if (!d.isInteger()) throw new CalcError('Bitwise operators need whole numbers');
+  return BigInt(d.toFixed());
+}
+
+function bitwise(op: '&' | '|' | 'xor' | '<<' | '>>', a: Value, b: Value): Value {
+  const x = bigInteger(a);
+  const y = bigInteger(b);
+  if ((op === '<<' || op === '>>') && (y < 0n || y > MAX_SHIFT))
+    throw new CalcError('Shift out of range');
+  const result =
+    op === '&' ? x & y : op === '|' ? x | y : op === 'xor' ? x ^ y : op === '<<' ? x << y : x >> y;
+  return num(new D(result.toString()));
 }
 
 function expectDate(v: Value): DateValue {
@@ -293,7 +354,7 @@ function evaluateNode(node: Node, env: Env): Value {
       return aggregate(node.name, env.block, ctx);
     case 'neg': {
       const v = ev(node.arg);
-      if (v.kind === 'datetime') throw new CalcError("Can't negate a date");
+      if (v.kind === 'datetime' || v.kind === 'bool') throw new CalcError("Can't negate that");
       if (v.kind === 'percent') return pct(v.value.neg());
       return v.kind === 'quantity' ? qty(v.value.neg(), v.unit) : num(v.value.neg());
     }
@@ -349,6 +410,25 @@ function evaluateNode(node: Node, env: Env): Value {
     }
     case 'date':
       return resolveDate(node.spec, env.settings);
+    case 'bool':
+      return bool(node.value);
+    case 'compare':
+      return bool(compare(node.op, ev(node.left), ev(node.right), ctx));
+    case 'logic': {
+      // Short-circuits: the right side is only evaluated when it matters.
+      const left = expectBool(ev(node.left));
+      if (node.op === 'and' ? !left : left) return bool(left);
+      return bool(expectBool(ev(node.right)));
+    }
+    case 'not':
+      return bool(!expectBool(ev(node.arg)));
+    case 'bitwise':
+      return bitwise(node.op, ev(node.left), ev(node.right));
+    case 'if': {
+      if (expectBool(ev(node.cond))) return ev(node.then);
+      if (!node.else) throw new CalcError('The condition is false and there is no else');
+      return ev(node.else);
+    }
     case 'convertZone':
       return inZone(expectDate(ev(node.arg)), node.zone);
     case 'until': {

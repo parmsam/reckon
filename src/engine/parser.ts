@@ -37,6 +37,27 @@ function infixBp(t: RToken | undefined): number {
       case '%':
       case '!':
         return 50;
+      // Python-like precedence: or < and < not < comparisons < | < xor < & < shifts < + -
+      case 'or':
+        return 3;
+      case 'and':
+        return 4;
+      case '<':
+      case '>':
+      case '<=':
+      case '>=':
+      case '==':
+      case '!=':
+        return 6;
+      case '|':
+        return 7;
+      case 'xor':
+        return 7.5;
+      case '&':
+        return 8;
+      case '<<':
+      case '>>':
+        return 9;
     }
   }
   if (t.t === 'unit') return UNIT_BP;
@@ -94,11 +115,21 @@ export function parse(tokens: RToken[]): Node {
         return { k: 'agg', name: t.name };
       case 'date':
         return { k: 'date', spec: t.spec };
+      case 'bool':
+        return { k: 'bool', value: t.value };
       case 'until':
         return { k: 'until', arg: expr(PREFIX_BP), unit: t.unit, since: t.since };
       case 'kw':
         // "in 3 days"
         if (t.kw === 'later') return { k: 'fromNow', arg: expr(UNIT_BP - 1), sign: 1 };
+        if (t.kw === 'if') {
+          const cond = expr(0);
+          expectKw('then');
+          const then = expr(0);
+          if (!isKw(peek(), 'else')) return { k: 'if', cond, then };
+          next();
+          return { k: 'if', cond, then, else: expr(0) };
+        }
         break;
       case 'unit': {
         // Currency before the amount: $30, € (2 + 3), EUR 20.
@@ -130,6 +161,7 @@ export function parse(tokens: RToken[]): Node {
           return inner;
         }
         if (t.op === '-') return { k: 'neg', arg: expr(PREFIX_BP) };
+        if (t.op === 'not') return { k: 'not', arg: expr(4.5) };
         if (t.op === '+') return expr(PREFIX_BP);
     }
     throw new CalcError('Unexpected token');
@@ -168,6 +200,22 @@ export function parse(tokens: RToken[]): Node {
     if (t.t === 'unit') return { k: 'withUnit', arg: left, unit: t.unit, power: unitPower() };
     if (t.t === 'op') {
       switch (t.op) {
+        case '<':
+        case '>':
+        case '<=':
+        case '>=':
+        case '==':
+        case '!=':
+          return { k: 'compare', op: t.op, left, right: expr(infixBp(t)) };
+        case 'and':
+        case 'or':
+          return { k: 'logic', op: t.op, left, right: expr(infixBp(t)) };
+        case '&':
+        case '|':
+        case 'xor':
+        case '<<':
+        case '>>':
+          return { k: 'bitwise', op: t.op, left, right: expr(infixBp(t)) };
         case '%':
           return { k: 'percent', arg: left };
         case '!':

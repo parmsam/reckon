@@ -28,7 +28,21 @@ export const OP_ALIASES: Record<string, string> = {
   '–': '-',
   ';': ',',
 };
-const OPS = new Set(['+', '-', '*', '/', '^', '(', ')', ',', '%', '!', '=']);
+const OPS = new Set(['+', '-', '*', '/', '^', '(', ')', ',', '%', '!', '=', '<', '>', '&', '|']);
+/** Two-character operators, read before single characters. */
+const TWO_CHAR_OPS: Record<string, string> = {
+  '**': '^',
+  '>=': '>=',
+  '<=': '<=',
+  '==': '==',
+  '!=': '!=',
+  '<<': '<<',
+  '>>': '>>',
+  '&&': 'and',
+  '||': 'or',
+};
+/** Unicode comparison signs. */
+const UNICODE_OPS: Record<string, string> = { '≥': '>=', '≤': '<=', '≠': '!=' };
 
 export const FRACTIONS: Record<string, [number, number]> = {
   '½': [1, 2],
@@ -198,12 +212,12 @@ export function lex(input: string, offset = 0): Token[] {
       continue;
     }
 
-    const isPow = rest.startsWith('**');
-    const op = isPow ? '^' : (OP_ALIASES[ch] ?? ch);
-    if (OPS.has(op)) {
+    const two = TWO_CHAR_OPS[rest.slice(0, 2)];
+    const op = two ?? UNICODE_OPS[ch] ?? OP_ALIASES[ch] ?? ch;
+    if (two || UNICODE_OPS[ch] || OPS.has(op)) {
       if (op === '(') depth++;
       if (op === ')') depth = Math.max(0, depth - 1);
-      const length = isPow ? 2 : 1;
+      const length = two ? 2 : 1;
       tokens.push({
         type: 'op',
         text: rest.slice(0, length),

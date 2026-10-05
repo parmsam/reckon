@@ -1,0 +1,55 @@
+// Comparisons
+5 > 3 => true
+5 < 3 => false
+5 >= 5 => true
+4 <= 3 => false
+0.1 + 0.2 == 0.3 => true
+2 != 2 => false
+5 ≥ 3 => true
+2 ≠ 3 => true
+5 km > 3 miles => true
+1 m == 100 cm => true
+$30 < €30 => true
+50% > 40% => true
+tomorrow > today => true
+3pm < noon => false
+true == false => false
+5 > 3% => (none)
+5 km > 3 kg => (none)
+
+// Logic
+5 > 3 and 2 > 1 => true
+5 > 3 && 2 > 10 => false
+5 > 30 or 2 > 1 => true
+false || true => true
+not 5 > 3 => false
+not true => false
+5 and 3 => (none)
+
+// Conditions
+price = 120 => 120
+if price > 100 then 10% off price else price => 108
+if price > 200 then 10% off price else price => 120
+if price > 100 then 5 => 5
+if price > 200 then 5 => (none)
+member = true => true
+if member and price >= 100 then $15 else $0 => $15.00
+
+// Bitwise
+0xF0 | 0x0F => 255
+0xFF & 0x0F => 15
+5 xor 3 => 6
+1 << 10 => 1,024
+1024 >> 3 => 128
+(0xF0 | 0x0F) in hex => 0xFF
+5 & 3 + 1 => 4
+1.5 | 1 => (none)
+1 << -1 => (none)
+
+// Prose stays prose
+salt and pepper: 5 => 5
+3 cats and 2 dogs => (none)
+if I buy 3 => 3
+not sure, maybe 4 => 4
+x = 5 => 5
+x == 5 => true

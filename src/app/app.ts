@@ -392,6 +392,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     svg(ICONS.command),
   );
+  const docsLink = h(
+    'a',
+    {
+      class: 'icon-btn',
+      href: `${import.meta.env.BASE_URL}docs/`,
+      target: '_blank',
+      rel: 'noopener',
+      'aria-label': 'Docs (opens in a new tab)',
+      title: 'Docs',
+    },
+    svg(ICONS.docs),
+  );
+  const shortcutsButton = h(
+    'button',
+    {
+      type: 'button',
+      class: 'icon-btn',
+      'aria-label': 'Keyboard shortcuts (?)',
+      title: 'Keyboard shortcuts (?)',
+      onclick: () => openShortcuts(),
+    },
+    svg(ICONS.keyboard),
+  );
   const accessory = createAccessoryRow(editor.view.dom, (text) => editor.insert(text));
 
   const app = h(
@@ -402,7 +425,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     h(
       'div',
       { class: 'main' },
-      h('header', { class: 'topbar' }, menuButton, titleEl, statusEl, noteActions, commandButton),
+      h(
+        'header',
+        { class: 'topbar' },
+        menuButton,
+        titleEl,
+        statusEl,
+        noteActions,
+        docsLink,
+        shortcutsButton,
+        commandButton,
+      ),
       banner,
       editorEl,
     ),

@@ -126,7 +126,7 @@ test('the keyboard shortcuts dialog opens from the sidebar, the palette and ?', 
 }) => {
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
-  await page.getByRole('button', { name: 'Keyboard shortcuts' }).click();
+  await page.getByRole('button', { name: 'Keyboard shortcuts', exact: true }).click();
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText('Command palette');
   await page.keyboard.press('Escape');

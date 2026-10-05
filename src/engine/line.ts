@@ -59,6 +59,8 @@ function tokenHighlight(t: RToken): HighlightType {
       return 'variable';
     case 'unit':
       return 'unit';
+    case 'bool':
+      return 'constant';
     case 'date':
     case 'zone':
       return 'date';

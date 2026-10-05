@@ -40,7 +40,13 @@ export type Node =
   /** `days until Dec 25`, `time since 9am` */
   | { k: 'until'; arg: Node; unit?: UnitDef; since: boolean }
   /** `3 days ago` (sign -1), `in 3 days` / `3 days later` (sign 1) */
-  | { k: 'fromNow'; arg: Node; sign: 1 | -1 };
+  | { k: 'fromNow'; arg: Node; sign: 1 | -1 }
+  | { k: 'bool'; value: boolean }
+  | { k: 'compare'; op: '<' | '>' | '<=' | '>=' | '==' | '!='; left: Node; right: Node }
+  | { k: 'logic'; op: 'and' | 'or'; left: Node; right: Node }
+  | { k: 'not'; arg: Node }
+  | { k: 'bitwise'; op: '&' | '|' | 'xor' | '<<' | '>>'; left: Node; right: Node }
+  | { k: 'if'; cond: Node; then: Node; else?: Node };
 
 /** True if the expression reads a sum/avg/count/min/max aggregate. */
 export function usesAggregate(node: Node): boolean {
@@ -56,7 +62,18 @@ export function usesAggregate(node: Node): boolean {
     case 'convertZone':
     case 'until':
     case 'fromNow':
+    case 'not':
       return usesAggregate(node.arg);
+    case 'compare':
+    case 'logic':
+    case 'bitwise':
+      return usesAggregate(node.left) || usesAggregate(node.right);
+    case 'if':
+      return (
+        usesAggregate(node.cond) ||
+        usesAggregate(node.then) ||
+        (node.else ? usesAggregate(node.else) : false)
+      );
     case 'binary':
       return usesAggregate(node.left) || usesAggregate(node.right);
     case 'call':

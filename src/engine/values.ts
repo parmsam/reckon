@@ -20,7 +20,9 @@ export type Value =
   /** An amount in `unit`: 5 km is { value: 5, unit: [{ km, 1 }] }. Never has an empty unit. */
   | { kind: 'quantity'; value: Decimal; unit: UnitExpr }
   /** A moment in time. `zoned` is set when the user named a time zone, so it's displayed. */
-  | { kind: 'datetime'; value: Temporal.ZonedDateTime; show: DateShow; zoned?: boolean };
+  | { kind: 'datetime'; value: Temporal.ZonedDateTime; show: DateShow; zoned?: boolean }
+  /** The result of a comparison or condition. */
+  | { kind: 'bool'; value: boolean };
 
 export function num(value: Decimal, format?: NumberFormat): Value {
   return format ? { kind: 'number', value, format } : { kind: 'number', value };
@@ -29,6 +31,10 @@ export function num(value: Decimal, format?: NumberFormat): Value {
 /** A quantity, or a plain number when `unit` is empty. */
 export function qty(value: Decimal, unit: UnitExpr): Value {
   return unit.length ? { kind: 'quantity', value, unit } : num(value);
+}
+
+export function bool(value: boolean): Value {
+  return { kind: 'bool', value };
 }
 
 export function pct(value: Decimal): Value {

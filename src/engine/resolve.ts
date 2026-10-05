@@ -11,8 +11,34 @@ import { CalcError, type Decimal } from './values';
  * `3 apples + 2 apples` evaluate to 5.
  */
 
-export type Op = '+' | '-' | '*' | '/' | '^' | '(' | ')' | ',' | '%' | '!' | 'mod';
-export type Keyword = 'of' | 'off' | 'on' | 'conv' | 'is' | 'what' | 'from' | 'ago' | 'later';
+export type Op =
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '^'
+  | '('
+  | ')'
+  | ','
+  | '%'
+  | '!'
+  | 'mod'
+  | '<'
+  | '>'
+  | '<='
+  | '>='
+  | '=='
+  | '!='
+  | '&'
+  | '|'
+  | 'xor'
+  | '<<'
+  | '>>'
+  | 'and'
+  | 'or'
+  | 'not';
+export type Keyword =
+  'of' | 'off' | 'on' | 'conv' | 'is' | 'what' | 'from' | 'ago' | 'later' | 'if' | 'then' | 'else';
 export type Target = 'hex' | 'bin' | 'oct' | 'sci' | 'dec' | 'percent';
 export type Aggregate = 'sum' | 'avg' | 'count' | 'min' | 'max';
 
@@ -38,6 +64,7 @@ export type RToken = Span &
     | { t: 'zone'; zone: string }
     /** "days until", "time since": `unit` is the unit to answer in, if given. */
     | { t: 'until'; unit?: UnitDef; since: boolean }
+    | { t: 'bool'; value: boolean }
   );
 
 export const OP_WORDS: Record<string, Op> = {
@@ -96,6 +123,15 @@ export const RESERVED = new Set([
   'is',
   'what',
   'by',
+  'and',
+  'or',
+  'not',
+  'xor',
+  'if',
+  'then',
+  'else',
+  'true',
+  'false',
 ]);
 
 const lower = (t: Token | undefined) => (t?.type === 'word' ? t.text.toLowerCase() : undefined);
@@ -104,7 +140,7 @@ const isOp = (t: Token | undefined, op: string) => t?.type === 'op' && t.op === 
 function endsOperand(t: RToken | undefined): boolean {
   if (!t) return false;
   if (t.t === 'op') return t.op === ')' || t.op === '%' || t.op === '!';
-  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit', 'date'].includes(t.t);
+  return ['num', 'var', 'const', 'prev', 'line', 'agg', 'unit', 'date', 'bool'].includes(t.t);
 }
 
 /** Longest unit name starting at src[i]: "fl oz", "square feet", "km". */
@@ -132,6 +168,7 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
   const last = () => out[out.length - 1];
   const span = (a: Token, b: Token = a): Span => ({ from: a.from, to: b.to });
   const loneDateWords = new Set<RToken>();
+  let depth = 0;
 
   let i = 0;
   while (i < src.length) {
@@ -164,8 +201,12 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
     }
 
     if (tok.type === 'op') {
-      // `=` is noise: people often end a line with it ("2 + 2 =").
-      if (tok.op !== '=') out.push({ t: 'op', op: tok.op as Op, ...span(tok) });
+      if (tok.op === '(') depth++;
+      if (tok.op === ')') depth = Math.max(0, depth - 1);
+      // `=` is noise: people often end a line with it ("2 + 2 ="). Commas only separate function
+      // arguments, so outside parentheses they're punctuation ("not sure, maybe 4").
+      const noise = tok.op === '=' || (tok.op === ',' && depth === 0);
+      if (!noise) out.push({ t: 'op', op: tok.op as Op, ...span(tok) });
       i += 1;
       continue;
     }
@@ -268,6 +309,44 @@ export function resolve(src: Token[], vars: ReadonlySet<string>): RToken[] {
       continue;
     }
     if ((w === 'ago' || w === 'later') && endsOperand(last())) {
+      out.push({ t: 'kw', kw: w, ...span(tok) });
+      i += 1;
+      continue;
+    }
+
+    // Logic: `and`/`or`/`xor` only between two operands ("salt and pepper" stays text).
+    if (
+      (w === 'and' || w === 'or' || w === 'xor') &&
+      endsOperand(last()) &&
+      startsOperand(src[i + 1])
+    ) {
+      out.push({ t: 'op', op: w, ...span(tok) });
+      i += 1;
+      continue;
+    }
+    const n = src[i + 1];
+    const valueNext =
+      n?.type === 'number' ||
+      isOp(n, '(') ||
+      (n?.type === 'word' &&
+        (vars.has(n.text.toLowerCase()) || ['true', 'false'].includes(n.text.toLowerCase())));
+    if (w === 'not' && !endsOperand(last()) && valueNext) {
+      out.push({ t: 'op', op: 'not', ...span(tok) });
+      i += 1;
+      continue;
+    }
+    if (w === 'true' || w === 'false') {
+      out.push({ t: 'bool', value: w === 'true', ...span(tok) });
+      i += 1;
+      continue;
+    }
+    // `if … then … else …`, only when the line has a `then`.
+    if (w === 'if' && src.slice(i + 1).some((t) => lower(t) === 'then')) {
+      out.push({ t: 'kw', kw: 'if', ...span(tok) });
+      i += 1;
+      continue;
+    }
+    if ((w === 'then' || w === 'else') && out.some((t) => t.t === 'kw' && t.kw === 'if')) {
       out.push({ t: 'kw', kw: w, ...span(tok) });
       i += 1;
       continue;
