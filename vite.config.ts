@@ -14,7 +14,8 @@ export default defineConfig({
       registerType: 'prompt',
       // Registered from the app (src/app/updates.ts), after the first paint.
       injectRegister: false,
-      pwaAssets: { config: true },
+      // Icon links are written in index.html, SVG first: with the plugin's .ico-first links, iOS Safari's tab view showed GitHub's icon.
+      pwaAssets: { config: true, includeHtmlHeadLinks: false },
       manifest: {
         name: 'Reckon',
         short_name: 'Reckon',
