@@ -3,17 +3,8 @@ import { chromium } from '@playwright/test';
 import { preview } from 'vite';
 
 const PORT = 4175;
+/** Added on top of the first-run notes (tutorial, budget, Lisbon trip). */
 const NOTES = [
-  `# Groceries
-apples: 6 × $0.45
-milk = $2.49
-bread: $3.25
-sum`,
-  `# Trip budget
-flights: 420 × 2
-hotel = 3 nights × 135
-food: 25% of hotel
-sum`,
   `# Freelance invoice
 hourly rate = $85/h
 
@@ -44,11 +35,11 @@ try {
       colorScheme: scheme,
     });
     const page = await context.newPage();
+    await page.addInitScript(() => localStorage.setItem('reckon.splash', 'off'));
     await page.goto(`http://localhost:${PORT}/reckon/`);
     await page.locator('.cm-result').first().waitFor();
-    // Replace the welcome note so the list only shows the demo notes.
-    for (const [i, body] of NOTES.entries()) {
-      if (i > 0) await page.getByRole('button', { name: 'New note' }).click();
+    for (const body of NOTES) {
+      await page.getByRole('button', { name: 'New note' }).click();
       await page.locator('.cm-content').click();
       await page.keyboard.press('ControlOrMeta+a');
       await page.keyboard.insertText(body);
