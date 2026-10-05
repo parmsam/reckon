@@ -217,14 +217,37 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
 
   // ---- Settings and command palette ---------------------------------------------------------
-  const settingsDialog = new SettingsDialog((next) => {
-    prefs = next;
-    applyAppearance(prefs);
-    editor.setSettings(engineSettings(prefs));
-    rates.enabled = prefs.fetchRates;
-    if (prefs.fetchRates) void rates.refresh();
-    void savePreferences(prefs).catch(() => {});
-  });
+  const settingsDialog = new SettingsDialog(
+    (next) => {
+      prefs = next;
+      applyAppearance(prefs);
+      editor.setSettings(engineSettings(prefs));
+      rates.enabled = prefs.fetchRates;
+      if (prefs.fetchRates) void rates.refresh();
+      void savePreferences(prefs).catch(() => {});
+    },
+    () => void addExampleNotes(),
+  );
+
+  /**
+   * Adds the tutorial and example notes (as new notes), skipping any that are already here
+   * unchanged, then opens the tutorial.
+   */
+  async function addExampleNotes(): Promise<void> {
+    if (storageError) return toast('Storage is unavailable in this browser');
+    const existing = new Set(store.active().map((n) => n.body));
+    const missing = FIRST_RUN_NOTES.filter((body) => !existing.has(body));
+    const now = Date.now();
+    const notes = missing.map((body, i) => newNote(body, now - (missing.length - 1 - i)));
+    await store.putMany(notes);
+    const tutorial = store.active().find((n) => n.body === WELCOME_NOTE);
+    if (tutorial) navigate({ kind: 'note', id: tutorial.id });
+    toast(
+      notes.length
+        ? `Added ${notes.length} note${notes.length === 1 ? '' : 's'}`
+        : 'The tutorial and examples are already in your notes',
+    );
+  }
 
   function openSettings(): void {
     closeDrawer();
@@ -277,6 +300,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         label: 'Help and docs',
         keywords: 'syntax reference guide manual llm prompt',
         run: () => window.open(`${import.meta.env.BASE_URL}docs/`, '_blank', 'noopener'),
+      },
+      {
+        id: 'examples',
+        label: 'Add the tutorial and example notes',
+        keywords: 'welcome help examples budget trip guide',
+        run: () => void addExampleNotes(),
       },
       {
         id: 'github',

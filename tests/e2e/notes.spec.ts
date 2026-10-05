@@ -194,3 +194,27 @@ test('exports a note with answers as Markdown and HTML', async ({ page }) => {
   expect(file.suggestedFilename()).toBe('Budget.html');
   expect(await readFile(await file.path(), 'utf8')).toContain('<td>rent × 12</td><td>14,400</td>');
 });
+
+test('the tutorial and examples can be added back', async ({ page, isMobile }) => {
+  // Trash the tutorial, then bring it back from the palette.
+  await openSidebar(page, isMobile);
+  await item(page, 'Welcome to Reckon').hover();
+  await page.getByRole('button', { name: 'Move Welcome to Reckon to trash' }).click();
+  await expect(page.locator('#note-title')).not.toHaveText('Welcome to Reckon');
+
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.keyboard.type('tutorial');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#toast')).toHaveText('Added 1 note');
+  await expect(page.locator('#note-title')).toHaveText('Welcome to Reckon');
+
+  // Nothing is duplicated the second time.
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.keyboard.type('tutorial');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#toast')).toHaveText(
+    'The tutorial and examples are already in your notes',
+  );
+  await openSidebar(page, isMobile);
+  await expect(items(page)).toHaveCount(3);
+});

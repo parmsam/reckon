@@ -40,7 +40,10 @@ export class SettingsDialog {
   private ratesNote = h('p', { class: 'field-hint', id: 'rates-hint' });
   private prefs: Preferences = { ...DEFAULT_PREFERENCES };
 
-  constructor(private onChange: (prefs: Preferences) => void) {
+  constructor(
+    private onChange: (prefs: Preferences) => void,
+    onAddExamples: () => void,
+  ) {
     const select = (key: keyof Preferences, options: [string, string][]) =>
       this.register(
         key,
@@ -134,6 +137,32 @@ export class SettingsDialog {
             h('label', { for: 'pref-fetchRates' }, 'Fetch exchange rates'),
           ),
           this.ratesNote,
+        ),
+        h(
+          'fieldset',
+          {},
+          h('legend', {}, 'Help'),
+          h(
+            'div',
+            { class: 'field' },
+            h(
+              'button',
+              {
+                type: 'button',
+                class: 'text-btn',
+                onclick: () => {
+                  this.el.close();
+                  onAddExamples();
+                },
+              },
+              'Add the tutorial and example notes',
+            ),
+            h(
+              'p',
+              { class: 'field-hint' },
+              'Adds them as new notes; your notes are left as they are.',
+            ),
+          ),
         ),
         h(
           'div',
