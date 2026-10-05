@@ -414,6 +414,10 @@ first; changing numbers by direct manipulation is opt-in and guarded.
 - [x] Ghost deltas: while a slider or scrub is active, every answer that moved shows its change beside it
   (`+$120.00`, `−3 days`), and so does the total bar. Changes are measured from where the session started,
   in the answer's current unit; answers of a different kind than before (or true/false) show none.
+- [x] Explorable share links (Tangle, *Explorable Explanations*): the read-only share and plain-text link views
+  keep their sliders, with a handle on every slider line (a reader has no cursor). Changes stay in the view and
+  are never saved; *Save a copy* saves the note as shared. Trashed notes stay static. Slider lines are inputs
+  only: `left = $3,000 - rent` uses other lines, so it gets no slider.
 
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)

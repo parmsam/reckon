@@ -819,7 +819,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   async function showShared(body: string, label: string): Promise<void> {
     await leaveCurrent();
     mode = { kind: 'share', body };
-    editor.setDoc(body, { readOnly: true });
+    // Read-only, but the sliders work: a reader can try other numbers without saving a copy.
+    editor.setDoc(body, { readOnly: true, explorable: true });
     checkCrypto(body);
     showTitle(body);
     statusEl.textContent = '';

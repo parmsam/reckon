@@ -1,4 +1,4 @@
-import { StateField, Transaction, type EditorState, type Range } from '@codemirror/state';
+import { Facet, StateField, Transaction, type EditorState, type Range } from '@codemirror/state';
 import {
   Decoration,
   EditorView,
@@ -14,6 +14,15 @@ import { engineSettings, resultsField, setAdjusting } from './results';
  * `name = number` lines, and ⌥/Alt-drag scrubbing. Both only touch plain numbers, and each
  * session is a single undo step.
  */
+
+/**
+ * A read-only note whose numbers can still be adjusted, like a shared note: every slider line
+ * shows its handle (a reader has no cursor to put on it), and nothing is saved.
+ */
+export const explorable = Facet.define<boolean, boolean>({ combine: (on) => on.some(Boolean) });
+
+/** Whether numbers can be adjusted at all: in editable notes, and in explorable ones. */
+const adjustable = (state: EditorState) => !state.readOnly || state.facet(explorable);
 
 /** Plain numbers only: digits, optional thousands commas, optional decimals. Not 1.5k, 0xFF… */
 const PLAIN = /^-?\d{1,3}(?:,\d{3})*(?:\.\d+)?$|^-?\d+(?:\.\d+)?$/;
@@ -50,14 +59,15 @@ function numberAtPos(state: EditorState, pos: number): NumberAt | undefined {
   return PLAIN.test(text) ? { from: line.from + h.from, to: line.from + h.to, text } : undefined;
 }
 
-/** For `name = <one plain number>` lines: the variable and its number. */
+/** For `name = <one plain number>` lines that use no other lines: the variable and its number. */
 function sliderTarget(
   state: EditorState,
   lineNumber: number,
 ): (NumberAt & { name: string }) | undefined {
   const line = state.doc.line(lineNumber);
   const result = state.field(resultsField)[lineNumber - 1];
-  if (!result?.variable || result.kind !== 'value') return undefined;
+  // Inputs only: `left = $3,000 - rent` uses other lines, so it isn't a slider for `left`.
+  if (!result?.variable || result.kind !== 'value' || result.uses?.length) return undefined;
   const numbers = result.highlights.filter((h) => h.type === 'number');
   if (numbers.length !== 1) return undefined;
   const h = numbers[0]!;
@@ -192,7 +202,7 @@ class SliderHandle extends WidgetType {
   }
 }
 
-/** The slider handle on the cursor's line, when it's `name = <plain number>`. */
+/** The slider handle on the cursor's line (every line, when explorable) for `name = <plain number>`. */
 const sliderField = StateField.define<DecorationSet>({
   create: (state) => sliderDecorations(state),
   update: (decos, tr) =>
@@ -205,15 +215,21 @@ const sliderField = StateField.define<DecorationSet>({
 });
 
 function sliderDecorations(state: EditorState): DecorationSet {
-  if (state.facet(engineSettings).sliders === false || state.readOnly) return Decoration.none;
-  const line = state.doc.lineAt(state.selection.main.head).number;
-  const target = sliderTarget(state, line);
-  if (!target) return Decoration.none;
-  const handle: Range<Decoration> = Decoration.widget({
-    widget: new SliderHandle(target),
-    side: 1,
-  }).range(target.to);
-  return Decoration.set([handle]);
+  if (state.facet(engineSettings).sliders === false || !adjustable(state)) return Decoration.none;
+  const cursor = state.doc.lineAt(state.selection.main.head).number;
+  const lines = state.facet(explorable)
+    ? Array.from({ length: state.doc.lines }, (_, i) => i + 1)
+    : [cursor];
+  const handles: Range<Decoration>[] = [];
+  for (const line of lines) {
+    const target = sliderTarget(state, line);
+    if (target) {
+      handles.push(
+        Decoration.widget({ widget: new SliderHandle(target), side: 1 }).range(target.to),
+      );
+    }
+  }
+  return Decoration.set(handles);
 }
 
 // ---- Scrubbing ----------------------------------------------------------------------------
@@ -222,7 +238,7 @@ const PX_PER_STEP = 4;
 
 /** ⌥/Alt-drag a plain number sideways to change it (Shift for 10× steps). Off unless enabled. */
 const scrubbing = ViewPlugin.define((view) => {
-  const enabled = () => view.state.facet(engineSettings).scrub === true && !view.state.readOnly;
+  const enabled = () => view.state.facet(engineSettings).scrub === true && adjustable(view.state);
   const altClass = (on: boolean) => view.dom.classList.toggle('cm-alt-held', on && enabled());
   const onKey = (e: KeyboardEvent) => altClass(e.altKey);
   const onBlur = () => altClass(false);

@@ -167,6 +167,28 @@ test('plain-text links open a read-only preview that can be saved', async ({ pag
   await expect(page.locator('#toast')).toContainText('broken');
 });
 
+test('shared notes are explorable: sliders work, nothing is saved', async ({ page }) => {
+  const note = '# Budget\nrent = $1,200\nfood = $400\nleft = $3,000 - rent - food';
+  await page.goto(`./#/new?text=${encodeURIComponent(note)}`);
+  await expect(page.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
+  // No cursor in a read-only note, so every slider line shows its handle.
+  await expect(page.locator('.cm-slider-handle')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Adjust rent with a slider' }).click();
+  await page.getByRole('slider', { name: 'Adjust rent' }).fill('1500');
+  await expect(page.locator('.cm-line', { hasText: 'left = ' }).locator('.cm-result')).toHaveText(
+    '−$300.00$1,100.00',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.cm-line').nth(1)).toContainText('rent = $1,500');
+  await expect(page.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
+
+  // Nothing was saved, and "Save a copy" keeps the note as it was shared.
+  await expect(items(page)).toHaveCount(3);
+  await page.locator('.banner').getByRole('button', { name: 'Save a copy' }).click();
+  await expect(page).toHaveURL(/\/reckon\/$/);
+  await expect(page.locator('.cm-line').nth(1)).toContainText('rent = $1,200');
+});
+
 test('the docs page loads and its examples open in the app', async ({ page }) => {
   await page.goto('./docs/');
   await expect(page.getByRole('heading', { name: 'Getting started' })).toBeVisible();

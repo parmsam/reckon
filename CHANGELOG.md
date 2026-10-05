@@ -9,6 +9,9 @@ bump the minor version, fixes bump the patch version.
   and the command palette.
 - **See how far answers move:** while you drag a slider or scrub a number, each answer it affects shows its
   change beside it (`+$120.00`, `−3 days`), and so does the total bar.
+- **Explorable share links:** whoever opens a share link can drag the sliders (rent, nights…) and watch the
+  answers change, without saving a copy. Nothing they change is saved.
+- Sliders only appear on input lines: `left = $3,000 - rent` no longer offers one.
 
 ## 1.1.0 — 2026-10-05
 

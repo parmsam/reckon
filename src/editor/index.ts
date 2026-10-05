@@ -11,7 +11,7 @@ import {
 } from '@codemirror/view';
 import { toggleLineComment } from './commands';
 import { completion } from './completion';
-import { interactiveNumbers } from './interactive';
+import { explorable, interactiveNumbers } from './interactive';
 import type { LineResult } from '../engine';
 import {
   copyCurrentResult,
@@ -36,8 +36,11 @@ export interface EditorOptions {
 
 export interface Editor {
   view: EditorView;
-  /** Shows a different note, with fresh undo history. */
-  setDoc(doc: string, options?: { readOnly?: boolean }): void;
+  /**
+   * Shows a different note, with fresh undo history. `explorable` keeps a read-only note's
+   * sliders working; those changes are never reported through `onChange`.
+   */
+  setDoc(doc: string, options?: { readOnly?: boolean; explorable?: boolean }): void;
   /** Replaces the text after a change from another tab, keeping the cursor nearby. */
   applyExternal(doc: string): void;
   getDoc(): string;
@@ -66,12 +69,13 @@ export function createEditor({
   const gutter = new Compartment();
   let showLineNumbers = false;
   let currentSettings = settings;
-  const readOnlyExtensions = (on: boolean) => [
+  const readOnlyExtensions = (on: boolean, explore = false) => [
     EditorState.readOnly.of(on),
     EditorView.editable.of(!on),
+    explorable.of(on && explore),
   ];
 
-  const createState = (text: string, ro: boolean) =>
+  const createState = (text: string, ro: boolean, explore = false) =>
     EditorState.create({
       doc: text,
       extensions: [
@@ -100,12 +104,12 @@ export function createEditor({
         completion,
         interactiveNumbers,
         reckonTheme,
-        readOnly.of(readOnlyExtensions(ro)),
+        readOnly.of(readOnlyExtensions(ro, explore)),
         gutter.of(showLineNumbers ? lineNumbers() : []),
         EditorView.updateListener.of((update) => {
-          const userEdit = update.transactions.some(
-            (tr) => tr.docChanged && !tr.annotation(external),
-          );
+          const userEdit =
+            !update.state.readOnly &&
+            update.transactions.some((tr) => tr.docChanged && !tr.annotation(external));
           if (userEdit) onChange?.(update.state.doc.toString());
           const answersChanged =
             update.startState.field(resultsField) !== update.state.field(resultsField);
@@ -118,8 +122,8 @@ export function createEditor({
 
   return {
     view,
-    setDoc(text, { readOnly: ro = false } = {}) {
-      view.setState(createState(text, ro));
+    setDoc(text, { readOnly: ro = false, explorable: explore = false } = {}) {
+      view.setState(createState(text, ro, explore));
       onUpdate?.();
     },
     applyExternal(text) {

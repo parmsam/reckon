@@ -38,7 +38,8 @@ them off in Settings.
   back any time with *Add the tutorial and example notes* (in Settings, or the <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> menu).
 - **Share link** (the ↗ button): copies a link with the whole note compressed into it, labelled with the
   note's name (`…/reckon/#/share/monthly-budget/…`). Whoever opens it sees a read-only copy and can save their
-  own. The address bar always shows just the app's address, so copying it shares Reckon, never your note.
+  own. They can still try other numbers: each `name = number` line has a **⇆** slider, and every answer follows.
+  Nothing they change is saved, and *Save a copy* keeps the note as you shared it. The address bar always shows just the app's address, so copying it shares Reckon, never your note.
 - **Backups**: *Export all notes* (in the notes list) saves a JSON file; *Import notes* restores it, or
   turns `.txt` and `.md` files into notes.
 - **Download and export** (the ↓ button): the note as text, or with its answers as aligned text, Markdown
