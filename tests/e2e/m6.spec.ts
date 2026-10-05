@@ -99,7 +99,15 @@ test('math keys appear above the phone keyboard', async ({ page, isMobile }) => 
 test('works offline after the first visit', async ({ page, context }) => {
   // Wait for the service worker to take control and cache the app.
   await page.waitForFunction(
-    async () => Boolean(navigator.serviceWorker?.controller) && (await caches.keys()).length > 0,
+    async () => {
+      const registration = await navigator.serviceWorker.ready;
+      const cached = await caches.match('index.html', { ignoreSearch: true });
+      return (
+        registration.active?.state === 'activated' &&
+        Boolean(navigator.serviceWorker.controller) &&
+        Boolean(cached)
+      );
+    },
     undefined,
     { timeout: 15_000 },
   );
