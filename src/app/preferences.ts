@@ -102,13 +102,21 @@ export function engineSettings(p: Preferences): Partial<Settings> {
   };
 }
 
-const DARK = window.matchMedia('(prefers-color-scheme: dark)');
 let current: Preferences | undefined;
-DARK.addEventListener('change', () => current && syncThemeColor(current));
+let darkQuery: MediaQueryList | undefined;
+
+/** Created on first use, so this module also loads in Node (unit tests). */
+function systemDark(): boolean {
+  if (!darkQuery) {
+    darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    darkQuery.addEventListener('change', () => current && syncThemeColor(current));
+  }
+  return darkQuery.matches;
+}
 
 /** The browser and installed-app title bar follow the theme. */
 function syncThemeColor(p: Preferences): void {
-  const dark = p.theme === 'dark' || (p.theme === 'system' && DARK.matches);
+  const dark = p.theme === 'dark' || (p.theme === 'system' && systemDark());
   let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (!meta) {
     meta = document.createElement('meta');
