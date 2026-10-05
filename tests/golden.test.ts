@@ -14,14 +14,22 @@ const RATES = JSON.parse(readFileSync(join(FIXTURES, 'rates.json'), 'utf8')) as 
   number
 >;
 
+/** Templates for the docs: one note per file, each its own document. */
+const TEMPLATES = join(FIXTURES, 'templates');
+
 /**
- * Each fixture file is evaluated as one document. A line ending in ` => expected` asserts the
+ * Each fixture file (and each template) is evaluated as one document. A line ending in ` => expected` asserts the
  * formatted result of that line; `=> (none)` asserts that the line shows no result. Currency
  * fixtures use the fixed rates in rates.json.
  */
-for (const file of readdirSync(FIXTURES).filter((f) => f.endsWith('.calc'))) {
-  describe(file, () => {
-    const lines = readFileSync(join(FIXTURES, file), 'utf8').replace(/\n$/, '').split('\n');
+const files = [
+  ...readdirSync(FIXTURES).map((f) => join(FIXTURES, f)),
+  ...readdirSync(TEMPLATES).map((f) => join(TEMPLATES, f)),
+].filter((f) => f.endsWith('.calc'));
+
+for (const path of files) {
+  describe(path.slice(FIXTURES.length + 1), () => {
+    const lines = readFileSync(path, 'utf8').replace(/\n$/, '').split('\n');
     const cases = lines.map((line, index) => {
       const at = line.lastIndexOf(ARROW);
       return at === -1

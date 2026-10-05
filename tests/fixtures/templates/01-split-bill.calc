@@ -1,0 +1,10 @@
+# Split the bill
+// Tax and tip on a shared meal. Click the tip to change it, and every answer follows.
+food = $186.40 => $186.40
+tax rate = 8.875% => 8.875%
+tip = ok 15% | [good 18%] | great 22% => 18%
+people = 4 => 4
+tax = tax rate of food => $16.54
+tip amount = tip of food => $33.55
+total = food + tax + tip amount => $236.50
+each = total / people => $59.12

@@ -1,0 +1,10 @@
+# Loan payment
+// The monthly payment on a loan, and what it costs in interest.
+loan = $350,000 => $350,000.00
+annual rate = 6.5% => 6.5%
+years = 30 => 30
+r = annual rate / 12 => 0.5416666667%
+n = years × 12 => 360
+payment = loan × r / (1 - (1 + r)^-n) => $2,212.24
+total paid = payment × n => $796,405.71
+interest = total paid - loan => $446,405.71

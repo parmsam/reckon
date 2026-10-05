@@ -1,7 +1,7 @@
 // Builds the docs page, llms.txt, llms-full.txt, prompt.txt and the agent skill into dist/, from
 // docs-src/ and the tested syntax reference (tests/fixtures/reference.calc). Also refreshes the
 // repo copy of the skill in skills/reckon/SKILL.md. Runs as part of `npm run build`.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { marked } from 'marked';
 import { createServer } from 'vite';
 
@@ -31,6 +31,12 @@ try {
   const { noteLink, SITE_URL } = await server.ssrLoadModule('/src/links.ts');
 
   const sections = gen.parseReference(read('tests/fixtures/reference.calc'));
+  // Reusable notes, tested like the reference (one document per file), in file-name order.
+  const templateDir = 'tests/fixtures/templates';
+  const templates = readdirSync(templateDir)
+    .filter((f) => f.endsWith('.calc'))
+    .sort()
+    .map((f) => gen.parseTemplate(read(`${templateDir}/${f}`)));
   const { glossary, unitCatalog } = await server.ssrLoadModule('/src/engine/glossary.ts');
   const { evaluateDocument } = await server.ssrLoadModule('/src/engine/index.ts');
   // Same fixed clock and sample rates as the tests, so the docs show the tested answers.
@@ -63,6 +69,7 @@ try {
   const llmsFull = [
     llms.split('\n## Docs')[0].trim(),
     guide,
+    `## Templates\n\nReady-made notes to open and adapt. Every answer is tested.\n\n${gen.templatesMarkdown(templates, (text) => noteLink(text))}`,
     `## Syntax reference\n\nEvery line below is tested. Answers use sample exchange rates, and dates assume it is\nThursday, Jan 15, 2026, 12:00 in UTC.\n\n${reference}`,
     `## Glossary\n\nEvery word and symbol Reckon understands. ↵ separates lines of a multi-line example.\n\n${gen.glossaryMarkdown(groups, answer)}`,
     `## Units\n\nEvery unit, with all the ways to write it. Symbols match exactly; names ignore case.\n\n${gen.unitsMarkdown(units)}`,
@@ -81,6 +88,7 @@ try {
   const nav = gen.sectionLinks(sections);
   const html = read('docs-src/page.html')
     .replace('{{guide}}', markdown(guide))
+    .replace('{{templates}}', gen.templatesHtml(templates, relative))
     .replace('{{syntaxNav}}', nav.map((s) => `<a href="#${s.id}">${s.title}</a>`).join(''))
     .replace('{{reference}}', gen.referenceHtml(sections, relative))
     .replace(
@@ -99,7 +107,7 @@ try {
     );
   write('dist/docs/index.html', html);
   console.log(
-    `Docs built: ${sections.length} syntax sections, ${sections.flatMap((s) => s.blocks).flat().length} examples`,
+    `Docs built: ${templates.length} templates, ${sections.length} syntax sections, ${sections.flatMap((s) => s.blocks).flat().length} examples`,
   );
 } finally {
   await server.close();

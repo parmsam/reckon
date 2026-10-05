@@ -1,0 +1,12 @@
+# LTV and CAC
+// What a customer is worth against what it costs to win one. Aim for 3× or more.
+price = $49 => $49.00
+gross margin = 80% => 80%
+monthly churn = 3% => 3%
+lifetime = round(1 / monthly churn, 1) => 33.3
+ltv = price × gross margin × lifetime => $1,305.36
+marketing spend = $25,000 => $25,000.00
+new customers = 120 => 120
+cac = marketing spend / new customers => $208.33
+ltv to cac: round(ltv / cac, 1) => 6.3
+months to win back cac: round(cac / (price × gross margin), 1) => 5.3

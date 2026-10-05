@@ -217,3 +217,63 @@ export function unitsHtml(kinds: UnitKindLike[]): string {
 
 export const glossaryNav = (groups: GlossaryGroupLike[]) =>
   groups.map((g) => ({ title: g.title, id: `glossary-${g.id}` }));
+
+export interface Template {
+  title: string;
+  description: string;
+  /** The note as it opens in Reckon: heading, description comment and lines, without answers. */
+  text: string;
+  examples: Example[];
+}
+
+/** Parses a template (tests/fixtures/templates/*.calc): "# Title", a "//" description, then lines. */
+export function parseTemplate(source: string): Template {
+  const lines = source.replace(/\n$/, '').split('\n');
+  const title = lines[0]!.replace(/^#\s*/, '');
+  const description = lines
+    .filter((l) => l.startsWith('//'))
+    .map((l) => l.replace(/^\/\/\s?/, ''))
+    .join(' ');
+  const examples = lines
+    .filter((l) => !l.startsWith('#') && !l.startsWith('//'))
+    .map((line) => {
+      const at = line.lastIndexOf(' => ');
+      return at === -1
+        ? { input: line, result: '' }
+        : { input: line.slice(0, at), result: line.slice(at + 4).trim() };
+    });
+  const text = lines
+    .map((l) => (l.lastIndexOf(' => ') === -1 ? l : l.slice(0, l.lastIndexOf(' => '))))
+    .join('\n');
+  return { title, description, text, examples };
+}
+
+/** Templates as Markdown, for llms-full.txt. */
+export function templatesMarkdown(templates: Template[], link: (text: string) => string): string {
+  return templates
+    .map((t) =>
+      [
+        `### ${t.title}`,
+        t.description,
+        '```\n' + exampleText(t.examples) + '\n```',
+        `[Open in Reckon](${link(t.text)})`,
+      ].join('\n\n'),
+    )
+    .join('\n\n');
+}
+
+/** Templates as HTML cards, each a small note with an "Open in Reckon" link. */
+export function templatesHtml(templates: Template[], link: (text: string) => string): string {
+  return templates
+    .map((t) => {
+      const rows = t.examples
+        .map((e) => `<tr><td>${escapeHtml(e.input)}</td><td>${escapeHtml(e.result)}</td></tr>`)
+        .join('');
+      return (
+        `<section class="template" id="template-${slug(t.title)}"><h3>${escapeHtml(t.title)}</h3>` +
+        `<p>${escapeHtml(t.description)}</p><figure class="note"><table>${rows}</table>` +
+        `<a class="try" href="${escapeHtml(link(t.text))}">Open in Reckon ↗</a></figure></section>`
+      );
+    })
+    .join('\n');
+}

@@ -1,0 +1,10 @@
+# Savings goal
+// How long to save for something, and how compound interest grows a balance.
+goal = $15,000 => $15,000.00
+saved = $3,200 => $3,200.00
+monthly saving = $450 => $450.00
+months needed = ceil((goal - saved) / monthly saving) months => 27 months
+reached: today + months needed => Sat, Apr 15, 2028
+balance = $10,000 => $10,000.00
+rate = 5% => 5%
+after 10 years: balance × (1 + rate)^10 => $16,288.95

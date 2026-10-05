@@ -6,6 +6,7 @@ import {
   exampleText,
   fill,
   parseReference,
+  parseTemplate,
   referenceMarkdown,
 } from '../src/docs/generate';
 import { decodeLinkText, noteLink } from '../src/links';
@@ -30,6 +31,16 @@ describe('note links', () => {
 });
 
 describe('docs generation', () => {
+  it('reads a template: title, description, and the note without its answers', () => {
+    const t = parseTemplate(
+      '# Tip\n// Leave a tip.\nbill = $80 => $80.00\ntip: 18% of bill => $14.40\n',
+    );
+    expect(t.title).toBe('Tip');
+    expect(t.description).toBe('Leave a tip.');
+    expect(t.text).toBe('# Tip\n// Leave a tip.\nbill = $80\ntip: 18% of bill');
+    expect(t.examples.at(-1)).toEqual({ input: 'tip: 18% of bill', result: '$14.40' });
+  });
+
   const sections = parseReference(readFileSync('tests/fixtures/reference.calc', 'utf8'));
 
   it('reads every section of the reference', () => {

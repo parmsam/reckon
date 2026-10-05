@@ -1,0 +1,9 @@
+# Freelance hourly rate
+// Work back from the income you want to the rate you need to charge.
+target income = $120,000 => $120,000.00
+expenses = $14,000 => $14,000.00
+weeks off = 6 => 6
+billable hours a week = 25 => 25
+billable hours = (52 - weeks off) × billable hours a week => 1,150
+hourly rate = (target income + expenses) / billable hours => $116.52
+day rate = hourly rate × 8 => $932.17

@@ -1,0 +1,8 @@
+# Project timeline
+// Work back from a deadline, or forward from a start date.
+launch = Mar 30 => Mon, Mar 30
+days until launch => 74 days
+weeks until launch => 10.5714 weeks
+kickoff = next monday => Mon, Jan 19
+kickoff + 6 weeks => Mon, Mar 2
+code freeze: launch - 2 weeks => Mon, Mar 16

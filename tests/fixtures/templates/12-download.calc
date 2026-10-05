@@ -1,0 +1,7 @@
+# Download time
+// How long a file takes to move at a given speed.
+file = 48 GB => 48 GB
+speed = 25 MB/s => 25 MB/s
+file / speed in min => 32 min
+backup = 2 TB => 2 TB
+backup / (40 MB/s) in hours => 13.8889 h

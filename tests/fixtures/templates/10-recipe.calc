@@ -1,0 +1,9 @@
+# Scale a recipe
+// Change the servings and every amount follows. Convert to metric as you go.
+servings = 4 => 4
+want = 10 => 10
+scale = want / servings => 2.5
+flour: 2.5 cups × scale => 6.25 cups
+butter: 6 tbsp × scale => 15 tbsp
+milk: 1.25 cups × scale in ml => 739.3382 mL
+bake: 350 °F in °C => 176.6667 °C

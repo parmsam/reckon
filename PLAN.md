@@ -114,6 +114,7 @@ above it. A line with no recognizable expression produces no result.
 | `sum` / `total` | Sum of results since the last heading or blank line. Lines that themselves use an aggregate are left out, so `sum` then `avg` doesn't double count. |
 | `avg` / `average` | Mean of the same block |
 | `count`, `min`, `max` | Same block |
+| `median`, `stdev` / `stddev` / `std` | Same block. `stdev` is the sample standard deviation (n − 1, like spreadsheets' STDEV); it needs at least two answers |
 | `subtotal` / `grand total` (later) | Soulver-style nested totals |
 
 ### 3.6 Units
@@ -159,7 +160,7 @@ above it. A line with no recognizable expression produces no result.
 - Later: business days (`3 business days from today`), unix timestamps.
 
 ### 3.9 Functions and constants
-`sqrt cbrt abs round floor ceil sin cos tan asin acos atan log ln exp min max root fact`
+`sqrt cbrt abs round floor ceil sin cos tan asin acos atan log ln exp min max sum avg median stdev root fact`
 · `round(x, 2)` · angles default to degrees (configurable) · `pi`, `e`, `tau`, `phi`
 
 ### 3.10 Output formats
@@ -445,6 +446,20 @@ first; changing numbers by direct manipulation is opt-in and guarded.
 ### Later
 - [x] Conditionals and comparisons (`if … then … else …`, `< > == !=`, `and/or/not`, true/false); bitwise ops (`& | xor << >>`)
 - [ ] Subtotals and grand totals; tag-based sums (Soulver)
+- [ ] Multi-cursor editing: `EditorState.allowMultipleSelections` (⌘/Ctrl-click adds a cursor),
+  `rectangularSelection` + `crosshairCursor` (⌥/Alt-drag), and select-next-occurrence (⌘/Ctrl D). Alt-drag
+  already scrubs numbers when that setting is on, so the two need to share the gesture (scrub only on a number).
+- [ ] Answer references (Soulver): double-click (or tap, on iOS) an answer to reference it in a calculation
+  below. References are live and update automatically when earlier lines change. Stored in the text as a
+  stable reference that survives inserting and deleting lines above it (not a plain `line3`), shown as a chip.
+- [ ] Subtotals by gesture (Soulver): double-click (or tap, on iOS) a blank line beneath some lines to drop in a
+  subtotal of the lines above it.
+- [ ] Tags (Soulver): tag lines (for example `#food`), then total, average and other statistics over every line
+  with a tag (`sum #food`, `avg #travel`), across headings and blocks. Needs a syntax that doesn't clash with
+  `#` headings. See [soulver.app](https://soulver.app).
+- [x] Templates in the docs: reusable notes (split a bill, runway, LTV/CAC, loan, unit price, recipes…) with
+  *Open in Reckon*, after Figr's templates. One file each in `tests/fixtures/templates/` (`# Title`, a `//`
+  description, then lines with tested answers), each evaluated as its own document by the golden tests.
 - [x] Custom functions and units defined in a note (`f(x) = x^2 + 1`, recursion, `1 sprint = 2 weeks`, `1 dozen = 12`,
   overriding built-ins like `1 cup = 250 ml`). Unit factors are looked up live, so they follow variables and rates.
 - [ ] Plugin API (sandboxed JS, Numi-style) for user-defined units and functions

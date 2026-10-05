@@ -1,0 +1,8 @@
+# Salary and hourly pay
+// Compare a salary with an hourly wage, and see a raise.
+salary = $85,000 => $85,000.00
+hours a week = 40 => 40
+hourly = salary / (52 × hours a week) => $40.87
+monthly = salary / 12 => $7,083.33
+raise = 4% => 4%
+salary + raise => $88,400.00

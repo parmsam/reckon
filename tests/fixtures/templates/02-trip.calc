@@ -1,0 +1,8 @@
+# Trip budget
+// Mix currencies freely; the total is in dollars.
+flights: $420 × 2 => $840.00
+hotel: 4 nights × €135 => €540.00
+food: €60 × 4 => €240.00
+tours: ¥12,000 => ¥12,000
+sum in USD => $1,786.67
+per person: prev / 2 => $893.33

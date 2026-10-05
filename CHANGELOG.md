@@ -5,6 +5,11 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- `median` and `stdev` (also `stddev`, `std`): for the lines above, like `avg`, or as functions
+  (`median(5, 1, 3)`). `stdev` is the sample standard deviation, like spreadsheets' STDEV.
+- Templates in the docs: 14 ready-made notes (split a bill, runway, LTV and CAC, loan payment, unit price…)
+  to open in Reckon and adapt. Every answer is tested.
+
 - A backup reminder (weekly by default; monthly or never in Settings) with a *Back up* button. It only
   appears when notes have changed since your last backup.
 - Fixed: the New note button was cut off in Firefox, and long notices wrapped into a narrow column.

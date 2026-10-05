@@ -1,0 +1,6 @@
+# Unit price
+// Which pack is the better deal?
+small = $3.49 / 400 g in $/kg => $8.73/kg
+large = $8.99 / 1.2 kg in $/kg => $7.49/kg
+large < small => true
+saving: round((small - large) / small, 3) in % => 14.1%

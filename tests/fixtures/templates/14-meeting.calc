@@ -1,0 +1,8 @@
+# Meeting across time zones
+// One time, everywhere the team works.
+meeting = 9am PST => 9:00 AM PST
+meeting in New York => 12:00 PM EST
+meeting in London => 5:00 PM GMT
+meeting in Berlin => 6:00 PM GMT+1
+meeting in Bangalore => 10:30 PM GMT+5:30
+meeting in Tokyo => Fri, 2:00 AM GMT+9

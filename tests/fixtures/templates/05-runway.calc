@@ -1,0 +1,11 @@
+# Startup runway
+// How long the money lasts, and when it runs out.
+cash in bank = $480,000 => $480,000.00
+monthly revenue = $18,000 => $18,000.00
+salaries = $42,000 => $42,000.00
+rent = $6,500 => $6,500.00
+software = $2,300 => $2,300.00
+other costs = $4,000 => $4,000.00
+monthly burn = salaries + rent + software + other costs - monthly revenue => $36,800.00
+runway = floor(cash in bank / monthly burn) months => 13 months
+out of money: today + runway => Mon, Feb 15, 2027

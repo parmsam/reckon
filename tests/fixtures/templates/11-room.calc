@@ -1,0 +1,11 @@
+# Paint a room
+// Wall area, less doors and windows, in liters of paint.
+width = 4.2 m => 4.2 m
+length = 3.6 m => 3.6 m
+height = 2.5 m => 2.5 m
+walls = 2 × (width + length) × height => 39 m²
+doors and windows = 4 m² => 4 m²
+area = walls - doors and windows => 35 m²
+coats = 2 => 2
+coverage = 10 m² per liter => 10 m²/L
+paint = area × coats / coverage => 7 L
