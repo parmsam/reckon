@@ -5,19 +5,28 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
-- **What's new:** after an update, a one-time note links to this changelog. It's also in Settings → About
-  and the command palette.
-- **See how far answers move:** while you drag a slider or scrub a number, each answer it affects shows its
-  change beside it (`+$120.00`, `−3 days`), and so does the total bar.
-- **Explorable share links:** whoever opens a share link can drag the sliders (rent, nights…) and watch the
-  answers change, without saving a copy. Nothing they change is saved.
-- Sliders only appear on input lines: `left = $3,000 - rent` no longer offers one.
-- **Sweep a variable:** tick *Sweep* in a slider and give it a range; every answer that uses the variable shows a
-  small chart of how it changes across that range, with a dot where the slider is.
-- On phones, the slider sits at the bottom of the screen so the answers stay visible.
+## 1.2.0 — 2026-10-05
+
+Playing with a note, after Bret Victor's *Inventing on Principle* and *Explorable Explanations*: see how far
+answers move, sweep a variable across a range, click through choices, and explore shared notes.
+
+### Exploring a note
 - **Choices:** `transport = car | [train] | fly` makes a what-if you can click through: the current option is a
   clickable word, and later lines can test it (`if transport == fly then $300 else $80`). Options can carry
-  values: `fare = car $120 | [train $80] | fly $300`. Works in shared notes too.
+  values: `fare = car $120 | [train $80] | fly $300`. <kbd>⌘/Ctrl</kbd> <kbd>⇧</kbd> <kbd>Space</kbd> picks the
+  next option on the cursor's line.
+- **See how far answers move:** while you drag a slider or scrub a number, each answer it affects shows its
+  change beside it (`+$120.00`, `−3 days`), and so does the total bar.
+- **Sweep a variable:** tick *Sweep* in a slider and give it a range; every answer that uses the variable shows a
+  small chart of how it changes across that range, with a dot where the slider is.
+- **Explorable share links:** whoever opens a share link can drag the sliders and click the choices, and watch
+  the answers change, without saving a copy. Nothing they change is saved.
+
+### App
+- **What's new:** after an update, a one-time note links to this changelog. It's also in Settings → About
+  and the command palette.
+- On phones, the slider sits at the bottom of the screen so the answers stay visible.
+- Sliders only appear on input lines: `left = $3,000 - rent` no longer offers one.
 
 ## 1.1.0 — 2026-10-05
 
