@@ -38,10 +38,16 @@ export function createShortcutsDialog(mod: string): HTMLDialogElement {
         { class: 'dialog-actions' },
         h(
           'a',
-          { href: `${import.meta.env.BASE_URL}docs/`, target: '_blank', rel: 'noopener' },
+          {
+            class: 'dialog-link',
+            href: `${import.meta.env.BASE_URL}docs/`,
+            target: '_blank',
+            rel: 'noopener',
+          },
           'Full docs and syntax ↗',
         ),
-        h('button', { class: 'primary-btn' }, 'Done'),
+        // Focus starts on Done (not the first link), so Enter or Esc closes the dialog.
+        h('button', { class: 'primary-btn', autofocus: true }, 'Done'),
       ),
     ),
   );

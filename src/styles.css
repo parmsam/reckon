@@ -968,3 +968,8 @@ kbd {
     animation: none;
   }
 }
+
+.dialog-link {
+  color: var(--accent);
+  font-size: 0.9rem;
+}

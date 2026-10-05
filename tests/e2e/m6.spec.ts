@@ -129,6 +129,8 @@ test('the keyboard shortcuts dialog opens from the sidebar, the palette and ?', 
   await page.getByRole('button', { name: 'Keyboard shortcuts', exact: true }).click();
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText('Command palette');
+  // Focus starts on Done, not on the docs link.
+  await expect(dialog.getByRole('button', { name: 'Done' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 
