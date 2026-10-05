@@ -799,3 +799,35 @@ kbd {
 .dialog-actions.end {
   justify-content: flex-end;
 }
+
+/* Download / export menu */
+.menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  min-width: 15rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: 0 10px 30px #0003;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--selection);
+  outline: none;
+}

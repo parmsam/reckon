@@ -47,6 +47,7 @@ own device.
 - **Precise decimals**: `0.1 + 0.2` is `0.3`, not `0.30000000000000004`
 - **Many notes** with search, pinning, trash and undo
 - **Share links**: the note is compressed into the URL itself, so no server ever sees it
+- **Export with answers** as aligned text, Markdown tables or a printable web page
 - **Backup and restore** as JSON, plus import of `.txt` and `.md` files
 - **Syncs between open tabs** and works offline once loaded
 - **Command palette** (<kbd>⌘/Ctrl</kbd> <kbd>K</kbd>), **autocomplete** for variables, units and functions, and a

@@ -51,6 +51,9 @@ evaluate('hourly rate = $85/h\n37.5 h × hourly rate\n5 km in miles');
 | `noteLink(text)` | A plain-text link that opens `text` in Reckon. |
 | `shareLink(text)` | A compressed share link (async). |
 | `decodeShare(payload)` | The note inside a share link (async). |
+| `toText(text, options?)` | The note with each answer aligned after its line. |
+| `toMarkdown(text, options?)` | The note as Markdown: headings, comments, and `\| Line \| Answer \|` tables. |
+| `toHtml(text, options?)` | The note as a standalone HTML page (`options.title` sets its title). |
 | `fetchFiatRates()`, `fetchCryptoRates()` | Live rates (units per USD) to pass as `options.rates`. |
 | `bundledRates` | The rates built into this version, with `fetchedAt`. |
 | `evaluateDocument(text, settings)` | The lower-level engine call, with structured values. |

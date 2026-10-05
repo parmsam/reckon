@@ -379,7 +379,8 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
 - [ ] Plugin API (sandboxed JS, Numi-style) for user-defined units and functions
 - [ ] Optional sync: File System Access API folder, or a GitHub Gist with a user token
 - [ ] Workspace tabs (Calcator/Ganaka)
-- [ ] Export the note with results as Markdown or HTML
+- [x] Export the note with results as aligned text, Markdown (tables) or HTML, from the download menu, the palette
+  and engine.js (`toText`, `toMarkdown`, `toHtml`)
 
 ---
 

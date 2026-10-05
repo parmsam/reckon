@@ -8,6 +8,7 @@
 import { Temporal as TemporalPolyfill } from 'temporal-polyfill';
 import snapshot from './data/rates.snapshot.json';
 import { evaluateDocument, type LineKind, type Settings } from './engine';
+import * as exporters from './export';
 
 // Dates need Temporal; use the polyfill only where it's missing (Node, older browsers).
 if (!('Temporal' in globalThis)) {
@@ -53,16 +54,19 @@ export interface LineOutput {
  * Evaluates a note and returns one entry per line. Defaults: locale en-US, the current time, the
  * local time zone, and the bundled exchange rates. Pass any engine setting to override them.
  */
-export function evaluate(text: string, options: Partial<Settings> = {}): LineOutput[] {
-  const settings: Partial<Settings> = {
+function withDefaults(options: Partial<Settings>): Partial<Settings> {
+  return {
     locale: 'en-US',
     now: Date.now(),
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     rates: bundledRates.rates,
     ...options,
   };
+}
+
+export function evaluate(text: string, options: Partial<Settings> = {}): LineOutput[] {
   const inputs = text.split('\n');
-  return evaluateDocument(text, settings).map((r, i) => ({
+  return evaluateDocument(text, withDefaults(options)).map((r, i) => ({
     line: i + 1,
     input: inputs[i]!,
     kind: r.kind,
@@ -70,4 +74,20 @@ export function evaluate(text: string, options: Partial<Settings> = {}): LineOut
     ...(r.error !== undefined && { error: r.error }),
     ...(r.variable !== undefined && { variable: r.variable }),
   }));
+}
+
+/** The note with each answer aligned after its line: "5 km in miles  → 3.1069 mi". */
+export function toText(text: string, options: Partial<Settings> = {}): string {
+  return exporters.toText(text, evaluateDocument(text, withDefaults(options)));
+}
+
+/** The note as Markdown: headings, comments as text, and calculations as | Line | Answer | tables. */
+export function toMarkdown(text: string, options: Partial<Settings> = {}): string {
+  return exporters.toMarkdown(text, evaluateDocument(text, withDefaults(options)));
+}
+
+/** The note as a standalone HTML page. */
+export function toHtml(text: string, options: Partial<Settings> & { title?: string } = {}): string {
+  const { title, ...settings } = options;
+  return exporters.toHtml(text, evaluateDocument(text, withDefaults(settings)), title);
 }

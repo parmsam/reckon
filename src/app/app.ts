@@ -13,6 +13,7 @@ import {
   noteFromText,
   parseBackup,
 } from './backup';
+import { toHtml, toMarkdown, toText } from '../export';
 import { createAccessoryRow } from './accessory';
 import { download, h, pickFiles, svg } from './dom';
 import { ICONS } from './icons';
@@ -86,9 +87,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       {
         type: 'button',
         class: 'icon-btn',
-        'aria-label': 'Download note',
-        title: 'Download note',
-        onclick: () => downloadNote(),
+        'aria-label': 'Download or export note',
+        title: 'Download or export',
+        'aria-haspopup': 'menu',
+        'aria-controls': 'export-menu',
+        onclick: (e: Event) => toggleExportMenu(e.currentTarget as HTMLElement),
       },
       svg(ICONS.download),
     ),
@@ -317,9 +320,33 @@ export async function startApp(root: HTMLElement): Promise<void> {
         { id: 'share', label: 'Copy share link', keywords: 'url send', run: run(share) },
         {
           id: 'download',
-          label: 'Download this note',
-          keywords: 'save text file',
-          run: downloadNote,
+          label: 'Download as text',
+          keywords: 'save txt file',
+          run: () => exportNote('text'),
+        },
+        {
+          id: 'export-answers',
+          label: 'Download as text with answers',
+          keywords: 'export results txt',
+          run: () => exportNote('answers'),
+        },
+        {
+          id: 'export-markdown',
+          label: 'Download as Markdown with answers',
+          keywords: 'export md results',
+          run: () => exportNote('markdown'),
+        },
+        {
+          id: 'export-html',
+          label: 'Download as a web page with answers',
+          keywords: 'export html print results',
+          run: () => exportNote('html'),
+        },
+        {
+          id: 'copy-answers',
+          label: 'Copy note with answers',
+          keywords: 'export clipboard results',
+          run: () => exportNote('copy'),
         },
         {
           id: 'pin',
@@ -677,10 +704,88 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   }
 
-  function downloadNote(): void {
+  type ExportFormat = 'text' | 'answers' | 'markdown' | 'html' | 'copy';
+
+  /** Downloads (or copies) the note, optionally with its answers. */
+  function exportNote(format: ExportFormat): void {
     const body = editor.getDoc();
-    download(fileName(deriveTitle(body), 'txt'), body, 'text/plain;charset=utf-8');
+    const results = editor.getResults();
+    const title = deriveTitle(body);
+    switch (format) {
+      case 'text':
+        return download(fileName(title, 'txt'), body, 'text/plain;charset=utf-8');
+      case 'answers':
+        return download(fileName(title, 'txt'), toText(body, results), 'text/plain;charset=utf-8');
+      case 'markdown':
+        return download(
+          fileName(title, 'md'),
+          toMarkdown(body, results),
+          'text/markdown;charset=utf-8',
+        );
+      case 'html':
+        return download(
+          fileName(title, 'html'),
+          toHtml(body, results, title),
+          'text/html;charset=utf-8',
+        );
+      case 'copy':
+        navigator.clipboard.writeText(toText(body, results)).then(
+          () => toast('Copied the note with answers'),
+          () => toast('Could not copy'),
+        );
+    }
   }
+
+  const EXPORTS: [ExportFormat, string][] = [
+    ['text', 'Text (.txt)'],
+    ['answers', 'Text with answers (.txt)'],
+    ['markdown', 'Markdown with answers (.md)'],
+    ['html', 'Web page with answers (.html)'],
+    ['copy', 'Copy with answers'],
+  ];
+  const exportMenu = h(
+    'div',
+    {
+      class: 'menu',
+      id: 'export-menu',
+      popover: 'auto',
+      role: 'menu',
+      'aria-label': 'Download or export',
+    },
+    ...EXPORTS.map(([format, label]) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          role: 'menuitem',
+          class: 'menu-item',
+          onclick: () => {
+            exportMenu.hidePopover();
+            exportNote(format);
+          },
+        },
+        label,
+      ),
+    ),
+  );
+
+  app.append(exportMenu);
+
+  function toggleExportMenu(anchor: HTMLElement): void {
+    if (exportMenu.matches(':popover-open')) return exportMenu.hidePopover();
+    const rect = anchor.getBoundingClientRect();
+    exportMenu.style.top = `${rect.bottom + 4}px`;
+    exportMenu.style.right = `${Math.max(8, window.innerWidth - rect.right)}px`;
+    exportMenu.showPopover();
+    exportMenu.querySelector<HTMLElement>('.menu-item')?.focus();
+  }
+  exportMenu.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const items = [...exportMenu.querySelectorAll<HTMLElement>('.menu-item')];
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    items[(at + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]?.focus();
+  });
 
   function exportAll(): void {
     if (storageError) return toast('Storage is unavailable in this browser');

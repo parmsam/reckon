@@ -10,7 +10,14 @@ import {
 } from '@codemirror/view';
 import { toggleLineComment } from './commands';
 import { completion } from './completion';
-import { copyCurrentResult, engineSettings, results, type EditorSettings } from './results';
+import type { LineResult } from '../engine';
+import {
+  copyCurrentResult,
+  engineSettings,
+  results,
+  resultsField,
+  type EditorSettings,
+} from './results';
 import { reckonTheme } from './theme';
 
 export { COPIED_EVENT } from './results';
@@ -30,6 +37,8 @@ export interface Editor {
   /** Replaces the text after a change from another tab, keeping the cursor nearby. */
   applyExternal(doc: string): void;
   getDoc(): string;
+  /** The current answers, one per line. */
+  getResults(): LineResult[];
   /** Replaces the selection with `text` (used by the phone keyboard row). */
   insert(text: string): void;
   /** Merges new engine settings (locale, rates…) and recomputes results. */
@@ -104,6 +113,7 @@ export function createEditor({ parent, doc, settings = {}, onChange }: EditorOpt
       });
     },
     getDoc: () => view.state.doc.toString(),
+    getResults: () => view.state.field(resultsField),
     insert(text) {
       view.dispatch(view.state.replaceSelection(text), {
         userEvent: 'input.type',

@@ -17,4 +17,7 @@ assert.equal(
   engine.noteLink('20% of $50'),
   'https://parmsam.github.io/reckon/#/new?text=20%25%20of%20%2450',
 );
+assert.match(engine.toMarkdown('# Budget\nrent = 1200\nrent × 12'), /\| rent × 12 \| 14,400 \|/);
+assert.match(engine.toText('5 km in miles'), /5 km in miles {2}→ 3\.1069 mi/);
+assert.match(engine.toHtml('1 + 1', { title: 'Sum' }), /<title>Sum<\/title>/);
 console.log(`engine.js ${engine.VERSION} OK`);

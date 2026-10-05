@@ -173,3 +173,24 @@ test('the docs page loads and its examples open in the app', async ({ page }) =>
   await expect(page.locator('.banner')).toContainText('Note from a link');
   await expect(page.locator('.cm-result').first()).toHaveText('10');
 });
+
+test('exports a note with answers as Markdown and HTML', async ({ page }) => {
+  await typeNote(page, '# Budget\nrent = 1,200\nrent × 12');
+  await page.getByRole('button', { name: 'Download or export note' }).click();
+  const menu = page.getByRole('menu', { name: 'Download or export' });
+  await expect(menu).toBeVisible();
+
+  let downloadPromise = page.waitForEvent('download');
+  await menu.getByRole('menuitem', { name: 'Markdown with answers (.md)' }).click();
+  let file = await downloadPromise;
+  expect(file.suggestedFilename()).toBe('Budget.md');
+  const { readFile } = await import('node:fs/promises');
+  expect(await readFile(await file.path(), 'utf8')).toContain('| rent × 12 | 14,400 |');
+
+  await page.getByRole('button', { name: 'Download or export note' }).click();
+  downloadPromise = page.waitForEvent('download');
+  await menu.getByRole('menuitem', { name: 'Web page with answers (.html)' }).click();
+  file = await downloadPromise;
+  expect(file.suggestedFilename()).toBe('Budget.html');
+  expect(await readFile(await file.path(), 'utf8')).toContain('<td>rent × 12</td><td>14,400</td>');
+});

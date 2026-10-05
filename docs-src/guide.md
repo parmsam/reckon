@@ -19,7 +19,9 @@ offline after the first visit.
   read-only copy and can save their own.
 - **Backups**: *Export all notes* (in the notes list) saves a JSON file; *Import notes* restores it, or
   turns `.txt` and `.md` files into notes.
-- **Download** (the ↓ button) saves the current note as a text file.
+- **Download and export** (the ↓ button): the note as text, or with its answers as aligned text, Markdown
+  (calculations become tables) or a web page you can print. *Copy with answers* puts the aligned text on
+  the clipboard.
 
 ## Privacy
 
