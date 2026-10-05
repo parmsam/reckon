@@ -147,3 +147,16 @@ test('the keyboard shortcuts dialog opens from the sidebar, the palette and ?', 
   await expect(dialog).toBeHidden();
   await expect(page.locator('.cm-line').first()).toHaveText('what?');
 });
+
+test('the GitHub link shows once: top bar on wide screens, notes list on phones', async ({
+  page,
+  isMobile,
+}) => {
+  const links = page.getByRole('link', { name: /Reckon on GitHub/ });
+  if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
+  await expect(links).toHaveCount(1);
+  await expect(links).toBeVisible();
+  await expect(links).toHaveAttribute('href', 'https://github.com/parmsam/reckon');
+  const inSidebar = await links.evaluate((el) => Boolean(el.closest('.sidebar')));
+  expect(inSidebar).toBe(Boolean(isMobile));
+});

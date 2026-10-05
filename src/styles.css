@@ -854,6 +854,12 @@ kbd {
   }
 }
 
+@media (min-width: 601px) {
+  .narrow-only {
+    display: none;
+  }
+}
+
 .keys-top .editor {
   padding-top: 3.25rem;
 }

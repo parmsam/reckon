@@ -157,6 +157,19 @@ export class Sidebar {
             iconButton(ICONS.download, 'Export all notes', () => this.handlers.exportAll()),
             iconButton(ICONS.keyboard, 'Keyboard shortcuts', () => this.handlers.openShortcuts()),
             iconButton(ICONS.settings, 'Settings', () => this.handlers.openSettings()),
+            // The top bar has this link on wider screens.
+            h(
+              'a',
+              {
+                class: 'icon-btn narrow-only',
+                href: 'https://github.com/parmsam/reckon',
+                target: '_blank',
+                rel: 'noopener',
+                'aria-label': 'Reckon on GitHub (opens in a new tab)',
+                title: 'Source on GitHub',
+              },
+              svg(ICONS.github),
+            ),
           ),
     );
   }
