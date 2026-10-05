@@ -19,7 +19,7 @@ export interface Token {
   time?: TimeOfDay;
 }
 
-const OP_ALIASES: Record<string, string> = {
+export const OP_ALIASES: Record<string, string> = {
   '×': '*',
   '·': '*',
   '⋅': '*',
@@ -30,7 +30,7 @@ const OP_ALIASES: Record<string, string> = {
 };
 const OPS = new Set(['+', '-', '*', '/', '^', '(', ')', ',', '%', '!', '=']);
 
-const FRACTIONS: Record<string, [number, number]> = {
+export const FRACTIONS: Record<string, [number, number]> = {
   '½': [1, 2],
   '⅓': [1, 3],
   '⅔': [2, 3],
@@ -47,7 +47,7 @@ const FRACTIONS: Record<string, [number, number]> = {
   '⅝': [5, 8],
   '⅞': [7, 8],
 };
-const SUFFIXES: Record<string, number> = { k: 1e3, K: 1e3, M: 1e6, bn: 1e9 };
+export const SUFFIXES: Record<string, number> = { k: 1e3, K: 1e3, M: 1e6, bn: 1e9 };
 
 /** 2026-07-04, 2026-07-04T09:30, 2026-07-04 09:30:15 */
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{1,2}:\d{2}(?::\d{2})?)?(?![\d:])/;

@@ -28,7 +28,7 @@ Type text and numbers naturally, and see the answers line by line.</p>
   </picture>
 </p>
 
-**[Docs](https://parmsam.github.io/reckon/docs/)** · **[Syntax](https://parmsam.github.io/reckon/docs/#syntax)** · **[For LLMs](https://parmsam.github.io/reckon/llms.txt)**
+**[Docs](https://parmsam.github.io/reckon/docs/)** · **[Syntax](https://parmsam.github.io/reckon/docs/#syntax)** · **[Glossary](https://parmsam.github.io/reckon/docs/#glossary)** · **[Units](https://parmsam.github.io/reckon/docs/#units)** · **[For LLMs](https://parmsam.github.io/reckon/llms.txt)**
 
 Reckon is a free, open-source take on notepad calculators like [Numi](https://numi.app) and
 [Soulver](https://soulver.app). It runs in any browser, installs as an app, works offline, and keeps your notes on your

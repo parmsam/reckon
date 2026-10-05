@@ -96,8 +96,10 @@ skills/reckon/     the agent skill; generated from docs-src/skill.md by the buil
    URLs and hash routes (`#/note/<id>`) for navigation. Never assume the app lives at `/`.
 9. **Accessibility.** Interactive elements are keyboard reachable, have labels, and meet AA contrast (4.5:1) in both
    themes against `--bg`, `--panel` and `--results-bg`. Colors are `light-dark()` pairs in `styles.css`.
-10. **Document syntax in the reference.** New user-facing syntax gets an example in
+10. **Document syntax in the reference and glossary.** New user-facing syntax gets an example in
    `tests/fixtures/reference.calc` (tested, and the source of the docs, llms-full.txt and the prompt).
+   New words or symbols go in `src/engine/glossary.ts`; `tests/glossary.test.ts` fails if the parser accepts
+   a word the glossary doesn't list, a function has no description, or an example has no answer.
    Keep the `{{placeholders}}` in docs-src/ templates in sync with `scripts/build-docs.mjs`.
 11. **Keep PLAN.md current.** Tick milestone checkboxes as work lands, and record decisions that change the plan.
 

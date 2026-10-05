@@ -350,6 +350,9 @@ CSS units; fetching exchange rates on or off (off means no network requests at a
   The reference comes from `tests/fixtures/reference.calc`, a golden fixture, so every example is tested;
   `scripts/build-docs.mjs` turns it into the page, llms-full.txt, the prompt and the skill. Every example
   has an "Open in Reckon" link.
+- [x] Glossary and unit catalogue in the docs and llms-full.txt: every word and symbol the parser accepts,
+  generated from its own tables (`src/engine/glossary.ts`), with a tested example each; every unit with all
+  its spellings. A test fails if a parser word is missing.
 - [x] `llms.txt` at `/reckon/llms.txt` ([llmstxt.org](https://llmstxt.org) format), linking to the docs,
   plus `llms-full.txt` with the whole syntax reference in one Markdown file
 - [x] Plain-text note links: `#/new?text=<percent-encoded note>` opens the text as a read-only preview with

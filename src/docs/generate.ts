@@ -115,3 +115,102 @@ export function sectionLinks(sections: Section[]): { title: string; id: string }
 export function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, name: string) => values[name] ?? match);
 }
+
+// ---- Glossary -------------------------------------------------------------------------------
+
+export interface GlossaryEntryLike {
+  terms: string[];
+  meaning: string;
+  example?: string;
+}
+export interface GlossaryGroupLike {
+  id: string;
+  title: string;
+  intro?: string;
+  entries: GlossaryEntryLike[];
+}
+export interface UnitKindLike {
+  kind: string;
+  units: { symbol: string; symbols: string[]; names: string[] }[];
+}
+
+/** Multi-line examples on one line: "10 ↵ 20 ↵ sum". */
+const oneLine = (example: string) => example.split('\n').join(' ↵ ');
+const cell = (s: string) => s.replace(/\|/g, '\\|');
+
+export function glossaryMarkdown(
+  groups: GlossaryGroupLike[],
+  answer: (example: string) => string | undefined,
+): string {
+  return groups
+    .map((g) => {
+      const rows = g.entries.map((e) => {
+        const example = e.example
+          ? `\`${cell(oneLine(e.example))}\` → ${cell(answer(e.example) ?? '')}`
+          : '';
+        return `| ${e.terms.map((t) => `\`${cell(t)}\``).join(' ')} | ${cell(e.meaning)} | ${example} |`;
+      });
+      return [
+        `### ${g.title}`,
+        g.intro ?? '',
+        '| Write | Meaning | Example |\n|---|---|---|\n' + rows.join('\n'),
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+    })
+    .join('\n\n');
+}
+
+export function glossaryHtml(
+  groups: GlossaryGroupLike[],
+  answer: (example: string) => string | undefined,
+): string {
+  return groups
+    .map((g) => {
+      const rows = g.entries
+        .map((e) => {
+          const terms = e.terms.map((t) => `<code>${escapeHtml(t)}</code>`).join(' ');
+          const example = e.example
+            ? `<code>${e.example.split('\n').map(escapeHtml).join('<br>')}</code> <span class="answer">→ ${escapeHtml(answer(e.example) ?? '')}</span>`
+            : '';
+          return `<tr><td>${terms}</td><td>${escapeHtml(e.meaning)}</td><td>${example}</td></tr>`;
+        })
+        .join('');
+      const intro = g.intro ? `<p>${escapeHtml(g.intro)}</p>` : '';
+      return `<section id="glossary-${g.id}"><h3>${escapeHtml(g.title)}</h3>${intro}<table class="glossary"><thead><tr><th>Write</th><th>Meaning</th><th>Example</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+    })
+    .join('\n');
+}
+
+const otherSpellings = (u: UnitKindLike['units'][number]) => [
+  ...new Set([...u.symbols.filter((s) => s !== u.symbol), ...u.names]),
+];
+
+export function unitsMarkdown(kinds: UnitKindLike[]): string {
+  return kinds
+    .map(
+      (k) =>
+        `### ${k.kind}\n\n| Unit | Also written |\n|---|---|\n` +
+        k.units
+          .map((u) => `| \`${cell(u.symbol)}\` | ${otherSpellings(u).map(cell).join(', ')} |`)
+          .join('\n'),
+    )
+    .join('\n\n');
+}
+
+export function unitsHtml(kinds: UnitKindLike[]): string {
+  return kinds
+    .map((k) => {
+      const rows = k.units
+        .map(
+          (u) =>
+            `<tr><td><code>${escapeHtml(u.symbol)}</code></td><td>${otherSpellings(u).map(escapeHtml).join(', ')}</td></tr>`,
+        )
+        .join('');
+      return `<details><summary>${escapeHtml(k.kind)} <span class="count">${k.units.length}</span></summary><table class="glossary"><tbody>${rows}</tbody></table></details>`;
+    })
+    .join('\n');
+}
+
+export const glossaryNav = (groups: GlossaryGroupLike[]) =>
+  groups.map((g) => ({ title: g.title, id: `glossary-${g.id}` }));

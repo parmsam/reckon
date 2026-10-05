@@ -32,7 +32,7 @@ export interface DateSpec {
 /** What a datetime value shows: the date, the time of day, or both. */
 export type DateShow = 'date' | 'time' | 'datetime';
 
-const MONTHS: Record<string, number> = {};
+export const MONTHS: Record<string, number> = {};
 'january february march april may june july august september october november december'
   .split(' ')
   .forEach((m, i) => {
@@ -42,19 +42,19 @@ const MONTHS: Record<string, number> = {};
 MONTHS.sept = 9;
 
 /** Monday is 1, as in Temporal. Abbreviations only count after next/last/this ("sat" is also satoshis). */
-const WEEKDAYS: Record<string, number> = {};
-const WEEKDAY_ABBREVIATIONS: Record<string, number> = {};
+export const WEEKDAYS: Record<string, number> = {};
+export const WEEKDAY_ABBREVIATIONS: Record<string, number> = {};
 'monday tuesday wednesday thursday friday saturday sunday'.split(' ').forEach((d, i) => {
   WEEKDAYS[d] = i + 1;
   WEEKDAY_ABBREVIATIONS[d.slice(0, 3)] = i + 1;
 });
 Object.assign(WEEKDAY_ABBREVIATIONS, { tues: 2, thur: 4, thurs: 4 });
 
-const TODAY_WORDS: Record<string, number> = { today: 0, tomorrow: 1, yesterday: -1 };
+export const TODAY_WORDS: Record<string, number> = { today: 0, tomorrow: 1, yesterday: -1 };
 const ORDINALS = new Set(['st', 'nd', 'rd', 'th']);
 
 /** Common abbreviations, matched in uppercase. They map to places so daylight saving is right. */
-const ZONE_ABBREVIATIONS: Record<string, string> = {
+export const ZONE_ABBREVIATIONS: Record<string, string> = {
   PST: 'America/Los_Angeles',
   PDT: 'America/Los_Angeles',
   PT: 'America/Los_Angeles',
@@ -92,7 +92,7 @@ const ZONE_ABBREVIATIONS: Record<string, string> = {
 };
 
 /** Places people say that aren't IANA city names. */
-const PLACE_ALIASES: Record<string, string> = {
+export const PLACE_ALIASES: Record<string, string> = {
   'san francisco': 'America/Los_Angeles',
   'silicon valley': 'America/Los_Angeles',
   seattle: 'America/Los_Angeles',

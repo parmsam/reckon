@@ -40,7 +40,7 @@ export type RToken = Span &
     | { t: 'until'; unit?: UnitDef; since: boolean }
   );
 
-const OP_WORDS: Record<string, Op> = {
+export const OP_WORDS: Record<string, Op> = {
   plus: '+',
   minus: '-',
   times: '*',
@@ -49,8 +49,8 @@ const OP_WORDS: Record<string, Op> = {
   mod: 'mod',
   modulo: 'mod',
 };
-const CONVERSIONS = new Set(['in', 'to', 'as', 'into']);
-const TARGETS: Record<string, Target> = {
+export const CONVERSIONS = new Set(['in', 'to', 'as', 'into']);
+export const TARGETS: Record<string, Target> = {
   hex: 'hex',
   hexadecimal: 'hex',
   bin: 'bin',
@@ -64,14 +64,14 @@ const TARGETS: Record<string, Target> = {
   percent: 'percent',
   percentage: 'percent',
 };
-const PERCENT_WORDS = new Set(['percent', 'pct']);
-const SCALES: Record<string, number> = {
+export const PERCENT_WORDS = new Set(['percent', 'pct']);
+export const SCALES: Record<string, number> = {
   thousand: 1e3,
   million: 1e6,
   billion: 1e9,
   trillion: 1e12,
 };
-const AGGREGATES: Record<string, Aggregate> = {
+export const AGGREGATES: Record<string, Aggregate> = {
   sum: 'sum',
   total: 'sum',
   avg: 'avg',
@@ -81,7 +81,7 @@ const AGGREGATES: Record<string, Aggregate> = {
   min: 'min',
   max: 'max',
 };
-const PREV_WORDS = new Set(['prev', 'previous', 'ans']);
+export const PREV_WORDS = new Set(['prev', 'previous', 'ans']);
 const ARTICLES = new Set(['a', 'an']);
 const BINARY_OPS = new Set(['+', '-', '*', '/', '^']);
 

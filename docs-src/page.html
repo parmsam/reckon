@@ -182,6 +182,41 @@
         font-size: 0.82rem;
         text-align: right;
       }
+      .glossary code {
+        white-space: nowrap;
+      }
+      .glossary td:first-child {
+        width: 30%;
+      }
+      .glossary td {
+        font-size: 0.88rem;
+      }
+      .answer {
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      details {
+        margin: 0.4rem 0;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+      summary {
+        padding: 0.5rem 0.8rem;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .count {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 0.85rem;
+      }
+      details table {
+        margin: 0 0 0.4rem;
+      }
       .prompt {
         position: relative;
       }
@@ -237,6 +272,9 @@
         <a href="#questions">Questions</a>
         <a href="#syntax">Syntax</a>
         <div class="sub">{{syntaxNav}}</div>
+        <a href="#glossary">Glossary</a>
+        <div class="sub">{{glossaryNav}}</div>
+        <a href="#units">Units</a>
         <a href="#links-that-open-a-note">Links</a>
         <a href="#the-engine-module">Engine module</a>
         <a href="#for-llms-and-agents">LLMs and agents</a>
@@ -250,7 +288,19 @@
           dates assume it's Thursday, Jan 15, 2026, 12:00 in UTC. <em>Open in Reckon</em> opens the
           example as a note you can edit and save.
         </p>
-        {{reference}} {{developers}}
+        {{reference}}
+        <h2 id="glossary">Glossary</h2>
+        <p>
+          Every word and symbol Reckon understands, with an example of each. Multi-line examples
+          show the last line's answer.
+        </p>
+        {{glossary}}
+        <h2 id="units">Units</h2>
+        <p>
+          Every unit, with all the ways to write it. Symbols match exactly (<code>mL</code>,
+          <code>°C</code>); names ignore case (<code>Kilometers</code>).
+        </p>
+        {{units}} {{developers}}
         <h2 id="prompt">The prompt</h2>
         <p>
           Paste this into ChatGPT, Claude or another assistant, then ask for the note you want ("a
