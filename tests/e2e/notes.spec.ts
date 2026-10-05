@@ -34,7 +34,8 @@ test.beforeEach(async ({ page }) => {
 
 test('creates notes and switches between them', async ({ page, isMobile }) => {
   await newNote(page, isMobile, '# Groceries\nmilk = 2.5');
-  await expect(page).toHaveURL(/#\/note\/[0-9A-Z]{26}$/);
+  // The address stays the app's plain URL; notes never appear in it.
+  await expect(page).toHaveURL(/\/reckon\/$/);
   await openSidebar(page, isMobile);
   await expect(items(page)).toHaveCount(4);
   await expect(items(page).first()).toContainText('Groceries');
@@ -104,7 +105,7 @@ test('share links open read-only and can be saved', async ({ page, context, brow
   await expect(shared.locator('.cm-result').first()).toHaveText('4');
   await shared.locator('.banner').getByRole('button', { name: 'Save a copy' }).click();
   await expect(shared.locator('#toast')).toHaveText('Saved to your notes');
-  await expect(shared).toHaveURL(/#\/note\//);
+  await expect(shared).toHaveURL(/\/reckon\/$/);
   await expect(shared.locator('.cm-content')).toHaveAttribute('contenteditable', 'true');
 });
 
@@ -159,7 +160,7 @@ test('plain-text links open a read-only preview that can be saved', async ({ pag
   await expect(page.locator('.cm-content')).toHaveAttribute('contenteditable', 'false');
   await expect(page.locator('.cm-result')).toHaveText(['$85.00/h', '$3,187.50', '10']);
   await page.locator('.banner').getByRole('button', { name: 'Save a copy' }).click();
-  await expect(page).toHaveURL(/#\/note\//);
+  await expect(page).toHaveURL(/\/reckon\/$/);
   await expect(page.locator('#note-title')).toHaveText('From an LLM');
 
   await page.goto('./#/new?text=%E0%A4%A');
@@ -223,4 +224,22 @@ test('note links from another browser explain themselves', async ({ page }) => {
   await page.goto('./#/note/01M44WYGZP5E41PGBPHGRRYWPZ');
   await expect(page.locator('#toast')).toContainText("isn't saved in this browser");
   await expect(page.locator('#note-title')).toHaveText('Welcome to Reckon');
+});
+
+test('the address stays the plain app URL while switching notes', async ({ page, isMobile }) => {
+  await newNote(page, isMobile, '# Private\nsalary = 90k');
+  await expect(page).toHaveURL(/\/reckon\/$/);
+  await openSidebar(page, isMobile);
+  await item(page, 'Monthly budget').locator('.note-open').click();
+  await expect(page.locator('#note-title')).toHaveText('Monthly budget');
+  await expect(page).toHaveURL(/\/reckon\/$/);
+
+  // Back and forward still move between notes, and a reload keeps the note.
+  await page.goBack();
+  await expect(page.locator('#note-title')).toHaveText('Private');
+  await page.goForward();
+  await expect(page.locator('#note-title')).toHaveText('Monthly budget');
+  await page.reload();
+  await expect(page.locator('#note-title')).toHaveText('Monthly budget');
+  await expect(page).toHaveURL(/\/reckon\/$/);
 });

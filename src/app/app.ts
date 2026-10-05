@@ -562,19 +562,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
 
   // ---- Navigation ---------------------------------------------------------------------------
+  /** The app's plain address, with no note in it. */
+  const appUrl = () => location.pathname + location.search;
+  const stateNote = () => (history.state as { note?: string } | null)?.note;
+
+  /**
+   * Notes open without changing the address: it stays at the app's plain URL, so copying it
+   * never shares (or seems to share) a note. Each note gets its own history entry, so back and
+   * forward still work. Share and plain-text links keep their address while previewed.
+   */
   function navigate(route: Route, { replace = false } = {}): void {
-    const hash = routeHash(route);
-    if (replace) {
-      history.replaceState(null, '', hash || location.pathname + location.search);
+    if (route.kind === 'note' || route.kind === 'home') {
+      const state = route.kind === 'note' ? { note: route.id } : null;
+      const same = route.kind === 'note' && stateNote() === route.id && !location.hash;
+      if (replace || same || route.kind === 'home') history.replaceState(state, '', appUrl());
+      else history.pushState(state, '', appUrl());
       void handleRoute();
-    } else if (location.hash === hash) {
-      void handleRoute();
-    } else {
-      location.hash = hash;
+      return;
     }
+    const hash = routeHash(route);
+    if (location.hash === hash) void handleRoute();
+    else location.hash = hash;
   }
 
-  window.addEventListener('hashchange', () => void handleRoute());
+  // Back/forward between notes, and links typed or pasted into the address bar.
+  window.addEventListener('popstate', () => void handleRoute());
 
   async function handleRoute(): Promise<void> {
     closeDrawer();
@@ -585,11 +597,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       toast('That link is broken or too long');
       return navigate({ kind: 'home' }, { replace: true });
     }
-    if (route.kind === 'note' && store.get(route.id)) return openNote(route.id);
+    if (route.kind === 'note' && store.get(route.id)) {
+      // An older #/note/ link: open it, and tidy the address back to the app's plain URL.
+      history.replaceState({ note: route.id }, '', appUrl());
+      return openNote(route.id);
+    }
     if (route.kind === 'note') {
       // Note links only work in the browser that saved the note: explain instead of guessing.
       toast("That note isn't saved in this browser. To share a note, use the share button (↗).");
+      history.replaceState(null, '', appUrl());
     }
+    const remembered = stateNote();
+    if (route.kind === 'home' && remembered && store.get(remembered)) return openNote(remembered);
     return openHome();
   }
 

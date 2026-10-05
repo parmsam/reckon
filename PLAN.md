@@ -256,7 +256,9 @@ interface Note {
 - A bundled snapshot of rates (`src/data/rates.snapshot.json`, `npm run update-rates`), refreshed by the deploy workflow, so the very first offline use still works. A failed refresh keeps the committed snapshot.
 
 ### 4.6 Routing and hosting
-- Routing is hash based (`#/note/<id>`, `#/share/<payload>`), so GitHub Pages never returns a 404 for deep links.
+- The address bar stays at the app's plain URL while notes are open (history entries carry the note, so back
+  and forward still work), so copying it never shares a note. Links that open notes are hash based
+  (`#/share/[name/]<payload>`, `#/new?text=…`), so GitHub Pages never returns a 404.
 - Vite sets `base: '/reckon/'`, and the PWA `scope` and `start_url` match it.
 - `.github/workflows/deploy.yml` runs build, test, then `actions/upload-pages-artifact` and `actions/deploy-pages` on every push to `main`.
 
