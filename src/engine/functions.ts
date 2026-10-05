@@ -87,11 +87,32 @@ export const FUNCTIONS: Record<string, FunctionDef> = {
   max: variadic((args) => D.max(...args)),
   sum: variadic((args) => D.sum(...args)),
   avg: variadic((args) => D.sum(...args).div(args.length)),
+  median: variadic(median),
+  stdev: variadic(stdev),
 };
+
+/** The middle value, or the mean of the two middle values. */
+export function median(values: Decimal[]): Decimal {
+  const sorted = [...values].sort((a, b) => a.comparedTo(b));
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid]! : sorted[mid - 1]!.plus(sorted[mid]!).div(2);
+}
+
+/** Sample standard deviation (n − 1), like spreadsheets' STDEV. */
+export function stdev(values: Decimal[]): Decimal {
+  if (values.length < 2) throw new CalcError('Standard deviation needs at least two values');
+  const mean = D.sum(...values).div(values.length);
+  const squares = values.map((v) => v.minus(mean).pow(2));
+  return D.sum(...squares)
+    .div(values.length - 1)
+    .sqrt();
+}
 
 export const FUNCTION_ALIASES: Record<string, string> = {
   average: 'avg',
   mean: 'avg',
+  stddev: 'stdev',
+  std: 'stdev',
   total: 'sum',
   factorial: 'fact',
 };

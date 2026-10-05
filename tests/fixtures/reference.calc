@@ -43,11 +43,12 @@ tip($80, 18%) => $14.40
 3 dozen => 36
 
 // ## Previous answers and totals
-// prev is the last answer. sum, avg, count, min and max cover the lines since the last heading or blank line. line3 is the answer on line 3.
+// prev is the last answer. sum, avg, median, stdev, count, min and max cover the lines since the last heading or blank line. line3 is the answer on line 3.
 groceries: 80 => 80
 gas: 45 => 45
 dinner: 55 => 55
 sum => 180
+median => 55
 avg => 60
 prev × 2 => 120
 

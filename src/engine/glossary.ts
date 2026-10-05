@@ -61,6 +61,8 @@ const OP_MEANINGS: Record<string, [string, string]> = {
 const AGGREGATE_MEANINGS: Record<string, string> = {
   sum: 'Adds up the answers above, back to the last heading or blank line',
   avg: 'Average of the answers above',
+  median: 'Middle answer above (the mean of the two middle ones when the count is even)',
+  stdev: 'Sample standard deviation of the answers above (n − 1, like spreadsheets)',
   count: 'How many answers are above',
   min: 'Smallest answer above (min(…) with parentheses is the function)',
   max: 'Largest answer above (max(…) with parentheses is the function)',
@@ -103,6 +105,8 @@ export const FUNCTION_DOCS: Record<string, [string, string]> = {
   max: ['Largest of the arguments', 'max(4, 9, 2)'],
   sum: ['Sum of the arguments', 'sum(1, 2, 3)'],
   avg: ['Average of the arguments', 'avg(2, 4)'],
+  median: ['Middle value of the arguments', 'median(5, 1, 3)'],
+  stdev: ['Sample standard deviation of the arguments', 'stdev(2, 4, 4, 4, 5, 5, 7, 9)'],
 };
 
 const CONSTANT_MEANINGS: Record<string, string> = {

@@ -8,6 +8,9 @@ average => 20
 count => 3
 min => 10
 max => 30
+median => 20
+stdev => 10
+std => 10
 sum * 2 => 120
 prev + 1 => 121
 ans => 121
@@ -27,5 +30,20 @@ avg => (none)
 # Functions over arguments
 sum(1, 2, 3) => 6
 avg(2, 4) => 3
+median(5, 1, 3) => 3
+median(1, 2, 3, 4) => 2.5
+stddev(2, 4, 4, 4, 5, 5, 7, 9) => 2.1380899353
+stdev(3 m, 300 cm, 400 cm) => 0.5774 m
+stdev(5) => (none)
 max(100,200) => 200
 min(4; 2) => 2
+
+# Median and standard deviation of a block
+4 km => 4 km
+1000 m => 1,000 m
+2 km => 2 km
+median => 2 km
+stdev => 1.5275 km
+
+9 => 9
+stdev => (none)

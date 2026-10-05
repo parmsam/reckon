@@ -48,7 +48,11 @@ function print(node: Node, ctx: ExplainContext): string {
       return withValue(`line ${node.n}`);
     case 'agg':
       return withValue(
-        node.name === 'avg' ? 'average of the lines above' : `${node.name} of the lines above`,
+        node.name === 'avg'
+          ? 'average of the lines above'
+          : node.name === 'stdev'
+            ? 'standard deviation of the lines above'
+            : `${node.name} of the lines above`,
       );
     case 'date':
     case 'unit':

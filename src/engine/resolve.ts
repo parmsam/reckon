@@ -40,7 +40,7 @@ export type Op =
 export type Keyword =
   'of' | 'off' | 'on' | 'conv' | 'is' | 'what' | 'from' | 'ago' | 'later' | 'if' | 'then' | 'else';
 export type Target = 'hex' | 'bin' | 'oct' | 'sci' | 'dec' | 'percent';
-export type Aggregate = 'sum' | 'avg' | 'count' | 'min' | 'max';
+export type Aggregate = 'sum' | 'avg' | 'median' | 'stdev' | 'count' | 'min' | 'max';
 
 interface Span {
   from: number;
@@ -106,6 +106,10 @@ export const AGGREGATES: Record<string, Aggregate> = {
   avg: 'avg',
   average: 'avg',
   mean: 'avg',
+  median: 'median',
+  stdev: 'stdev',
+  stddev: 'stdev',
+  std: 'stdev',
   count: 'count',
   min: 'min',
   max: 'max',

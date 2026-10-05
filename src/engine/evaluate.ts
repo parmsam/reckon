@@ -8,7 +8,7 @@ import {
   resolveDate,
   type DateValue,
 } from './datetime';
-import { CONSTANTS, callFunction, factorial } from './functions';
+import { CONSTANTS, callFunction, factorial, median, stdev } from './functions';
 import { getUnit, type UnitContext, type UnitExpr } from './units';
 import {
   compatible,
@@ -196,14 +196,18 @@ export function aggregate(name: string, block: readonly Value[], ctx: UnitContex
       ? D.sum(...values)
       : name === 'avg'
         ? D.sum(...values).div(values.length)
-        : name === 'min'
-          ? D.min(...values)
-          : D.max(...values);
+        : name === 'median'
+          ? median(values)
+          : name === 'stdev'
+            ? stdev(values)
+            : name === 'min'
+              ? D.min(...values)
+              : D.max(...values);
   return make({ value: result, unit }, ctx);
 }
 
 const KEEPS_UNIT = new Set(['abs', 'round', 'floor', 'ceil', 'trunc']);
-const COMBINES = new Set(['min', 'max', 'sum', 'avg']);
+const COMBINES = new Set(['min', 'max', 'sum', 'avg', 'median', 'stdev']);
 const TRIG = new Set(['sin', 'cos', 'tan']);
 const ROOT_DEGREE: Record<string, number> = { sqrt: 2, cbrt: 3 };
 
