@@ -539,6 +539,10 @@ button {
 .cm-tok-label {
   color: var(--tok-label);
 }
+.cm-tok-tag {
+  color: var(--tok-reference);
+  font-weight: 600;
+}
 .cm-tok-comment {
   color: var(--tok-comment);
   font-style: italic;

@@ -116,6 +116,8 @@ above it. A line with no recognizable expression produces no result.
 | `count`, `min`, `max` | Same block |
 | `median`, `stdev` / `stddev` / `std` | Same block. `stdev` is the sample standard deviation (n − 1, like spreadsheets' STDEV); it needs at least two answers |
 | `subtotal` | Sum of the answers since the last subtotal, blank line or heading, then starts a new group. In the app, double-click a blank line under some answers to put one there (on phones, the Σ key). |
+| `lunch $12 #food` | A tag: `#` and a word, after a space or at the start of the line (a heading needs `# ` with a space). Tags are left out of the math; a line can have several. |
+| `sum #food`, `avg #food #travel` | A total (any of `sum`, `avg`, `median`, `stdev`, `count`, `min`, `max`, and `subtotal`/`grand total`, which act like `sum`) over every answer above with one of those tags, across headings and blank lines. Tags on a total line choose what it adds up rather than tagging it. |
 | `grand total` | Every subtotal since the last heading (blank lines don't reset it), plus the answers after the last subtotal: everything counted once |
 
 ### 3.6 Units
@@ -461,9 +463,8 @@ first; changing numbers by direct manipulation is opt-in and guarded.
   stable reference that survives inserting and deleting lines above it (not a plain `line3`), shown as a chip.
 - [x] Subtotals (Soulver): `subtotal` and `grand total` (§3.5). Double-click a blank line beneath some answers
   to drop in a subtotal; on phones, where a tap only places the cursor, the Σ key in the math row does it.
-- [ ] Tags (Soulver): tag lines (for example `#food`), then total, average and other statistics over every line
-  with a tag (`sum #food`, `avg #travel`), across headings and blocks. Needs a syntax that doesn't clash with
-  `#` headings. See [soulver.app](https://soulver.app).
+- [x] Tags (Soulver): `lunch $12 #food`, then `sum #food`, `avg #travel` over every tagged line above, across
+  headings and blocks (§3.5). Headings need `# ` with a space, so `#food` never clashes with them.
 - [x] Templates in the docs: reusable notes (split a bill, runway, LTV/CAC, loan, unit price, recipes…) with
   *Open in Reckon*, after Figr's templates. One file each in `tests/fixtures/templates/` (`# Title`, a `//`
   description, then lines with tested answers), each evaluated as its own document by the golden tests.

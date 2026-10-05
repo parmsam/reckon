@@ -5,6 +5,9 @@ bump the minor version, fixes bump the patch version.
 
 ## Unreleased
 
+- Tags: `lunch $12 #food`, then `sum #food` (or `avg`, `count`, `max`… or several tags) totals every tagged
+  line above, across headings and blank lines.
+
 - Subtotals: `subtotal` adds up the lines since the last one, and `grand total` adds up the subtotals.
   Double-click a blank line under some answers to put a subtotal there (on phones, the Σ key).
 

@@ -68,6 +68,8 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
   let sectionLines: number[] = [];
   let subtotals: Value[] = [];
   let subtotalLines: number[] = [];
+  // Answers by tag (#food), across the whole note.
+  const tagged = new Map<string, { value: Value; line: number }[]>();
   let prev: Value | undefined;
   // Where things were defined, so each line can say which lines it uses.
   const definedAt = new Map<string, number>();
@@ -181,25 +183,33 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
 
     usedRates = false;
     const lineIndex = results.length;
+    // `sum #food`: a total over the tagged answers instead of the block.
+    const filter = line.tags && usesAggregate(line.ast!) ? line.tags : undefined;
+    const matching = filter
+      ? [...new Map(filter.flatMap((t) => tagged.get(t) ?? []).map((e) => [e.line, e]))]
+          .sort(([a], [b]) => a - b)
+          .map(([, e]) => e)
+      : undefined;
     const density = ingredientDensity(raw);
     const lineUnits = density ? { ...units, density } : units;
     const env = {
       vars,
       prev,
       lineValue: (n: number) => (n >= 1 && n <= results.length ? results[n - 1]!.value : undefined),
-      block,
-      section,
-      subtotals,
+      block: matching ? matching.map((e) => e.value) : block,
+      section: matching ? matching.map((e) => e.value) : section,
+      subtotals: matching ? [] : subtotals,
       settings: s,
       units: lineUnits,
       functions,
     };
+    const tagLines = matching?.map((e) => e.line);
     const uses = linesUsed(line.ast!, {
       definedAt,
       prevLine,
-      blockLines,
-      sectionLines,
-      subtotalLines,
+      blockLines: tagLines ?? blockLines,
+      sectionLines: tagLines ?? sectionLines,
+      subtotalLines: tagLines ? [] : subtotalLines,
     });
     try {
       const value = evaluate(line.ast!, env);
@@ -242,7 +252,15 @@ export function evaluateDocument(source: string, settings: Partial<Settings> = {
           definedAt.set(`s:${option.name}`, lineIndex);
         }
       }
-      if (!usesAggregate(line.ast!)) {
+      if (line.tags && !filter) {
+        for (const tag of line.tags) {
+          if (!tagged.has(tag)) tagged.set(tag, []);
+          tagged.get(tag)!.push({ value, line: lineIndex });
+        }
+      }
+      if (filter) {
+        // A total by tag doesn't touch the block's groups.
+      } else if (!usesAggregate(line.ast!)) {
         block.push(value);
         blockLines.push(lineIndex);
         section.push(value);

@@ -322,6 +322,12 @@ export function glossary(): GlossaryGroup[] {
           meaning: 'The answer on line 3 (any line number)',
           example: '7\n8\nline1 × 10',
         },
+        {
+          terms: ['#tag'],
+          meaning:
+            'Tags a line (lunch $12 #food); a total followed by tags (sum #food) covers every line above with them',
+          example: 'lunch $12 #food\ntaxi $30\ndinner $45 #food\nsum #food',
+        },
       ],
     },
     {

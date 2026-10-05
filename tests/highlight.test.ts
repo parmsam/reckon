@@ -21,6 +21,16 @@ describe('highlights', () => {
     ]);
   });
 
+  it('marks tags, but not a # inside a word', () => {
+    expect(spans('lunch $12 #food #treat')).toEqual([
+      'tag:#food',
+      'tag:#treat',
+      'unit:$',
+      'number:12',
+    ]);
+    expect(spans('C# course: $40').filter((s) => s.startsWith('tag'))).toEqual([]);
+  });
+
   it('marks labels, assignments and inline comments with line offsets', () => {
     expect(spans('Rent: monthly rent = 1,200 // per month')).toEqual([
       'label:Rent:',

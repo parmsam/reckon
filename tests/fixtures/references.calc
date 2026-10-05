@@ -80,3 +80,26 @@ subtotal => 0
 # A heading starts over
 grand total => 0
 grand piano => (none)
+
+# Tags
+lunch: $12 #food => $12.00
+taxi: $30 #travel => $30.00
+dinner: $45 #food #treat => $45.00
+#food snacks $8 => $8.00
+sum => $95.00
+
+# Totals by tag reach across headings and blank lines
+hotel: $200 #travel => $200.00
+
+sum #food => $65.00
+total #travel => $230.00
+avg #food => $21.67
+count #food => 3
+max #food #travel => $200.00
+sum #treat => $45.00
+sum #nothing => 0
+avg #nothing => (none)
+sum #food × 2 => $130.00
+food total: sum #Food => $65.00
+C# course: $40 => $40.00
+# Heading with #hashtag

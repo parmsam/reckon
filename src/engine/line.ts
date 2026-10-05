@@ -19,7 +19,9 @@ export type HighlightType =
   | 'comment'
   | 'heading'
   /** A choice option's name, on the choice line and where it's compared. */
-  | 'choice';
+  | 'choice'
+  /** `#food` */
+  | 'tag';
 
 /** A highlighted range, in UTF-16 offsets from the start of the line. */
 export interface Highlight {
@@ -75,9 +77,13 @@ export interface ParsedLine {
   error?: string;
   highlights: Highlight[];
   choice?: Choice;
+  /** Tags on the line (`#food`), lowercased and without the `#`. */
+  tags?: string[];
 }
 
 const HEADING = /^\s*#{1,6}(?:\s|$)/;
+/** `#food`: at the start or after a space, so `C#` isn't one. */
+const TAG = /(^|\s)#([\p{L}_][\p{L}\p{N}_-]*)/gu;
 const COMMENT = /^\s*\/\//;
 /** `rent: 1200`. The colon must not sit inside a time like 3:30. */
 const LABEL = /^([^:]*\p{L}[^:]*?):(?!\d)/u;
@@ -138,6 +144,15 @@ export function parseLine(raw: string, scope: Scope): ParsedLine {
   let text = commentAt === -1 ? raw : raw.slice(0, commentAt);
   let offset = 0;
 
+  // Tags are blanked out (keeping offsets) so the math never sees them.
+  const tags: string[] = [];
+  text = text.replace(TAG, (_match, space: string, name: string, at: number) => {
+    const from = at + space.length;
+    highlights.push({ from, to: from + name.length + 1, type: 'tag' });
+    if (!tags.includes(name.toLowerCase())) tags.push(name.toLowerCase());
+    return space + ' '.repeat(name.length + 1);
+  });
+
   const label = LABEL.exec(text);
   if (label) {
     highlights.push({ from: 0, to: label[0].length, type: 'label' });
@@ -191,7 +206,7 @@ export function parseLine(raw: string, scope: Scope): ParsedLine {
 
   const finish = (line: Omit<ParsedLine, 'highlights'>): ParsedLine => {
     if (commentAt !== -1) highlights.push({ from: commentAt, to: raw.length, type: 'comment' });
-    return { ...line, ...(define && { define }), highlights };
+    return { ...line, ...(define && { define }), ...(tags.length && { tags }), highlights };
   };
 
   const user = { functions, units: scope.units, symbols: scope.symbols };
