@@ -9,13 +9,14 @@ export type Route =
   | { kind: 'badLink' };
 
 /**
- * Hash routes, so GitHub Pages never sees a deep link: `#/note/<id>`, `#/share/<payload>`,
+ * Hash routes, so GitHub Pages never sees a deep link: `#/note/<id>`, `#/share/[name/]<payload>`,
  * `#/new?text=<percent-encoded note>`.
  */
 export function parseRoute(hash: string): Route {
   const note = /^#\/note\/([0-9A-Z]{26})$/.exec(hash);
   if (note) return { kind: 'note', id: note[1]! };
-  const share = /^#\/share\/([A-Za-z0-9_-]+)$/.exec(hash);
+  // `#/share/<payload>` or `#/share/<name>/<payload>`; the name is only a label.
+  const share = /^#\/share\/(?:[a-z0-9-]*\/)?([A-Za-z0-9_-]+)$/.exec(hash);
   if (share) return { kind: 'share', payload: share[1]! };
   const fresh = /^#\/new\?(.*)$/s.exec(hash);
   if (fresh) {

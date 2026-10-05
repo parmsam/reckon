@@ -10,7 +10,7 @@ import {
 } from '../src/app/backup';
 import { parseRoute, routeHash } from '../src/app/router';
 import { filterNotes, sortNotes } from '../src/app/search';
-import { decodeShare, encodeShare } from '../src/app/share';
+import { decodeShare, encodeShare, linkName, shareLink } from '../src/app/share';
 import { NotesStore } from '../src/app/store';
 import { closeDB, DB_NAME, type Note } from '../src/storage/db';
 import { newNote } from '../src/storage/notes';
@@ -40,6 +40,21 @@ describe('share links', () => {
     expect(await decodeShare(payload)).toBe(
       '# Trip 🧳\nflights: $420 × 2\nhotel = 3 nights × $135\nfood: 25% of hotel\nsum\n',
     );
+  });
+
+  it('labels links with the note name, and opens labelled and unlabelled links alike', async () => {
+    expect(linkName('# Monthly Budget\nrent = 1200')).toBe('monthly-budget');
+    expect(linkName('Café crème: 3 × €4')).toBe('cafe-creme-3-4');
+    expect(linkName('// only a comment')).toBe('');
+    expect(linkName(`# ${'word '.repeat(20)}`).length).toBeLessThanOrEqual(40);
+
+    const link = await shareLink('# Trip\n2 + 2', 'https://example.com/reckon/');
+    expect(link).toMatch(/^https:\/\/example\.com\/reckon\/#\/share\/trip\/[A-Za-z0-9_-]+$/);
+    const route = parseRoute(link.slice(link.indexOf('#')));
+    expect(route.kind).toBe('share');
+    expect(await decodeShare((route as { payload: string }).payload)).toBe('# Trip\n2 + 2');
+    const unlabelled = parseRoute(`#/share/${(route as { payload: string }).payload}`);
+    expect(unlabelled).toEqual(route);
   });
 
   it('rejects corrupt payloads', async () => {

@@ -95,7 +95,7 @@ test('share links open read-only and can be saved', async ({ page, context, brow
   await page.getByRole('button', { name: 'Copy share link' }).click();
   await expect(page.locator('#toast')).toHaveText('Share link copied');
   const url = await page.evaluate(() => navigator.clipboard.readText());
-  expect(url).toMatch(/\/reckon\/#\/share\/[A-Za-z0-9_-]+$/);
+  expect(url).toMatch(/\/reckon\/#\/share\/welcome-to-reckon\/[A-Za-z0-9_-]+$/);
 
   const shared = await context.newPage();
   await shared.goto(url);
@@ -217,4 +217,10 @@ test('the tutorial and examples can be added back', async ({ page, isMobile }) =
   );
   await openSidebar(page, isMobile);
   await expect(items(page)).toHaveCount(3);
+});
+
+test('note links from another browser explain themselves', async ({ page }) => {
+  await page.goto('./#/note/01M44WYGZP5E41PGBPHGRRYWPZ');
+  await expect(page.locator('#toast')).toContainText("isn't saved in this browser");
+  await expect(page.locator('#note-title')).toHaveText('Welcome to Reckon');
 });

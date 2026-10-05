@@ -1,3 +1,6 @@
+import { SITE_URL } from '../links';
+import { deriveTitle } from './title';
+
 /**
  * Share links carry the note in the URL hash, so no server sees it:
  * `#/share/<base64url(deflate-raw(utf8 body))>`.
@@ -33,4 +36,26 @@ export async function encodeShare(body: string): Promise<string> {
 export async function decodeShare(payload: string): Promise<string> {
   const bytes = await pipe(fromBase64Url(payload), new DecompressionStream('deflate-raw'));
   return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+}
+
+/** A short, readable label for a link: "# Monthly budget" → "monthly-budget". Empty if untitled. */
+export function linkName(text: string): string {
+  const title = deriveTitle(text);
+  if (title === 'Untitled') return '';
+  const slug = title
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug.length <= 40 ? slug : slug.slice(0, 40).replace(/-[^-]*$/, '');
+}
+
+/**
+ * A share link: `<base>#/share/<name>/<payload>`. The name is only a label, so people can tell
+ * links apart; the note itself is in the payload.
+ */
+export async function shareLink(text: string, base = SITE_URL): Promise<string> {
+  const name = linkName(text);
+  return `${base}#/share/${name ? `${name}/` : ''}${await encodeShare(text)}`;
 }

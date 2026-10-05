@@ -19,16 +19,8 @@ export { evaluateDocument, formatValue, defaultSettings } from './engine';
 export type { LineResult, Settings, Value } from './engine';
 export { fetchCryptoRates, fetchFiatRates } from './data/rates';
 export { decodeLinkText, noteLink, SITE_URL } from './links';
-import { encodeShare } from './app/share';
-import { SITE_URL } from './links';
-
-/**
- * A compressed share link (`#/share/<deflate-raw, base64url>`): shorter than noteLink for long
- * notes. Needs CompressionStream (browsers, Node 18+, Deno).
- */
-export async function shareLink(text: string, base = SITE_URL): Promise<string> {
-  return `${base}#/share/${await encodeShare(text)}`;
-}
+/** A compressed share link, labelled with the note's name: `…#/share/monthly-budget/<payload>`. */
+export { linkName, shareLink } from './app/share';
 export { decodeShare } from './app/share';
 
 export const VERSION = '1.0.0';

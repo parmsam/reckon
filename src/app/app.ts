@@ -27,7 +27,7 @@ import {
 } from './preferences';
 import { RatesManager } from './rates';
 import { parseRoute, routeHash, type Route } from './router';
-import { decodeShare, encodeShare } from './share';
+import { decodeShare, shareLink } from './share';
 import { SettingsDialog } from './settings-dialog';
 import { createShortcutsDialog } from './shortcuts-dialog';
 import { Sidebar } from './sidebar';
@@ -124,7 +124,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : null;
     toastEl.classList.add('visible');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('visible'), action ? 5000 : 1800);
+    // Longer messages and ones with an action stay up longer.
+    toastTimer = setTimeout(
+      () => toastEl.classList.remove('visible'),
+      action || message.length > 60 ? 5000 : 1800,
+    );
   }
 
   function showBanner(text: string | undefined, action?: { label: string; run: () => void }): void {
@@ -582,6 +586,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return navigate({ kind: 'home' }, { replace: true });
     }
     if (route.kind === 'note' && store.get(route.id)) return openNote(route.id);
+    if (route.kind === 'note') {
+      // Note links only work in the browser that saved the note: explain instead of guessing.
+      toast("That note isn't saved in this browser. To share a note, use the share button (↗).");
+    }
     return openHome();
   }
 
@@ -749,7 +757,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   async function share(): Promise<void> {
-    const url = `${location.origin}${location.pathname}#/share/${await encodeShare(editor.getDoc())}`;
+    const url = await shareLink(editor.getDoc(), `${location.origin}${location.pathname}`);
     try {
       await navigator.clipboard.writeText(url);
       toast(

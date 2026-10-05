@@ -5,8 +5,8 @@ Reckon has no server API, because it's a static site. Instead, three kinds of li
 | Link | Use |
 |---|---|
 | `{{site}}#/new?text=<note>` | **Plain-text link.** The note is [percent-encoded](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent): space `%20`, new line `%0A`, `$` `%24`, `%` `%25`, `+` `%2B`, `#` `%23`, `&` `%26`. Easy to write by hand, by an LLM, or in any language. |
-| `{{site}}#/share/<payload>` | **Share link.** The note as raw DEFLATE, then base64url without padding. Shorter for long notes. |
-| `{{site}}#/note/<id>` | A note already saved in this browser. |
+| `{{site}}#/share/<name>/<payload>` | **Share link.** The note as raw DEFLATE, then base64url without padding. Shorter for long notes. The `<name>/` part (letters, digits and `-`) is only a label and can be left out. |
+| `{{site}}#/note/<id>` | A note saved in *this* browser. It doesn't work for anyone else; share with a share link instead. |
 
 Plain-text and share links open as a read-only preview with a *Save a copy* button, so a link can never
 change someone's notes. The decoder forgives common slips: a raw `+` stays a plus, and a bare `%`

@@ -17,8 +17,9 @@ offline after the first visit.
 - **Many notes**: create, search, pin and trash them in the notes list. Trashed notes can be restored.
 - **Tutorial and examples**: new users start with a tutorial, a monthly budget and a trip plan. Bring them
   back any time with *Add the tutorial and example notes* (in Settings, or the <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> menu).
-- **Share link** (the ↗ button): copies a link with the whole note compressed into it. Whoever opens it sees a
-  read-only copy and can save their own.
+- **Share link** (the ↗ button): copies a link with the whole note compressed into it, labelled with the
+  note's name (`…/reckon/#/share/monthly-budget/…`). Whoever opens it sees a read-only copy and can save their
+  own. The address bar's `#/note/…` link only works in your own browser, so share with the button.
 - **Backups**: *Export all notes* (in the notes list) saves a JSON file; *Import notes* restores it, or
   turns `.txt` and `.md` files into notes.
 - **Download and export** (the ↓ button): the note as text, or with its answers as aligned text, Markdown
