@@ -195,3 +195,24 @@ test.describe('splash screen', () => {
     );
   });
 });
+
+test('tips cycle, can be turned off, and come back from Settings', async ({ page, isMobile }) => {
+  if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
+  const tip = page.getByRole('complementary', { name: 'Tip' });
+  await expect(tip).toBeVisible();
+  const first = await tip.textContent();
+  await tip.getByRole('button', { name: 'Next tip' }).click();
+  await expect(tip).not.toHaveText(first!);
+
+  await tip.getByRole('button', { name: 'Turn off tips' }).click();
+  await expect(tip).toBeHidden();
+  await expect(page.locator('#toast')).toContainText('Tips are off');
+
+  await page.reload();
+  await expect(page.locator('.cm-result').first()).toBeVisible();
+  await openSettings(page, isMobile);
+  await page.getByLabel('Show tips in the notes list').check();
+  await page.getByRole('button', { name: 'Done' }).click();
+  if (isMobile) await page.getByRole('button', { name: 'Toggle notes list' }).click();
+  await expect(page.getByRole('complementary', { name: 'Tip' })).toBeVisible();
+});

@@ -9,8 +9,16 @@ right as you type. Click an answer to copy it.
 - Notes are saved in your browser as you type. Open the notes list with the ☰ button.
 - Press <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> for every command, or <kbd>?</kbd> for the keyboard shortcuts.
 
-Reckon is a PWA: use your browser's **Install** option to get it in your dock or home screen. It works
-offline after the first visit.
+Reckon works offline after the first visit, and you can install it as an app with its own icon and window:
+
+- **iPhone and iPad (Safari):** tap **Share**, then **Add to Home Screen**.
+- **Android (Chrome):** open the menu (⋮), then **Install app** or **Add to Home screen**.
+- **Chrome or Edge on a computer:** click the install icon in the address bar, or **Install Reckon** in the
+  <kbd>⌘/Ctrl</kbd> <kbd>K</kbd> menu.
+- **Safari on a Mac:** choose **File → Add to Dock**.
+
+The tip at the bottom of the notes list shows the right steps for your device. Tips cycle each visit; turn
+them off with × or in Settings.
 
 ## Notes, sharing and backups
 

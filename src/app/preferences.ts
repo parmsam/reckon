@@ -19,6 +19,8 @@ export interface Preferences {
   fetchRates: boolean;
   /** Show the splash screen while Reckon starts. */
   showSplash: boolean;
+  /** Show a tip at the bottom of the notes list. */
+  showTips: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -32,6 +34,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   emPx: 16,
   fetchRates: true,
   showSplash: true,
+  showTips: true,
 };
 
 const KEY = 'preferences';
@@ -54,6 +57,7 @@ export function sanitize(input: unknown): Preferences {
   if (raw.angleUnit === 'deg' || raw.angleUnit === 'rad') p.angleUnit = raw.angleUnit;
   if (typeof raw.fetchRates === 'boolean') p.fetchRates = raw.fetchRates;
   if (typeof raw.showSplash === 'boolean') p.showSplash = raw.showSplash;
+  if (typeof raw.showTips === 'boolean') p.showTips = raw.showTips;
   if (typeof raw.locale === 'string' && (raw.locale === '' || isLocale(raw.locale)))
     p.locale = raw.locale;
   int('fontSize', 12, 24);

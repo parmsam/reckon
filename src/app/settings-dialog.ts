@@ -76,6 +76,10 @@ export class SettingsDialog {
       'showSplash',
       h('input', { id: 'pref-showSplash', type: 'checkbox' }),
     );
+    const showTips = this.register(
+      'showTips',
+      h('input', { id: 'pref-showTips', type: 'checkbox' }),
+    );
     const fetchRates = this.register(
       'fetchRates',
       h('input', { id: 'pref-fetchRates', type: 'checkbox', 'aria-describedby': 'rates-hint' }),
@@ -106,6 +110,12 @@ export class SettingsDialog {
             { class: 'field checkbox' },
             showSplash,
             h('label', { for: 'pref-showSplash' }, 'Show the splash screen when Reckon opens'),
+          ),
+          h(
+            'div',
+            { class: 'field checkbox' },
+            showTips,
+            h('label', { for: 'pref-showTips' }, 'Show tips in the notes list'),
           ),
         ),
         h(

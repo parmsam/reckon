@@ -29,6 +29,7 @@ import { RatesManager } from './rates';
 import { parseRoute, routeHash, type Route } from './router';
 import { decodeShare, shareLink } from './share';
 import { SettingsDialog } from './settings-dialog';
+import { installTip, tips, TipStrip, type TipContext } from './tips';
 import { createShortcutsDialog } from './shortcuts-dialog';
 import { Sidebar } from './sidebar';
 import { NotesStore } from './store';
@@ -229,9 +230,56 @@ export async function startApp(root: HTMLElement): Promise<void> {
       rates.enabled = prefs.fetchRates;
       if (prefs.fetchRates) void rates.refresh();
       void savePreferences(prefs).catch(() => {});
+      refreshTips();
     },
     () => void addExampleNotes(),
   );
+
+  // ---- Tips and installing ------------------------------------------------------------------
+  /** The browser's install prompt (Chrome, Edge, Android), kept until a tip's Install button uses it. */
+  interface InstallPrompt extends Event {
+    prompt(): Promise<void>;
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  }
+  let installPrompt: InstallPrompt | undefined;
+  const isInstalled = () =>
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as { standalone?: boolean }).standalone === true;
+
+  const tipContext = (): TipContext => ({
+    mod: MOD.replace('+', ''),
+    touch: window.matchMedia('(pointer: coarse)').matches,
+    installed: isInstalled(),
+    install: installPrompt ? () => void install() : undefined,
+  });
+
+  async function install(): Promise<void> {
+    if (!installPrompt) return;
+    const prompt = installPrompt;
+    installPrompt = undefined;
+    await prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    if (outcome === 'accepted') toast('Installing Reckon');
+    refreshTips();
+  }
+
+  const tipStrip = new TipStrip(() => {
+    settingsDialog.apply({ ...prefs, showTips: false });
+    toast('Tips are off. You can turn them back on in Settings.');
+  });
+  function refreshTips(): void {
+    tipStrip.update(tips(tipContext()), prefs.showTips);
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Offer installing from the tip instead of the browser's own banner.
+    e.preventDefault();
+    installPrompt = e as InstallPrompt;
+    refreshTips();
+  });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = undefined;
+    refreshTips();
+  });
 
   /**
    * Adds the tutorial and example notes (as new notes), skipping any that are already here
@@ -305,6 +353,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
         keywords: 'syntax reference guide manual llm prompt',
         run: () => window.open(`${import.meta.env.BASE_URL}docs/`, '_blank', 'noopener'),
       },
+      ...(installTip(tipContext())
+        ? [
+            {
+              id: 'install',
+              label: 'Install Reckon as an app',
+              keywords: 'pwa home screen dock offline',
+              run: () => {
+                const tip = installTip(tipContext())!;
+                if (tip.action) tip.action.run();
+                else toast(tip.text);
+              },
+            },
+          ]
+        : []),
       {
         id: 'examples',
         label: 'Add the tutorial and example notes',
@@ -526,6 +588,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     shortcutsDialog,
   );
   root.replaceChildren(app);
+  sidebar.el.insertBefore(tipStrip.el, sidebar.el.querySelector('.sidebar-foot'));
+  refreshTips();
 
   function readCollapsed(): boolean {
     try {
