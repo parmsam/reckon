@@ -88,6 +88,8 @@ export class SettingsDialog {
       'showLineNumbers',
       h('input', { id: 'pref-showLineNumbers', type: 'checkbox' }),
     );
+    const sliders = this.register('sliders', h('input', { id: 'pref-sliders', type: 'checkbox' }));
+    const scrub = this.register('scrub', h('input', { id: 'pref-scrub', type: 'checkbox' }));
     const fetchRates = this.register(
       'fetchRates',
       h('input', { id: 'pref-fetchRates', type: 'checkbox', 'aria-describedby': 'rates-hint' }),
@@ -160,6 +162,32 @@ export class SettingsDialog {
               ['rad', 'Radians'],
             ]),
           ),
+        ),
+        h(
+          'fieldset',
+          {},
+          h('legend', {}, 'Interactive numbers'),
+          h(
+            'div',
+            { class: 'field checkbox' },
+            sliders,
+            h(
+              'label',
+              { for: 'pref-sliders' },
+              'Slider for variables (the ⇆ on a line like rent = 1,200)',
+            ),
+          ),
+          h(
+            'div',
+            { class: 'field checkbox' },
+            scrub,
+            h(
+              'label',
+              { for: 'pref-scrub' },
+              'Drag numbers to change them, holding ⌥/Alt (desktop)',
+            ),
+          ),
+          h('p', { class: 'field-hint' }, 'Changes are ordinary edits: undo puts the number back.'),
         ),
         h(
           'fieldset',

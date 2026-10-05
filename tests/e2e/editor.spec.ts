@@ -137,3 +137,47 @@ test('answers explain themselves, and lines show what they use', async ({ page }
   await page.locator('.cm-line', { hasText: 'rent = ' }).click();
   await expect(page.locator('.cm-line.cm-used-by')).toHaveCount(1);
 });
+
+test('the slider changes a variable live, as one undo step', async ({ page }) => {
+  await page.goto('./');
+  await setNote(page, 'rent = $1,200\nrent × 12');
+  await page.locator('.cm-line', { hasText: 'rent = ' }).click();
+  await page.getByRole('button', { name: 'Adjust rent with a slider' }).click();
+  const slider = page.getByRole('slider', { name: 'Adjust rent' });
+  await slider.fill('1500');
+  await expect(page.locator('.cm-line').first()).toContainText('rent = $1,500');
+  await expect(resultOnLine(page, 'rent × 12')).toHaveText('$18,000.00');
+  await page.keyboard.press('Escape');
+
+  await page.locator('.cm-line', { hasText: 'rent × 12' }).click();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(page.locator('.cm-line').first()).toContainText('rent = $1,200');
+  await expect(resultOnLine(page, 'rent × 12')).toHaveText('$14,400.00');
+});
+
+test('⌥/Alt-drag changes numbers only when turned on', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'desktop only');
+  await page.goto('./');
+  await setNote(page, 'rent = $1,200\nrent × 12');
+  const number = page.locator('.cm-tok-number', { hasText: '1,200' });
+  const drag = async () => {
+    const box = (await number.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.keyboard.down('Alt');
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2, { steps: 5 });
+    await page.mouse.up();
+    await page.keyboard.up('Alt');
+  };
+
+  await drag();
+  await expect(page.locator('.cm-line').first()).toContainText('rent = $1,200');
+
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByLabel(/Drag numbers to change them/).check();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await drag();
+  await expect(page.locator('.cm-line').first()).toContainText('rent = $1,210');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(page.locator('.cm-line').first()).toContainText('rent = $1,200');
+});

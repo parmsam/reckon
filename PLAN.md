@@ -407,9 +407,9 @@ first; changing numbers by direct manipulation is opt-in and guarded.
   ("rent ($1,200.00) + utilities ($150.00)", "1 km = 0.6214 mi") and any ignored words. Lines without an
   answer show a "?" with the reason once the cursor leaves them (no flicker while typing).
 - [x] Dependencies: the cursor's line marks the lines it uses and the lines that use it (margin bars).
-- [ ] Variable slider: on a `name = number` line, a small handle opens a slider (works on phones). Setting,
+- [x] Variable slider: on a `name = number` line, a small handle opens a slider (works on phones). Setting,
   on by default, since nothing changes until it's used.
-- [ ] Scrubbing: ⌥/Alt-drag a plain number sideways to change it. Off by default; desktop only; one drag is
+- [x] Scrubbing: ⌥/Alt-drag a plain number sideways to change it. Off by default; desktop only; one drag is
   one undo step; never on dates, `1.5k` or other non-plain numbers.
 
 ### Later

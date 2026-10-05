@@ -1131,3 +1131,62 @@ kbd {
 .cm-line.cm-used-by {
   box-shadow: inset 3px 0 0 var(--accent);
 }
+
+/* Interactive numbers: slider handle and popover, ⌥/Alt-drag scrubbing */
+.cm-slider-handle {
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--accent);
+  font-size: 0.8em;
+  line-height: 1.4;
+  vertical-align: 0.1em;
+  cursor: pointer;
+}
+
+.slider-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(270px, calc(100vw - 16px));
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: 0 10px 30px #0003;
+}
+
+.slider-popover label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.slider-popover input[type='range'] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.slider-popover output {
+  color: var(--result);
+  font-family: var(--mono);
+}
+
+.cm-alt-held .cm-tok-number {
+  cursor: ew-resize;
+  text-decoration: underline dotted var(--accent);
+}
+
+.scrubbing,
+.scrubbing * {
+  cursor: ew-resize !important;
+  user-select: none;
+}

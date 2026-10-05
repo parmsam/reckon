@@ -11,6 +11,7 @@ import {
 } from '@codemirror/view';
 import { toggleLineComment } from './commands';
 import { completion } from './completion';
+import { interactiveNumbers } from './interactive';
 import type { LineResult } from '../engine';
 import {
   copyCurrentResult,
@@ -97,6 +98,7 @@ export function createEditor({
         settingsCompartment.of(engineSettings.of(currentSettings)),
         results,
         completion,
+        interactiveNumbers,
         reckonTheme,
         readOnly.of(readOnlyExtensions(ro)),
         gutter.of(showLineNumbers ? lineNumbers() : []),

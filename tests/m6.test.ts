@@ -7,6 +7,8 @@ import { toggleLineComment } from '../src/editor/commands';
 import { reckonCompletions } from '../src/editor/completion';
 import { engineSettings, resultsField } from '../src/editor/results';
 import { summarize } from '../src/editor/summary';
+import { formatLike } from '../src/editor/interactive';
+import { D } from '../src/engine/values';
 import { vocabulary } from '../src/engine/vocabulary';
 
 describe('preferences', () => {
@@ -150,5 +152,15 @@ describe('total bar summary', () => {
       avg: '20',
       count: 3,
     });
+  });
+});
+
+describe('interactive numbers', () => {
+  it('writes adjusted numbers the way the original was written', () => {
+    expect(formatLike('1,200', new D(1450))).toBe('1,450');
+    expect(formatLike('1,200', new D(12345.6))).toBe('12,346');
+    expect(formatLike('4.50', new D(4.75))).toBe('4.75');
+    expect(formatLike('3', new D(5))).toBe('5');
+    expect(formatLike('1000', new D(1500))).toBe('1500');
   });
 });

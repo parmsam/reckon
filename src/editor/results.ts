@@ -12,6 +12,10 @@ import { evaluateDocument, type LineResult, type Settings } from '../engine';
 export type EditorSettings = Partial<Settings> & {
   /** When the exchange rates were fetched, shown on currency results. */
   ratesAsOf?: number;
+  /** Show a slider handle on `name = number` lines. */
+  sliders?: boolean;
+  /** ⌥/Alt-drag numbers to change them. */
+  scrub?: boolean;
 };
 
 /** Engine settings (locale, precision, rates…) for this editor. */

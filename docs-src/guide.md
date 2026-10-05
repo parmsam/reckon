@@ -20,6 +20,16 @@ Reckon works offline after the first visit, and you can install it as an app wit
 The tip at the bottom of the notes list shows the right steps for your device. Tips cycle each visit; turn
 them off in Settings.
 
+## Seeing how a note works
+
+- **Why this answer?** Hover an answer to see how the line was read, with the values it used
+  ("rent ($1,200.00) + utilities ($150.00)"), and which lines it uses or is used by.
+- **No answer?** A "?" appears where the answer would be (once you leave the line). Hover or tap it for the reason.
+- **What depends on what:** the line with the cursor marks the lines it uses (green) and the lines that use it (orange).
+- **Try other numbers:** on a line like `rent = $1,200`, tap **⇆** for a slider and watch every answer below change.
+  With *Drag numbers to change them* on (Settings), hold <kbd>⌥/Alt</kbd> and drag any number. Undo puts it back.
+- **Totals:** the bar under the note shows the total of the section you're in; select lines for their sum and average.
+
 ## Notes, sharing and backups
 
 - **Many notes**: create, search, pin and trash them in the notes list. Trashed notes can be restored.

@@ -25,6 +25,10 @@ export interface Preferences {
   showTotals: boolean;
   /** Show line numbers beside the note. */
   showLineNumbers: boolean;
+  /** A slider handle on `name = number` lines. */
+  sliders: boolean;
+  /** ⌥/Alt-drag numbers to change them (off by default). */
+  scrub: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -41,6 +45,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   showTips: true,
   showTotals: true,
   showLineNumbers: false,
+  sliders: true,
+  scrub: false,
 };
 
 const KEY = 'preferences';
@@ -66,6 +72,8 @@ export function sanitize(input: unknown): Preferences {
   if (typeof raw.showTips === 'boolean') p.showTips = raw.showTips;
   if (typeof raw.showTotals === 'boolean') p.showTotals = raw.showTotals;
   if (typeof raw.showLineNumbers === 'boolean') p.showLineNumbers = raw.showLineNumbers;
+  if (typeof raw.sliders === 'boolean') p.sliders = raw.sliders;
+  if (typeof raw.scrub === 'boolean') p.scrub = raw.scrub;
   if (typeof raw.locale === 'string' && (raw.locale === '' || isLocale(raw.locale)))
     p.locale = raw.locale;
   int('fontSize', 12, 24);
@@ -103,8 +111,12 @@ export async function savePreferences(p: Preferences): Promise<void> {
 }
 
 /** The engine settings these preferences imply. */
-export function engineSettings(p: Preferences): Partial<Settings> {
+export function engineSettings(
+  p: Preferences,
+): Partial<Settings> & { sliders: boolean; scrub: boolean } {
   return {
+    sliders: p.sliders,
+    scrub: p.scrub,
     locale: p.locale || navigator.language,
     precision: p.precision,
     unitPrecision: p.unitPrecision,
