@@ -16,6 +16,7 @@ import { completion } from './completion';
 import { explorable, interactiveNumbers, nextChoice } from './interactive';
 import type { LineResult } from '../engine';
 import {
+  copyLine,
   copyCurrentResult,
   engineSettings,
   results,
@@ -74,6 +75,14 @@ export function createEditor({
   const gutter = new Compartment();
   let showLineNumbers = false;
   let currentSettings = settings;
+  const lineNumberGutter = () =>
+    lineNumbers({
+      domEventHandlers: {
+        dblclick(view, line) {
+          return copyLine(view, view.state.doc.lineAt(line.from).number);
+        },
+      },
+    });
   const readOnlyExtensions = (on: boolean, explore = false) => [
     EditorState.readOnly.of(on),
     EditorView.editable.of(!on),
@@ -131,7 +140,7 @@ export function createEditor({
         interactiveNumbers,
         reckonTheme,
         readOnly.of(readOnlyExtensions(ro, explore)),
-        gutter.of(showLineNumbers ? lineNumbers() : []),
+        gutter.of(showLineNumbers ? lineNumberGutter() : []),
         EditorView.updateListener.of((update) => {
           const userEdit =
             !update.state.readOnly &&
@@ -173,7 +182,7 @@ export function createEditor({
     },
     setLineNumbers(on) {
       showLineNumbers = on;
-      view.dispatch({ effects: gutter.reconfigure(on ? lineNumbers() : []) });
+      view.dispatch({ effects: gutter.reconfigure(on ? lineNumberGutter() : []) });
     },
     setSettings(next) {
       currentSettings = { ...currentSettings, ...next };

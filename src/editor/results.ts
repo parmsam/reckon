@@ -472,6 +472,13 @@ export function copyCurrentResult(view: EditorView): boolean {
   return true;
 }
 
+/** Copies the source text of a line. */
+export function copyLine(view: EditorView, line: number): boolean {
+  if (line < 1 || line > view.state.doc.lines) return false;
+  void copyResult(view, view.state.doc.line(line).text);
+  return true;
+}
+
 /** Announces the current line's result to screen readers. */
 const liveRegion = ViewPlugin.fromClass(
   class {
