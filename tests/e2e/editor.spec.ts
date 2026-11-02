@@ -61,6 +61,26 @@ test('clicking a result copies it', async ({ page, context, browserName }) => {
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('3,000');
 });
 
+test('double-clicking a line number copies the line', async ({
+  page,
+  context,
+  browserName,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'desktop only');
+  test.skip(browserName !== 'chromium', 'clipboard permissions are Chromium-only');
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByLabel('Show line numbers').check();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await setNote(page, 'rent = $1,200\nrent × 12');
+
+  await page.locator('.cm-lineNumbers .cm-gutterElement', { hasText: /^2$/ }).dblclick();
+  await expect(page.locator('#toast')).toHaveText('Copied rent × 12');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('rent × 12');
+});
+
 test('converts units and currencies with live rates', async ({ page }) => {
   await page.goto('./');
   await setNote(page, '5 km in miles\n$30 in EUR\n0.01 BTC in USD');
